@@ -12,7 +12,7 @@ const productController = {
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   },
-  
+
 
   // Obtener un producto por su ID
   getProductById: async (req, res) => {
@@ -36,7 +36,7 @@ const productController = {
 
     try {
       const [result] = await pool.query(
-        `INSERT INTO Product (name, images_path, brand, description, price, stock) 
+        `INSERT INTO Product (name, images_path, brand, description, price, stock)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [name.trim(), images_path, brand, description, price, stock]
       );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
   PencilIcon,
@@ -9,39 +9,110 @@ import ProductModal from "../components/ProductModal";
 import DeleteProductModal from "../components/DeleteProductModal";
 
 export default function Productos() {
-  const initialProducts = [
-    { id: 1, nombre: "Mouse Logitech G502", precioVenta: "$25.99", stock: 14 },
-    { id: 2, nombre: "Teclado Corsair K70", precioVenta: "$99.99", stock: 8 },
-    {
-      id: 3,
-      nombre: "Monitor Dell UltraSharp",
-      precioVenta: "$499.99",
-      stock: 5,
-    },
-    {
-      id: 4,
-      nombre: "Laptop HP Spectre x360",
-      precioVenta: "$1,299.99",
-      stock: 3,
-    },
-    {
-      id: 5,
-      nombre: "Auriculares Sony WH-1000XM4",
-      precioVenta: "$349.99",
-      stock: 10,
-    },
-  ];
 
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' o 'edit'
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Cargar productos de la base de datos
+  useEffect(() => {
+    fetch('http://localhost:5000/api/products') // <-- Adjust to your actual endpoint
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch products');
+        return response.json();
+      })
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  // TODO: implement loading screen for loading database
+  // if (loading) return <div>Cargando productos...</div>;
+  // if (error) return <div>Error: {error}</div>;
+
+  // console.log('dbuggg: ', products)
+
+  // Filtrar productos
   const filteredProducts = products.filter((p) =>
-    p.nombre.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // CRUD
+  const addProduct = async (productData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/products`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData)
+      });
+
+      const errorData = await res.json();
+      if (!res.ok) {
+        throw new Error(errorData.error);
+      }
+
+      let id = errorData.id_product;
+      console.log("ID::::, ", errorData)
+      return id;
+
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error adding product');
+    }
+  };
+
+  const deleteProduct = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error);
+      }
+
+      // Remove item from list
+      setProducts(products.filter(p => p.id_product !== id));
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error deleting product');
+    }
+  };
+
+  const editProduct = async (productData) => {
+    try {
+      let id = productData.id_product;
+      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData)
+      });
+
+      const errorData = await res.json();
+      if (!res.ok) {
+        throw new Error(errorData.error);
+      }
+
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error editing product');
+    }
+  };
 
   const handleOpenAddModal = () => {
     setSelectedProduct(null);
@@ -58,7 +129,8 @@ export default function Productos() {
   const handleDeleteProduct = (productId) => {
     console.log("Producto eliminado:", productId);
     // Eliminar producto de la lista
-    setProducts(products.filter(p => p.id !== productId));
+    deleteProduct(productId)
+    setProducts(products.filter(p => p.id_product !== productId));
     setDeleteModalOpen(false);
   };
 
@@ -66,17 +138,19 @@ export default function Productos() {
     if (modalMode === 'edit') {
       // Actualizar producto existente
       console.log("Producto actualizado:", productData);
-      setProducts(products.map(p => 
-        p.id === productData.id ? productData : p
+      editProduct(productData);
+      setProducts(products.map(p =>
+        p.id_product === productData.id_product ? productData : p
       ));
+      // setProducts([...products, productData]);
     } else {
       // Agregar nuevo producto
       console.log("Nuevo producto agregado:", productData);
-      const newProduct = {
-        id: Math.max(...products.map(p => p.id)) + 1, // Genera un nuevo ID
-        ...productData
-      };
-      setProducts([...products, newProduct]);
+      let new_id = addProduct(productData);
+      productData.id_product = new_id;
+      console.log("DATAAA: ", productData);
+      console.log("ANADIDO: ", new_id);
+      setProducts([...products, productData]);
     }
   };
 
@@ -121,6 +195,7 @@ export default function Productos() {
                 ID
               </th>
               <th className="px-5 py-2">Nombre</th>
+              <th className="px-5 py-2">Marca</th>
               <th className="px-5 py-2">Precio Venta</th>
               <th className="px-5 py-2">Stock</th>
               <th className="px-5 py-2">Acciones</th>
@@ -128,10 +203,11 @@ export default function Productos() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.map((product) => (
-              <tr key={product.id}>
-                <td className="px-4 py-3 text-sm">{product.id}</td>
-                <td className="px-4 py-3">{product.nombre}</td>
-                <td className="px-4 py-3">{product.precioVenta}</td>
+              <tr key={product.id_product}>
+                <td className="px-4 py-3 text-sm">{product.id_product}</td>
+                <td className="px-4 py-3">{product.name}</td>
+                <td className="px-4 py-3">{product.brand}</td>
+                <td className="px-4 py-3">{product.price}</td>
                 <td className="px-4 py-3">{product.stock}</td>
                 <td className="px-4 py-3">
                   <button
@@ -177,7 +253,7 @@ export default function Productos() {
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         product={selectedProduct}
-        onDelete={() => handleDeleteProduct(selectedProduct?.id)}
+        onDelete={() => handleDeleteProduct(selectedProduct?.id_product)}
       />
     </div>
   );
