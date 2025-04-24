@@ -5,9 +5,9 @@ import {
   TrashIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import EditProductModal from "../components/EditProductModal";
+import ProductModal from "../components/ProductModal";
 import DeleteProductModal from "../components/DeleteProductModal";
-// import AddProductModal from "../components/AddProductModal";
+
 export default function Productos() {
   const initialProducts = [
     { id: 1, nombre: "Mouse Logitech G502", precioVenta: "$25.99", stock: 14 },
@@ -32,39 +32,54 @@ export default function Productos() {
     },
   ];
 
+  const [products, setProducts] = useState(initialProducts);
   const [search, setSearch] = useState("");
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('add'); // 'add' o 'edit'
 
-  const filteredProducts = initialProducts.filter((p) =>
+  const filteredProducts = products.filter((p) =>
     p.nombre.toLowerCase().includes(search.toLowerCase())
   );
 
-  const closeEditModal = () => {
-    setEditModalOpen(false);
+  const handleOpenAddModal = () => {
     setSelectedProduct(null);
+    setModalMode('add');
+    setProductModalOpen(true);
   };
 
-  const handleDelete = (productId) => {
-    console.log("Producto eliminado:", productId);
-    // Lógica para eliminar producto de la lista real
-  };
-
-  const handleEdit = (product) => {
+  const handleOpenEditModal = (product) => {
     setSelectedProduct(product);
-    setEditModalOpen(true);
+    setModalMode('edit');
+    setProductModalOpen(true);
   };
 
-  const handleSaveEdit = (updatedProduct) => {
-    console.log("Producto actualizado:", updatedProduct);
-    // Lógica para actualizar producto en la lista real
+  const handleDeleteProduct = (productId) => {
+    console.log("Producto eliminado:", productId);
+    // Eliminar producto de la lista
+    setProducts(products.filter(p => p.id !== productId));
+    setDeleteModalOpen(false);
   };
-  const handleSaveProduct = (product) => {
-    console.log("Nuevo producto agregado:", product);
-    // Aquí puedes manejar la lógica para guardar el producto
+
+  const handleSaveProduct = (productData) => {
+    if (modalMode === 'edit') {
+      // Actualizar producto existente
+      console.log("Producto actualizado:", productData);
+      setProducts(products.map(p => 
+        p.id === productData.id ? productData : p
+      ));
+    } else {
+      // Agregar nuevo producto
+      console.log("Nuevo producto agregado:", productData);
+      const newProduct = {
+        id: Math.max(...products.map(p => p.id)) + 1, // Genera un nuevo ID
+        ...productData
+      };
+      setProducts([...products, newProduct]);
+    }
   };
+
   return (
     <div className="p-4 bg-white rounded-xl shadow-lg">
       {/* Encabezado */}
@@ -73,8 +88,8 @@ export default function Productos() {
 
         {/* Botón agregar producto en la esquina derecha */}
         <button
-          className=" flex absolute -top-3 right-0 mt-2 mr-4 bg-gray-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700"
-          onClick={() => setAddModalOpen(true)}
+          className="flex absolute -top-3 right-0 mt-2 mr-4 bg-gray-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700"
+          onClick={handleOpenAddModal}
         >
           <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shadow-lg mr-2 ">
             <PlusIcon className="h-4 w-4 text-gray-600" />
@@ -120,7 +135,7 @@ export default function Productos() {
                 <td className="px-4 py-3">{product.stock}</td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => handleEdit(product)}
+                    onClick={() => handleOpenEditModal(product)}
                     className="text-blue-600 hover:underline mr-3"
                   >
                     <PencilIcon className="h-5 w-5" />
@@ -148,23 +163,22 @@ export default function Productos() {
         </table>
       </div>
 
-      <EditProductModal
-        isOpen={editModalOpen}
-        onClose={closeEditModal}
+      {/* Modal compartido para agregar y editar productos */}
+      <ProductModal
+        isOpen={productModalOpen}
+        onClose={() => setProductModalOpen(false)}
         product={selectedProduct}
-        onSave={handleSaveEdit}
+        onSave={handleSaveProduct}
+        mode={modalMode}
       />
+
+      {/* Modal para eliminar producto */}
       <DeleteProductModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         product={selectedProduct}
-        onDelete={handleDelete}
+        onDelete={() => handleDeleteProduct(selectedProduct?.id)}
       />
-      {/* <AddProductModal
-        isOpen={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        onSave={handleSaveProduct}
-      /> */}
     </div>
   );
 }
