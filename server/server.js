@@ -28,6 +28,10 @@ if (process.env.NODE_ENV === 'production') {
 }
 */
 
+// Rutas API
+app.use('/api/products', require('./routes/productRoutes'));
+
+// Iniciar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
