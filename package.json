@@ -1,22 +1,26 @@
 {
-  "name": "my-app",
+  "name": "e-commerce-tec",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "server": "nodemon server/server.js",
     "client": "vite",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-
     "build": "vite build",
     "start": "node server/server.js",
-
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.2",
+    "@heroicons/react": "^2.2.0",
+    "@tailwindcss/postcss": "^4.1.4",
+    "postcss": "^8.5.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.5.1",
+    "tailwindcss": "^4.1.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
