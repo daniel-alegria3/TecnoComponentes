@@ -28,6 +28,7 @@ import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 const navigation = [
   { name: "Inicio", href: "/" },
   { name: "About", href: "/about" },
+  { name: "Productos", href: "/productos" },
   // { name: "Sobre nosotros", href: "/SobreNosotros" },
   // { name: "Construye tu PC", href: "/ConstruyeTuPC" },
 ];

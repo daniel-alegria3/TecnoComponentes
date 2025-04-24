@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import About from './pages/About'
 import './App.css'
+import Productos from './pages/Productos'
 
 function App() {
   const [message, setMessage] = useState('');
@@ -21,6 +22,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/productos" element={<Productos />} />
       </Routes>
     </Router>
     </>
