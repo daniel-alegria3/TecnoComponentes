@@ -34,7 +34,7 @@ export default function DeleteProductModal({ isOpen, onClose, product, onDelete 
                 ¿Estás seguro de eliminar este producto?
               </Dialog.Title>
               <p className="mt-2 text-gray-600">
-                <strong>{product.nombre}</strong> será eliminado permanentemente.
+              <strong>{product.name}</strong> será eliminado permanentemente.
               </p>
 
               <div className="mt-4 flex justify-end gap-3">

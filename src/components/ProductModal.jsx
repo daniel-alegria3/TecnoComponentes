@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
   // Estados para todos los campos del formulario
   const [formData, setFormData] = useState({
-    nombre: '',
-    precioVenta: '',
-    stock: '',
-    imageURL: '',
+    name: '',
+    image_path: '',
     brand: '',
-    description: ''
+    description: '',
+    price: '',
+    stock: '',
   });
   const [errors, setErrors] = useState({});
 
@@ -17,26 +17,29 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
   useEffect(() => {
     if (product && mode === 'edit') {
       setFormData({
-        nombre: product.nombre || '',
-        precioVenta: product.precioVenta || '',
-        stock: product.stock || '',
-        imageURL: product.imageURL || '',
+        name: product.name || '',
+        image_path: product.image_path || '',
         brand: product.brand || '',
-        description: product.description || ''
+        description: product.description || '',
+        price: product.price || '',
+        stock: product.stock || '',
       });
     } else if (mode === 'add') {
       // Resetear el formulario cuando se usa para añadir
       setFormData({
-        nombre: '',
-        precioVenta: '',
-        stock: '',
-        imageURL: '',
+        name: '',
+        image_path: '',
         brand: '',
-        description: ''
+        description: '',
+        price: '',
+        stock: '',
       });
     }
     setErrors({});
   }, [product, mode, isOpen]);
+
+
+  console.log('666: ', formData);
 
   // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
@@ -47,8 +50,8 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
   // Validar el formulario
   const validate = () => {
     const newErrors = {};
-    if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
-    if (!formData.precioVenta.trim()) newErrors.precioVenta = 'El precio es requerido';
+    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
+    if (!formData.price.trim()) newErrors.price = 'El precio es requerido';
     if (!formData.stock || Number(formData.stock) < 0) newErrors.stock = 'El stock debe ser mayor o igual a 0';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -57,20 +60,24 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
   // Guardar el producto (nuevo o actualizado)
   const handleSave = () => {
     if (!validate()) return;
-    
+
     const productData = {
       ...formData,
       stock: Number(formData.stock)
     };
-    
+
     if (mode === 'edit' && product) {
       // Para edición, mantener el ID y otros campos que no están en el formulario
-      onSave({ ...product, ...productData });
+      onSave({
+        ...product,
+        ...productData,
+        id_product: product.id_product
+      });
     } else {
       // Para añadir nuevo producto
       onSave(productData);
     }
-    
+
     onClose();
   };
 
@@ -99,13 +106,13 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
               Nombre*:
               <input
                 type="text"
-                name="nombre"
-                value={formData.nombre}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2 mt-1"
               />
-              {errors.nombre && (
-                <p className="text-red-500 text-sm">{errors.nombre}</p>
+              {errors.name && (
+                <p className="text-red-500 text-sm">{errors.name}</p>
               )}
             </label>
 
@@ -114,8 +121,8 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
               Imagen URL:
               <input
                 type="text"
-                name="imageURL"
-                value={formData.imageURL}
+                name="image_path"
+                value={formData.image_path}
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2 mt-1"
               />
@@ -150,8 +157,8 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
               Precio*:
               <input
                 type="text"
-                name="precioVenta"
-                value={formData.precioVenta}
+                name="price"
+                value={formData.price}
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2 mt-1"
               />
