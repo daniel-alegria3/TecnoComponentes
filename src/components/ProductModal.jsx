@@ -38,9 +38,6 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
     setErrors({});
   }, [product, mode, isOpen]);
 
-
-  console.log('666: ', formData);
-
   // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
