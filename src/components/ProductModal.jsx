@@ -13,21 +13,26 @@ const ProductModal = ({
 }) => {
   const [formData, setFormData] = useState({
     name: "",
-    image_path: "",
+    image_path: [], // Cambiado a array
     brand: "",
     description: "",
     price: "",
     stock: "",
-    category: categories[0]?.id || "", // Valor por defecto: primera categoría
+    category: categories[0]?.id || "",
   });
   const [errors, setErrors] = useState({});
+  const [newImageUrl, setNewImageUrl] = useState(""); // Estado temporal para el input
 
   // Cargar datos del producto cuando se abre el modal
   useEffect(() => {
     if (product && mode === "edit") {
       setFormData({
         name: product.name || "",
-        image_path: product.image_path || "",
+        image_path: Array.isArray(product.image_path) 
+          ? product.image_path 
+          : product.image_path 
+            ? [product.image_path] 
+            : [], // Convertir a array si no lo es
         brand: product.brand || "",
         description: product.description || "",
         price: product.price || "",
@@ -37,7 +42,7 @@ const ProductModal = ({
     } else if (mode === "add") {
       setFormData({
         name: "",
-        image_path: "",
+        image_path: [],
         brand: "",
         description: "",
         price: "",
@@ -46,11 +51,33 @@ const ProductModal = ({
       });
     }
     setErrors({});
+    setNewImageUrl(""); // Resetear el input temporal
   }, [product, mode, isOpen, categories]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Manejar agregar nueva URL de imagen
+  const handleAddImage = () => {
+    if (newImageUrl.trim()) {
+      setFormData({
+        ...formData,
+        image_path: [...formData.image_path, newImageUrl.trim()],
+      });
+      setNewImageUrl("");
+    }
+  };
+
+  // Manejar eliminar URL de imagen
+  const handleRemoveImage = (index) => {
+    const newImages = [...formData.image_path];
+    newImages.splice(index, 1);
+    setFormData({
+      ...formData,
+      image_path: newImages,
+    });
   };
 
   const validate = () => {
@@ -71,6 +98,12 @@ const ProductModal = ({
       ...formData,
       stock: Number(formData.stock),
       category: formData.category,
+      // Asegurarse de que image_path es un array
+      image_path: Array.isArray(formData.image_path) 
+        ? formData.image_path 
+        : formData.image_path 
+          ? [formData.image_path] 
+          : [],
     };
 
     if (mode === "edit" && product) {
@@ -121,16 +154,39 @@ const ProductModal = ({
               )}
             </label>
 
-            {/* Imagen URL */}
+            {/* Imágenes URL */}
             <label className="block mb-2">
-              Imagen URL:
-              <input
-                type="text"
-                name="image_path"
-                value={formData.image_path}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2 mt-1"
-              />
+              Imágenes URL:
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="Ingrese una URL de imagen"
+                  className="flex-1 border rounded px-3 py-2"
+                />
+                <button
+                  onClick={handleAddImage}
+                  className="px-3 py-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
+                >
+                  Agregar
+                </button>
+              </div>
+              
+              {/* Lista de imágenes */}
+              <div className="mt-2 space-y-2">
+                {formData.image_path.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="text-sm truncate flex-1">{url}</span>
+                    <button
+                      onClick={() => handleRemoveImage(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
             </label>
 
             {/* Marca */}
