@@ -8,7 +8,9 @@ function AdminLayout() {
     <div>
       <NavbarAdmin />
       <hr />
-      <Outlet />
+      <main className="flex-grow">
+        <Outlet />
+      </main>
     </div>
     </>
   )

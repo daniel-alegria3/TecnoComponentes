@@ -1,77 +1,85 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
-  // Estados para todos los campos del formulario
+const ProductModal = ({
+  isOpen,
+  onClose,
+  product,
+  onSave,
+  mode = "add",
+  categories = [],
+  loadingCategories = false,
+  categoriesError = null,
+}) => {
   const [formData, setFormData] = useState({
-    name: '',
-    image_path: '',
-    brand: '',
-    description: '',
-    price: '',
-    stock: '',
+    name: "",
+    image_path: "",
+    brand: "",
+    description: "",
+    price: "",
+    stock: "",
+    category: categories[0]?.id || "", // Valor por defecto: primera categoría
   });
   const [errors, setErrors] = useState({});
 
-  // Cargar datos del producto cuando se abre el modal en modo edición
+  // Cargar datos del producto cuando se abre el modal
   useEffect(() => {
-    if (product && mode === 'edit') {
+    if (product && mode === "edit") {
       setFormData({
-        name: product.name || '',
-        image_path: product.image_path || '',
-        brand: product.brand || '',
-        description: product.description || '',
-        price: product.price || '',
-        stock: product.stock || '',
+        name: product.name || "",
+        image_path: product.image_path || "",
+        brand: product.brand || "",
+        description: product.description || "",
+        price: product.price || "",
+        stock: product.stock || "",
+        category: product.category || categories[0]?.id || "",
       });
-    } else if (mode === 'add') {
-      // Resetear el formulario cuando se usa para añadir
+    } else if (mode === "add") {
       setFormData({
-        name: '',
-        image_path: '',
-        brand: '',
-        description: '',
-        price: '',
-        stock: '',
+        name: "",
+        image_path: "",
+        brand: "",
+        description: "",
+        price: "",
+        stock: "",
+        category: categories[0]?.id || "",
       });
     }
     setErrors({});
-  }, [product, mode, isOpen]);
+  }, [product, mode, isOpen, categories]);
 
-  // Manejar cambios en los campos del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Validar el formulario
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
-    if (!formData.price.trim()) newErrors.price = 'El precio es requerido';
-    if (!formData.stock || Number(formData.stock) < 0) newErrors.stock = 'El stock debe ser mayor o igual a 0';
+    if (!formData.name.trim()) newErrors.name = "El nombre es requerido";
+    if (!formData.price.trim()) newErrors.price = "El precio es requerido";
+    if (!formData.stock || Number(formData.stock) < 0)
+      newErrors.stock = "El stock debe ser mayor o igual a 0";
+    if (!formData.category) newErrors.category = "La categoría es requerida";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Guardar el producto (nuevo o actualizado)
   const handleSave = () => {
     if (!validate()) return;
 
     const productData = {
       ...formData,
-      stock: Number(formData.stock)
+      stock: Number(formData.stock),
+      category: formData.category,
     };
 
-    if (mode === 'edit' && product) {
-      // Para edición, mantener el ID y otros campos que no están en el formulario
+    if (mode === "edit" && product) {
       onSave({
         ...product,
         ...productData,
-        id_product: product.id_product
+        id_product: product.id_product,
       });
     } else {
-      // Para añadir nuevo producto
       onSave(productData);
     }
 
@@ -95,7 +103,7 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
             transition={{ duration: 0.3 }}
           >
             <h2 className="text-xl font-semibold mb-4">
-              {mode === 'edit' ? 'Editar Producto' : 'Agregar Producto'}
+              {mode === "edit" ? "Editar Producto" : "Agregar Producto"}
             </h2>
 
             {/* Nombre */}
@@ -137,6 +145,41 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
               />
             </label>
 
+            {/* Categoría */}
+            <label className="block mb-2">
+              Categoría*:
+              {loadingCategories ? (
+                <div className="w-full border rounded px-3 py-2 mt-1 bg-gray-100 animate-pulse h-10"></div>
+              ) : categoriesError ? (
+                <div className="text-red-500 text-sm">
+                  Error cargando categorías
+                </div>
+              ) : categories.length > 0 ? (
+                <>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    className="w-full border rounded px-3 py-2 mt-1"
+                    required
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.category && (
+                    <p className="text-red-500 text-sm">{errors.category}</p>
+                  )}
+                </>
+              ) : (
+                <div className="text-yellow-600 text-sm">
+                  No hay categorías disponibles
+                </div>
+              )}
+            </label>
+
             {/* Descripción */}
             <label className="block mb-2">
               Descripción:
@@ -159,8 +202,8 @@ const ProductModal = ({ isOpen, onClose, product, onSave, mode = 'add' }) => {
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2 mt-1"
               />
-              {errors.precioVenta && (
-                <p className="text-red-500 text-sm">{errors.precioVenta}</p>
+              {errors.price && (
+                <p className="text-red-500 text-sm">{errors.price}</p>
               )}
             </label>
 

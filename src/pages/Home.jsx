@@ -1,164 +1,181 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import {
+  MagnifyingGlassIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/outline";
+import ProductCard from "../components/ProductCard";
 
 export default function Home() {
-  const [productos, setProductos] = useState([]);
+  // Lista de productos estática (sin fetch)
+  const productos = [
+    {
+      id: 1,
+      name: "AMD Ryzen™ 8000G",
+      images_path: [
+        "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=500",
+        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=500",
+      ],
+      brand: "AMD",
+      description:
+        "Procesador de última generación con gráficos integrados de alto rendimiento",
+      price: 299.99,
+      stock: 15,
+      category: "Procesadores",
+    },
+    {
+      id: 2,
+      name: "NVIDIA RTX 4090",
+      images_path: [
+        "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=500",
+      ],
+      brand: "NVIDIA",
+      description:
+        "Tarjeta gráfica de alto rendimiento para gaming y diseño profesional",
+      price: 1599.99,
+      stock: 3,
+      category: "Tarjetas Gráficas",
+    },
+    {
+      id: 3,
+      name: "Samsung SSD 1TB 980 PRO",
+      images_path: [
+        "https://images.unsplash.com/photo-1725085414299-0ce0aebc021a?q=80&w=988&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1725085815038-279c8139c8a4?q=80&w=988&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      ],
+      brand: "Samsung",
+      description: "Unidad de estado sólido NVMe de ultra alta velocidad",
+      price: 129.99,
+      stock: 8,
+      category: "Almacenamiento",
+    },
+    {
+      id: 4,
+      name: "Corsair K70 RGB Pro",
+      images_path: [
+        "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500",
+      ],
+      brand: "Corsair",
+      description: "Teclado mecánico para gaming con switches Cherry MX",
+      price: 149.99,
+      stock: 12,
+      category: "Periféricos",
+    },
+    {
+      id: 5,
+      name: "Logitech G Pro X Superlight",
+      images_path: [
+        "https://images.unsplash.com/photo-1527814050087-3793815479db?w=500",
+        "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=500",
+      ],
+      brand: "Logitech",
+      description: "Mouse inalámbrico ultraligero para gaming profesional",
+      price: 99.99,
+      stock: 0,
+      category: "Periféricos",
+    },
+    {
+      id: 6,
+      name: "ASUS ROG Swift PG279QM",
+      images_path: [
+        "https://images.unsplash.com/photo-1616763355548-1b606f439f86?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      ],
+      brand: "ASUS",
+      description: 'Monitor gaming 27" QHD 240Hz con tecnología G-SYNC',
+      price: 799.99,
+      stock: 5,
+      category: "Monitores",
+    },
+    {
+      id: 7,
+      name: "HyperX Cloud II Wireless",
+      images_path: [
+        "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500",
+      ],
+      brand: "HyperX",
+      description: "Audífonos inalámbricos para gaming con sonido surround 7.1",
+      price: 149.99,
+      stock: 7,
+      category: "Audio",
+    },
+    {
+      id: 8,
+      name: "Cooler Master NR200P",
+      images_path: [
+        "https://images.unsplash.com/photo-1726988372992-cf29696738b4?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      ],
+      brand: "Cooler Master",
+      description:
+        "Gabinete mini-ITX compacto con panel lateral de vidrio templado",
+      price: 119.99,
+      stock: 4,
+      category: "Gabinetes",
+    },
+  ];
 
-  useEffect(() => {
-    // Simulación de un API local (puede ser reemplazado por fetch a una API real)
-    const fetchProductos = async () => {
-      const response = await new Promise((resolve) => {
-        setTimeout(() => {
-          resolve([
-            {
-              id: 1,
-              nombre: "AMD Ryzen™ 8000G",
-              descripcion:
-                "Procesador de última generación con gráficos integrados de alto rendimiento",
-              precioOriginal: 329.99,
-              precio: 299.99,
-              estrellas: 4.5,
-              reviews: 42,
-              etiqueta: "Nuevo",
-              imagen: "ruta/amd-ryzen.png",
-            },
-            {
-              id: 2,
-              nombre: "NVIDIA RTX 4090",
-              descripcion:
-                "Tarjeta gráfica de alto rendimiento para gaming y diseño profesional",
-              precio: 1599.99,
-              estrellas: 5,
-              reviews: 87,
-              etiqueta: "En Stock",
-              imagen: "ruta/rtx-4090.png",
-            },
-            {
-              id: 3,
-              nombre: "Samsung SSD 1TB",
-              descripcion:
-                "Unidad de estado sólido de alta velocidad y capacidad para una experiencia fluida",
-              precioOriginal: 129.99,
-              precio: 99.99,
-              estrellas: 4.7,
-              reviews: 124,
-              etiqueta: "Oferta",
-              imagen: "ruta/samsung-ssd.png",
-            },
-            {
-              id: 4,
-              nombre: "Corsair Mechanical Keyboard",
-              descripcion:
-                "Teclado mecánico para gaming con retroiluminación RGB personalizable",
-              precio: 149.99,
-              estrellas: 4.6,
-              reviews: 99,
-              imagen: "ruta/corsair-keyboard.png",
-            },
-          ]);
-        }, 1000); // Simula un delay de 1 segundo
-      });
+  const [search, setSearch] = useState("");
 
-      setProductos(response);
-    };
-
-    fetchProductos();
-  }, []);
+  // Filtrar productos basado en el término de búsqueda
+  const productosFiltrados = productos.filter((producto) => {
+    const searchTerm = search.toLowerCase();
+    return (
+      producto.name.toLowerCase().includes(searchTerm) ||
+      producto.description.toLowerCase().includes(searchTerm) ||
+      producto.brand.toLowerCase().includes(searchTerm) ||
+      producto.category.toLowerCase().includes(searchTerm)
+    );
+  });
 
   return (
     <div className="font-monofur">
       <header className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-white border-b">
-        <h1 className="text-2xl font-bold text-blue-600">TecnoComponentes</h1>
-        <input
-          type="text"
-          placeholder="Buscar componentes, marcas o productos..."
-          className="border rounded px-3 py-2 flex-grow md:flex-grow-0 md:w-1/2"
-        />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">
-          Arma tu PC
-        </button>
+        <h1 className="text-2xl font-bold text-blue-600">
+          Tecno<span className="text-violet-500">Components</span>
+        </h1>
+
+        {/* Contenedor de buscador + botón */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          {/* Buscador */}
+          <div className="relative w-full sm:w-72">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="pl-10 border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-violet-500"
+              placeholder="Buscar producto..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <a
+            href="/arma-tu-pc"
+            className="bg-gradient-to-r from-violet-600 to-violet-400 text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:from-violet-700 hover:to-violet-500 transition-all duration-300"
+          >
+            <WrenchScrewdriverIcon className="h-5 w-5" />
+            Arma tu PC
+          </a>
+        </div>
       </header>
 
-      <div className="flex flex-wrap gap-4 px-6 py-4 border-b bg-gray-50">
-        <button className="bg-blue-600 text-white px-3 py-1 rounded">
-          Todas las categorías
-        </button>
-        <nav className="flex flex-wrap gap-4 text-sm">
-          <a href="#">Procesadores</a>
-          <a href="#">Tarjetas Gráficas</a>
-          <a href="#">Almacenamiento</a>
-          <a href="#">Monitores</a>
-          <a href="#">Periféricos</a>
-        </nav>
-      </div>
-
-      <section className="px-6 py-8 bg-blue-100 flex flex-wrap items-center justify-center gap-8">
-        <div className="max-w-md text-center md:text-left">
-          <h2 className="text-3xl font-bold text-blue-900 mb-4">
-            Componentes de Alta Calidad
-          </h2>
-          <p className="mb-4">
-            Encuentra las mejores piezas para construir o actualizar tu PC.
-            Precios increíbles y envío rápido.
-          </p>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">
-            Ver Ofertas
-          </button>
-        </div>
-        <img
-          src="ruta/pc-hero.png"
-          alt="PC armado"
-          className="w-72 md:w-96 rounded shadow-lg"
-        />
-      </section>
+      {/* Resto del código... */}
 
       <section className="px-6 py-8">
-        <h3 className="text-2xl font-semibold mb-4">Productos Destacados</h3>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {productos.map((producto) => (
-            <li
-              key={producto.id}
-              className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
-            >
-              <img
-                src={producto.imagen}
-                alt={producto.nombre}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold text-lg">{producto.nombre}</h4>
-                  {producto.etiqueta && (
-                    <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                      {producto.etiqueta}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 mb-2">
-                  {producto.descripcion}
-                </p>
-                <div className="flex items-center gap-2 text-yellow-400 mb-2">
-                  {"★".repeat(Math.round(producto.estrellas))}
-                  <span className="text-gray-500 text-xs">
-                    ({producto.reviews})
-                  </span>
-                </div>
-                <div className="mb-2">
-                  {producto.precioOriginal && (
-                    <span className="line-through text-gray-400 text-sm mr-2">
-                      ${producto.precioOriginal}
-                    </span>
-                  )}
-                  <span className="text-xl font-bold text-blue-600">
-                    ${producto.precio.toFixed(2)}
-                  </span>
-                </div>
-                <button className="bg-blue-600 text-white px-4 py-2 w-full rounded">
-                  Añadir al carrito
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <h3 className="text-2xl font-semibold mb-4">Productos</h3>
+
+        {/* Mostrar mensaje si no hay resultados */}
+        {productosFiltrados.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">
+              No se encontraron productos que coincidan con tu búsqueda
+            </p>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {productosFiltrados.map((producto) => (
+              <ProductCard key={producto.id} producto={producto} />
+            ))}
+          </ul>
+        )}
       </section>
       <section className="bg-white rounded-lg shadow p-6 flex flex-col md:flex-row items-center gap-6 mb-8">
         <div className="flex-1">
@@ -176,7 +193,9 @@ export default function Home() {
         </div>
         <div className="flex-1">
           <img
-            src="/images/armatu-pc.png"
+            src="https://c1.neweggimages.com/productimage/nb1280/A1HJS250227062SB447.jpg"
+            height={200}
+            width={200}
             alt="Componentes de PC"
             className="w-full h-auto rounded-lg object-cover"
           />

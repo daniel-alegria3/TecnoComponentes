@@ -10,36 +10,52 @@ import DeleteProductModal from "../../components/DeleteProductModal";
 
 export default function Productos() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); // Nuevo estado para categorías
   const [search, setSearch] = useState("");
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // 'add' o 'edit'
+  const [modalMode, setModalMode] = useState("add");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
+  // Obtener productos y establecer categorías al cargar el componente
   useEffect(() => {
-    setLoading(true);
-    setError(false); // Reseteamos el error cada vez que hacemos fetch
+    const fetchData = async () => {
+      try {
+        const defaultCategories = [
+          { id: 1, name: "Procesadores" },
+          { id: 2, name: "RAM" },
+          { id: 3, name: "SSD/HDD" },
+          { id: 4, name: "Laptops" },
+          { id: 5, name: "GPUs" },
+          { id: 6, name: "Mouse" },
+          { id: 7, name: "Monitores" },
+          { id: 8, name: "Teclado" },
+          { id: 9, name: "Fuente de poder" },
+          { id: 10, name: "Audifonos" },
+        ];
+        setLoading(true);
+        setError(null);
+        setCategories(defaultCategories);
 
-    fetch("http://localhost:5000/api/products")
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setProducts(data); // Solo establecemos productos si data es un array
-        } else {
-          console.error("Respuesta inesperada:", data);
-          setProducts([]); // Aseguramos que sea un array vacío en caso de respuesta incorrecta
-          setError(true);
-        }
-      })
-      .catch((err) => {
-        console.error("Error: ", err);
-        setError(true); // Solo marcamos que hubo error, no guardamos el mensaje
-      })
-      .finally(() => {
+        // 2. Luego obtiene los productos
+        const productsResponse = await fetch(
+          "http://localhost:5000/api/products"
+        );
+        if (!productsResponse.ok) throw new Error("Error al obtener productos");
+        const productsData = await productsResponse.json();
+
+        setProducts(Array.isArray(productsData) ? productsData : []);
+      } catch (err) {
+        console.error("Error:", err);
+        setError(err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Filtrar productos
@@ -47,7 +63,7 @@ export default function Productos() {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // CRUD
+  // CRUD Operations
   const addProduct = async (productData) => {
     try {
       const res = await fetch(`http://localhost:5000/api/products`, {
@@ -58,17 +74,17 @@ export default function Productos() {
         body: JSON.stringify(productData),
       });
 
-      const errorData = await res.json();
       if (!res.ok) {
+        const errorData = await res.json();
         throw new Error(errorData.error);
       }
 
-      let id = errorData.id_product;
-      console.log("ID::::, ", errorData);
-      return id;
+      const newProduct = await res.json();
+      return newProduct.id_product;
     } catch (err) {
       console.error("Error:", err);
-      alert("Error adding product");
+      alert("Error agregando producto");
+      throw err; // Re-lanzar el error para manejo adicional
     }
   };
 
@@ -83,32 +99,34 @@ export default function Productos() {
         throw new Error(errorData.error);
       }
 
-      // Remove item from list
       setProducts(products.filter((p) => p.id_product !== id));
     } catch (err) {
       console.error("Error:", err);
-      alert("Error deleting product");
+      alert("Error eliminando producto");
     }
   };
 
   const editProduct = async (productData) => {
     try {
-      let id = productData.id_product;
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(productData),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/products/${productData.id_product}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(productData),
+        }
+      );
 
-      const errorData = await res.json();
       if (!res.ok) {
+        const errorData = await res.json();
         throw new Error(errorData.error);
       }
     } catch (err) {
       console.error("Error:", err);
-      alert("Error editing product");
+      alert("Error editando producto");
+      throw err;
     }
   };
 
@@ -125,32 +143,25 @@ export default function Productos() {
   };
 
   const handleDeleteProduct = (productId) => {
-    console.log("Producto eliminado:", productId);
-    // Eliminar producto de la lista
     deleteProduct(productId);
-    setProducts(products.filter((p) => p.id_product !== productId));
     setDeleteModalOpen(false);
   };
 
-  const handleSaveProduct = (productData) => {
-    if (modalMode === "edit") {
-      // Actualizar producto existente
-      console.log("Producto actualizado:", productData);
-      editProduct(productData);
-      setProducts(
-        products.map((p) =>
-          p.id_product === productData.id_product ? productData : p
-        )
-      );
-      // setProducts([...products, productData]);
-    } else {
-      // Agregar nuevo producto
-      console.log("Nuevo producto agregado:", productData);
-      let new_id = addProduct(productData);
-      productData.id_product = new_id;
-      console.log("DATAAA: ", productData);
-      console.log("ANADIDO: ", new_id);
-      setProducts([...products, productData]);
+  const handleSaveProduct = async (productData) => {
+    try {
+      if (modalMode === "edit") {
+        await editProduct(productData);
+        setProducts(
+          products.map((p) =>
+            p.id_product === productData.id_product ? productData : p
+          )
+        );
+      } else {
+        const newId = await addProduct(productData);
+        setProducts([...products, { ...productData, id_product: newId }]);
+      }
+    } catch (error) {
+      console.error("Error al guardar producto:", error);
     }
   };
 
@@ -160,7 +171,6 @@ export default function Productos() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <h2 className="text-xl font-bold text-gray-800">Productos</h2>
 
-        {/* Contenedor de buscador + botón */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           {/* Buscador */}
           <div className="relative w-full sm:w-72">
@@ -188,6 +198,7 @@ export default function Productos() {
           </button>
         </div>
       </div>
+
       {/* Tabla */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -206,13 +217,13 @@ export default function Productos() {
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan="6" className="px-4 py-4 text-center text-gray-500">
+                <td colSpan="7" className="px-4 py-4 text-center text-gray-500">
                   Cargando productos...
                 </td>
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan="6" className="px-4 py-8 text-center text-red-600">
+                <td colSpan="7" className="px-4 py-8 text-center text-red-600">
                   <div className="flex flex-col items-center justify-center">
                     <svg
                       className="h-12 w-12 text-red-400 mb-2"
@@ -238,7 +249,7 @@ export default function Productos() {
               </tr>
             ) : filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-4 py-4 text-center text-gray-500">
+                <td colSpan="7" className="px-4 py-4 text-center text-gray-500">
                   No se encontraron productos.
                 </td>
               </tr>
@@ -248,7 +259,7 @@ export default function Productos() {
                   <td className="px-4 py-3 text-sm">{product.id_product}</td>
                   <td className="px-4 py-3">{product.name}</td>
                   <td className="px-4 py-3">{product.brand}</td>
-                  <td className="px-4 py-3">{product.price}</td>
+                  <td className="px-4 py-3">S/ {product.price}</td>
                   <td className="px-4 py-3">{product.stock}</td>
                   <td className="px-4 py-3">
                     <button
@@ -274,13 +285,14 @@ export default function Productos() {
         </table>
       </div>
 
-      {/* Modal compartido para agregar y editar productos */}
+      {/* Modal para productos */}
       <ProductModal
         isOpen={productModalOpen}
         onClose={() => setProductModalOpen(false)}
         product={selectedProduct}
         onSave={handleSaveProduct}
         mode={modalMode}
+        categories={categories}
       />
 
       {/* Modal para eliminar producto */}

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-import MainLayout from './layouts/MainLayout'
+import ClienteLayout from './layouts/ClienteLayout'
 import AdminLayout from './layouts/AdminLayout'
 
 import Home from './pages/Home'
@@ -12,20 +11,11 @@ import './App.css'
 import Dashboard from './pages/admin/Dashboard'
 
 function App() {
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    fetch('http://localhost:5000/api/message')
-      .then(res => res.json())
-      .then(data => setMessage(data.message))
-      .catch(err => console.error("Error fetching message:", err));
-  }, []);
-
   return (
     <Router>
       <Routes>
         {/* Rutas públicas con su layout */}
-        <Route element={<MainLayout />}>
+        <Route element={<ClienteLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/ofertas" element={<Ofertas />} />
         </Route>
@@ -39,5 +29,4 @@ function App() {
     </Router>
   )
 }
-
 export default App
