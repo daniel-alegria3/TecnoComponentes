@@ -1,4 +1,4 @@
-import Card from "../../components/Card"; // Tarjeta personalizada para mostrar estadísticas
+import Card from "../../components/AdminCard"; // Tarjeta personalizada para mostrar estadísticas
 
 function Dashboard() {
   return (

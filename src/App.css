@@ -45,30 +45,3 @@
 .read-the-docs {
   color: #888;
 }
-
-@keyframes drawRect {
-  from {
-    stroke-dasharray: 0 1000;
-    stroke-dashoffset: 0;
-  }
-  to {
-    stroke-dasharray: 1000 0;
-    stroke-dashoffset: 0;
-  }
-}
-
-.group-hover\:animate-drawRect {
-  stroke-dasharray: 0 1000;
-  stroke-dashoffset: 0;
-  animation: drawRect 1s linear forwards;
-}
-
-.custom-border {
-  stroke-dasharray: 480;
-  stroke-dashoffset: 480;
-  transition: stroke-dashoffset 1s ease;
-}
-
-.custom-border:hover {
-  stroke-dashoffset: 0;
-}
