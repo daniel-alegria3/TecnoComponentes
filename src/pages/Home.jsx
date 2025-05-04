@@ -1,91 +1,187 @@
-// Home.jsx
-import React from "react";
-
-const products = [
-  {
-    id: 1,
-    name: "Camisa clásica",
-    price: "$29.99",
-    image: "https://placehold.co/300x200/cccccc/ffffff?text=Imagen+de+camisa",
-  },
-  {
-    id: 2,
-    name: "Pantalón slim",
-    price: "$49.99",
-    image: "https://placehold.co/300x200/cccccc/ffffff?text=Imagen+de+pantalón",
-  },
-  {
-    id: 3,
-    name: "Zapatos de cuero",
-    price: "$89.99",
-    image: "https://placehold.co/300x200/cccccc/ffffff?text=Imagen+de+zapatos",
-  },
-  {
-    id: 4,
-    name: "Reloj elegante",
-    price: "$120.00",
-    image: "https://placehold.co/300x200/cccccc/ffffff?text=Imagen+de+reloj",
-  },
-  {
-    id: 5,
-    name: "Mochila casual",
-    price: "$45.50",
-    image: "https://placehold.co/300x200/cccccc/ffffff?text=Imagen+de+mochila",
-  },
-  {
-    id: 6,
-    name: "Gafas de sol",
-    price: "$35.00",
-    image: "https://placehold.co/300x200/cccccc/ffffff?text=Imagen+de+gafas",
-  },
-];
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [productos, setProductos] = useState([]);
+
+  useEffect(() => {
+    // Simulación de un API local (puede ser reemplazado por fetch a una API real)
+    const fetchProductos = async () => {
+      const response = await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve([
+            {
+              id: 1,
+              nombre: "AMD Ryzen™ 8000G",
+              descripcion:
+                "Procesador de última generación con gráficos integrados de alto rendimiento",
+              precioOriginal: 329.99,
+              precio: 299.99,
+              estrellas: 4.5,
+              reviews: 42,
+              etiqueta: "Nuevo",
+              imagen: "ruta/amd-ryzen.png",
+            },
+            {
+              id: 2,
+              nombre: "NVIDIA RTX 4090",
+              descripcion:
+                "Tarjeta gráfica de alto rendimiento para gaming y diseño profesional",
+              precio: 1599.99,
+              estrellas: 5,
+              reviews: 87,
+              etiqueta: "En Stock",
+              imagen: "ruta/rtx-4090.png",
+            },
+            {
+              id: 3,
+              nombre: "Samsung SSD 1TB",
+              descripcion:
+                "Unidad de estado sólido de alta velocidad y capacidad para una experiencia fluida",
+              precioOriginal: 129.99,
+              precio: 99.99,
+              estrellas: 4.7,
+              reviews: 124,
+              etiqueta: "Oferta",
+              imagen: "ruta/samsung-ssd.png",
+            },
+            {
+              id: 4,
+              nombre: "Corsair Mechanical Keyboard",
+              descripcion:
+                "Teclado mecánico para gaming con retroiluminación RGB personalizable",
+              precio: 149.99,
+              estrellas: 4.6,
+              reviews: 99,
+              imagen: "ruta/corsair-keyboard.png",
+            },
+          ]);
+        }, 1000); // Simula un delay de 1 segundo
+      });
+
+      setProductos(response);
+    };
+
+    fetchProductos();
+  }, []);
+
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-7">
-        {products.map((product) => (
-          <article key={product.id} className="w-full max-w-xs mx-auto">
-            <div className="w-full h-48 relative">
-              <img
-                src={product.image}
-                alt={`Imagen de ${product.name}`}
-                className="w-full h-full rounded-xl object-cover"
-              />
-            </div>
-            <div className="mt-5 flex items-center justify-between">
-              <div className="flex flex-row justify-between items-start w-full">
-                <div className="descripcion">
-                  <h6 className="font-medium text-xl leading-8 text-gray-800 mb-2 truncate">
-                    {product.name}
-                  </h6>
-                  <h6 className="font-semibold text-xl leading-8 text-indigo-600">
-                    {product.price}
-                  </h6>
-                </div>
-                <div className="agregar-carrito">
-                  <button className="p-2 rounded-full bg-white border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50">
-                    <svg
-                      className="stroke-gray-800 transition-all duration-500 group-hover:stroke-black"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="26"
-                      height="26"
-                      viewBox="0 0 26 26"
-                      fill="none"
-                    >
-                      <path
-                        d="M12.6892 21.125C12.6892 22.0225 11.9409 22.75 11.0177 22.75C10.0946 22.75 9.34632 22.0225 9.34632 21.125M19.3749 21.125C19.3749 22.0225 18.6266 22.75 17.7035 22.75C16.7804 22.75 16.032 22.0225 16.032 21.125M4.88917 6.5L6.4566 14.88C6.77298 16.5715 6.93117 17.4173 7.53301 17.917C8.13484 18.4167 8.99525 18.4167 10.7161 18.4167H18.0056C19.7266 18.4167 20.587 18.4167 21.1889 17.9169C21.7907 17.4172 21.9489 16.5714 22.2652 14.8798L22.8728 11.6298C23.3172 9.25332 23.5394 8.06508 22.8896 7.28254C22.2398 6.5 21.031 6.5 18.6133 6.5H4.88917ZM4.88917 6.5L4.33203 3.25"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-        ))}
+    <div className="font-monofur">
+      <header className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-white border-b">
+        <h1 className="text-2xl font-bold text-blue-600">TecnoComponentes</h1>
+        <input
+          type="text"
+          placeholder="Buscar componentes, marcas o productos..."
+          className="border rounded px-3 py-2 flex-grow md:flex-grow-0 md:w-1/2"
+        />
+        <button className="bg-blue-600 text-white px-4 py-2 rounded">
+          Arma tu PC
+        </button>
+      </header>
+
+      <div className="flex flex-wrap gap-4 px-6 py-4 border-b bg-gray-50">
+        <button className="bg-blue-600 text-white px-3 py-1 rounded">
+          Todas las categorías
+        </button>
+        <nav className="flex flex-wrap gap-4 text-sm">
+          <a href="#">Procesadores</a>
+          <a href="#">Tarjetas Gráficas</a>
+          <a href="#">Almacenamiento</a>
+          <a href="#">Monitores</a>
+          <a href="#">Periféricos</a>
+        </nav>
       </div>
-    </>
+
+      <section className="px-6 py-8 bg-blue-100 flex flex-wrap items-center justify-center gap-8">
+        <div className="max-w-md text-center md:text-left">
+          <h2 className="text-3xl font-bold text-blue-900 mb-4">
+            Componentes de Alta Calidad
+          </h2>
+          <p className="mb-4">
+            Encuentra las mejores piezas para construir o actualizar tu PC.
+            Precios increíbles y envío rápido.
+          </p>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded">
+            Ver Ofertas
+          </button>
+        </div>
+        <img
+          src="ruta/pc-hero.png"
+          alt="PC armado"
+          className="w-72 md:w-96 rounded shadow-lg"
+        />
+      </section>
+
+      <section className="px-6 py-8">
+        <h3 className="text-2xl font-semibold mb-4">Productos Destacados</h3>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {productos.map((producto) => (
+            <li
+              key={producto.id}
+              className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
+            >
+              <img
+                src={producto.imagen}
+                alt={producto.nombre}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold text-lg">{producto.nombre}</h4>
+                  {producto.etiqueta && (
+                    <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                      {producto.etiqueta}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mb-2">
+                  {producto.descripcion}
+                </p>
+                <div className="flex items-center gap-2 text-yellow-400 mb-2">
+                  {"★".repeat(Math.round(producto.estrellas))}
+                  <span className="text-gray-500 text-xs">
+                    ({producto.reviews})
+                  </span>
+                </div>
+                <div className="mb-2">
+                  {producto.precioOriginal && (
+                    <span className="line-through text-gray-400 text-sm mr-2">
+                      ${producto.precioOriginal}
+                    </span>
+                  )}
+                  <span className="text-xl font-bold text-blue-600">
+                    ${producto.precio.toFixed(2)}
+                  </span>
+                </div>
+                <button className="bg-blue-600 text-white px-4 py-2 w-full rounded">
+                  Añadir al carrito
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="bg-white rounded-lg shadow p-6 flex flex-col md:flex-row items-center gap-6 mb-8">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold mb-2">Arma Tu PC</h2>
+          <p className="text-gray-600 mb-4">
+            Configura tu equipo ideal con nuestro asistente. Selecciona
+            componentes compatibles y optimiza tu presupuesto.
+          </p>
+          <a
+            href="#"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition"
+          >
+            Comenzar a Armar
+          </a>
+        </div>
+        <div className="flex-1">
+          <img
+            src="/images/armatu-pc.png"
+            alt="Componentes de PC"
+            className="w-full h-auto rounded-lg object-cover"
+          />
+        </div>
+      </section>
+    </div>
   );
 }

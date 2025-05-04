@@ -5,7 +5,7 @@ import MainLayout from './layouts/MainLayout'
 import AdminLayout from './layouts/AdminLayout'
 
 import Home from './pages/Home'
-import About from './pages/About'
+import Ofertas from './pages/Ofertas'
 import Productos from './pages/admin/Productos'
 
 import './App.css'
@@ -27,7 +27,7 @@ function App() {
         {/* Rutas públicas con su layout */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/ofertas" element={<Ofertas />} />
         </Route>
 
         {/* Rutas admin con su layout */}
