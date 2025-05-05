@@ -115,7 +115,7 @@ const ProductCard = ({ producto }) => {
         <div className="flex justify-between items-center">
           <div>
             <span className="text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
-              ${producto.price ? producto.price.toFixed(2) : "0.00"}
+              ${producto.price ? Number(producto.price).toFixed(2) : "0.00"}
             </span>
           </div>
           
