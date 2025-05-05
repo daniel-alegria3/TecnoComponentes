@@ -26,3 +26,6 @@ dist-ssr
 # Ignore package-lock.json to avoid conflicts with yarn
 **/package-lock.json
 
+# Ignorar .env
+**/.env
+
