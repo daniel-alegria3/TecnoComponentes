@@ -28,7 +28,7 @@ const productController = {
 
   // Crear un nuevo producto
   createProduct: async (req, res) => {
-    const { name, images_path, brand, description, price, stock } = req.body;
+    const { name, images_path, brand, category,description, price, stock } = req.body;
 
     if (!name || name.trim() === '' || isNaN(price) || price < 0 || isNaN(stock) || stock < 0 || !Number.isInteger(stock)) {
       return res.status(400).json({ error: 'Datos inválidos' });
@@ -36,9 +36,9 @@ const productController = {
 
     try {
       const [result] = await pool.query(
-        `INSERT INTO Product (name, images_path, brand, description, price, stock)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [name.trim(), images_path, brand, description, price, stock]
+        `INSERT INTO Product (name, images_path, brand, category, description, price, stock)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name.trim(), images_path, brand, category.trim(), description, price, stock]
       );
       res.status(201).json({ message: 'Producto creado correctamente', id_product: result.insertId });
     } catch (error) {
@@ -49,7 +49,7 @@ const productController = {
 
   // Actualizar un producto existente
   updateProduct: async (req, res) => {
-    const { name, images_path, brand, description, price, stock } = req.body;
+    const { name, images_path, brand, category, description, price, stock } = req.body;
 
     if (!name || name.trim() === '' || isNaN(price) || price < 0 || isNaN(stock) || stock < 0 || !Number.isInteger(stock)) {
       return res.status(400).json({ error: 'Datos inválidos' });
@@ -57,8 +57,8 @@ const productController = {
 
     try {
       const [result] = await pool.query(
-        `UPDATE Product SET name = ?, images_path = ?, brand = ?, description = ?, price = ?, stock = ? WHERE id_product = ?`,
-        [name.trim(), images_path, brand, description, Number(price), Number(stock), req.params.id]
+        `UPDATE Product SET name = ?, images_path = ?, brand = ?, category = ?, description = ?, price = ?, stock = ? WHERE id_product = ?`,
+        [name.trim(), images_path, brand, category.trim(), description, Number(price), Number(stock), req.params.id]
       );
 
       if (result.affectedRows === 0) {
