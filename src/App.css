@@ -45,3 +45,8 @@
 .read-the-docs {
   color: #888;
 }
+
+/* En tu archivo global CSS */
+body.modal-open {
+  overflow: hidden;
+}
