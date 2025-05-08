@@ -12,5 +12,6 @@ mariadb -u root --password="$passwd" -v -e "
     CREATE DATABASE \`${db_name}\`;
 " && echo
 
-mariadb -u root --password="$passwd" "$db_name" < "${script_dir}/db_tables.sql"
+mariadb -u root --password="$passwd" "$db_name" < "${script_dir}/db_tables.sql" && echo
+mariadb -u root --password="$passwd" "$db_name" < "${script_dir}/db_procedures.sql" && echo
 
