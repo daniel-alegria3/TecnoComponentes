@@ -141,7 +141,7 @@ export default function Home() {
               {productosFiltrados.map((producto) => {
                 return (
                   <ProductCard
-                    key={producto.id}
+                    key={producto.id_product}
                     producto={{
                       ...producto,
                       images_path: Array.isArray(producto.images_path)
