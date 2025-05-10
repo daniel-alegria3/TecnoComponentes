@@ -18,8 +18,9 @@ const ProductModal = ({
     description: "",
     price: "",
     stock: "",
-    category: categories[0]?.id || "",
+    category: "",
   });
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [errors, setErrors] = useState({});
   const [localImagePreviews, setLocalImagePreviews] = useState([]); // Para imágenes locales antes de subir
   const [isUploading, setIsUploading] = useState(false);
@@ -38,7 +39,7 @@ const ProductModal = ({
         description: product.description || "",
         price: product.price || "",
         stock: product.stock || "",
-        category: product.category || categories[0]?.id || "",
+        category: product.category || "",
       });
     } else if (mode === "add") {
       setFormData({
@@ -48,7 +49,7 @@ const ProductModal = ({
         description: "",
         price: "",
         stock: "",
-        category: categories[0]?.id || "",
+        category: "",
       });
     }
     setErrors({});
@@ -57,7 +58,14 @@ const ProductModal = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+
+    if (name === "category" && value === "other") {
+      setShowNewCategoryInput(true);
+      setFormData((prev) => ({ ...prev, [name]: "" }));
+    } else {
+      setShowNewCategoryInput(false);
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -90,6 +98,10 @@ const ProductModal = ({
     });
   };
 
+  const onCloseModal = () => {
+    onClose();
+    setShowNewCategoryInput(false);
+  }
   const uploadToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -150,7 +162,6 @@ const ProductModal = ({
       } else {
         await onSave(productData);
       }
-
       onClose();
     } catch (error) {
       console.error("Error guardando producto:", error);
@@ -168,6 +179,8 @@ const ProductModal = ({
       });
     };
   }, [localImagePreviews]);
+
+  
 
   return (
     <AnimatePresence>
@@ -330,20 +343,69 @@ const ProductModal = ({
                 </div>
               ) : categories.length > 0 ? (
                 <>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full border rounded px-3 py-2 mt-1"
-                    required
-                    disabled={isUploading}
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
+                  {!showNewCategoryInput ? (
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={(e) => {
+                        if (e.target.value === "other") {
+                          setShowNewCategoryInput(true);
+                          setFormData((prev) => ({ ...prev, category: "" }));
+                        } else {
+                          setFormData((prev) => ({
+                            ...prev,
+                            category: e.target.value,
+                          }));
+                        }
+                      }}
+                      className="w-full border rounded px-3 py-2 mt-1"
+                      required
+                      disabled={isUploading}
+                    >
+                      <option value="" disabled selected>
+                        Selecciona una categoría
                       </option>
-                    ))}
-                  </select>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                      <option value="other">Otra</option>
+                    </select>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={formData.category}
+                        onChange={(e) => setFormData({...formData, category: e.target.value })}
+                        placeholder="Nombre de la nueva categoría"
+                        className="w-full border rounded px-3 py-2"
+                        required
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowNewCategoryInput(false);
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
                   {errors.category && (
                     <p className="text-red-500 text-sm">{errors.category}</p>
                   )}
@@ -402,7 +464,7 @@ const ProductModal = ({
 
             <div className="flex justify-end gap-3">
               <button
-                onClick={onClose}
+                onClick={onCloseModal}
                 className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
                 disabled={isUploading}
               >
