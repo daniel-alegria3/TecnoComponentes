@@ -1,7 +1,11 @@
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+const { Readable } = require('stream');
+const upload = multer({ storage: multer.memoryStorage() }); // Almacena en memoria
+
 cloudinary.config({
-  cloud_name: 'degeoyvyx',
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -13,8 +17,11 @@ const defaultOpts = {
       fetch_format: 'auto'
     },
     {
-      width: '200',
-      height: '200',
+      // width: 'auto',
+      // height: 'auto',
+    },
+    {
+      crop: 'limit'
     },
   ]
 }
@@ -55,40 +62,43 @@ const productController = {
     }
   },
 
-  // Crear un nuevo imagen
-  createImage: async (req, res) => {
-    const { filepath, image_bytes } = req.body;
+  createImage: [
+    upload.single('file'), // Middleware Multer para procesar FormData
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ error: 'No se proporcionó ningún archivo' });
+        }
 
-    // Check if image_bytes exists
-    if (!image_bytes) {
-      return res.status(400).json({ error: 'Bytes de la imagen no encontrados' });
+        // Convertir buffer a stream (más eficiente para Cloudinary)
+        const stream = Readable.from(req.file.buffer);
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'auto',
+            public_id: req.file.originalname.replace(/\.[^/.]+$/, ""),
+            transformation: defaultOpts.transformation
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Error en Cloudinary:', error);
+              return res.status(500).json({ error: 'Error al subir la imagen' });
+            }
+            res.status(201).json({
+              public_id: result.public_id,
+              url: cloudinary.url(result.public_id, {
+                transformation: defaultOpts.transformation
+              })
+            });
+          }
+        );
+
+        stream.pipe(uploadStream);
+      } catch (error) {
+        console.error('Error en createImage:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+      }
     }
-
-    // Optional: get extension from filepath if needed
-    const extension = filepath?.split('.').pop() || 'png'; // default to png if missing
-
-    // Validate that image_bytes is a valid image (basic check)
-    const isBase64 = /^data:image\/(png|jpeg|jpg|gif);base64,/.test(image_bytes);
-    if (!isBase64) {
-      return res.status(400).json({ error: 'image_bytes no contiene datos de imagen válidos' });
-    }
-
-    try {
-      const uploadResult = await cloudinary.uploader.upload(image_bytes, {
-        public_id: filepath ? filepath.replace(/\.[^/.]+$/, "") : undefined, // strip extension
-        resource_type: 'image',
-      });
-
-      res.status(201).json({
-        message: 'Imagen creada correctamente',
-        public_id: uploadResult.public_id,
-        url: cloudinary.url(uploadResult.public_id, defaultOpts),
-      });
-    } catch (error) {
-      console.error('Error en createImage:', error);
-      res.status(500).json({ error: 'No se pudo crear la imagen' });
-    }
-  },
+  ],
 
   // Eliminar un producto
   deleteImage: async (req, res) => {
@@ -112,7 +122,6 @@ const productController = {
       const id = req.params.id;
       const result = await cloudinary.api.resource(id); // fails if id not in claudinary
 
-      console.log(url);
       res.json({
         public_id: id,
         url: cloudinary.url(id, defaultOpts),
