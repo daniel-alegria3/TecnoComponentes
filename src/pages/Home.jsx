@@ -11,10 +11,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    
     const fetchData = async () => {
       try {
-        
         setLoading(true);
         setError(null);
 
@@ -24,9 +22,7 @@ export default function Home() {
 
         if (!productsResponse.ok) {
           const errorText = await productsResponse.text();
-          throw new Error(
-            `Error ${productsResponse.status}: ${errorText}`
-          );
+          throw new Error(`Error ${productsResponse.status}: ${errorText}`);
         }
 
         const productsData = await productsResponse.json();
@@ -36,17 +32,16 @@ export default function Home() {
         }
 
         const productosTransformados = productsData.map((producto) => {
-          
           let imagesArray = [];
           if (Array.isArray(producto.images_path)) {
             imagesArray = producto.images_path;
-          } else if (typeof producto.images_path === 'string') {
-            imagesArray = producto.images_path.split(',');
+          } else if (typeof producto.images_path === "string") {
+            imagesArray = producto.images_path.split(",");
           }
 
           return {
             ...producto,
-            images_path: imagesArray
+            images_path: imagesArray,
           };
         });
 
@@ -61,8 +56,7 @@ export default function Home() {
 
     fetchData();
 
-    return () => {
-    };
+    return () => {};
   }, []);
   const [search, setSearch] = useState("");
 
@@ -76,7 +70,6 @@ export default function Home() {
     );
   });
 
-
   if (loading) {
     return <div className="text-center py-8">Cargando productos...</div>;
   }
@@ -85,7 +78,7 @@ export default function Home() {
     return (
       <div className="text-center py-8 text-red-500">
         Error: {error}
-        <button 
+        <button
           onClick={() => window.location.reload()}
           className="ml-4 bg-blue-500 text-white px-4 py-2 rounded"
         >
@@ -127,34 +120,34 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="px-6 py-8">
+      <section className="px-6 py-8 flex flex-col justify-center items-center">
         <h3 className="text-2xl font-semibold mb-4">Productos</h3>
 
         {productosFiltrados.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">
-                No se encontraron productos que coincidan con tu búsqueda
-              </p>
-            </div>
+          <div className="text-center py-8">
+            <p className="text-gray-500">
+              No se encontraron productos que coincidan con tu búsqueda
+            </p>
+          </div>
         ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {productosFiltrados.map((producto) => {
-                return (
-                  <ProductCard
-                    key={producto.id_product}
-                    producto={{
-                      ...producto,
-                      images_path: Array.isArray(producto.images_path)
-                        ? producto.images_path
-                        : []
-                    }}
-                  />
-                );
-              })}
-            </ul>
+          <ul className="flex flex-wrap w-full justify-center md:justify-start gap-4 align-items-center">
+            {productosFiltrados.map((producto) => {
+              return (
+                <ProductCard
+                  key={producto.id_product}
+                  producto={{
+                    ...producto,
+                    images_path: Array.isArray(producto.images_path)
+                      ? producto.images_path
+                      : [],
+                  }}
+                />
+              );
+            })}
+          </ul>
         )}
       </section>
-      
+
       <section className="bg-white rounded-lg shadow p-6 flex flex-col md:flex-row items-center gap-6 mb-8">
         <div className="flex-1">
           <h2 className="text-2xl font-semibold mb-2">Arma Tu PC</h2>

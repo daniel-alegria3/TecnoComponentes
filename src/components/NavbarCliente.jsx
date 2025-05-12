@@ -166,13 +166,12 @@ export default function Navbar() {
                     </MenuItems>
                   </Menu>
                 ) : (
-                  <div
+                  <a href="/login"
                     className="relative ml-3 group"
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                   >
                     <svg
-                      onClick={handleLogin}
                       width="140"
                       height="36"
                       viewBox="0 0 140 36"
@@ -245,7 +244,7 @@ export default function Navbar() {
                         className="sm:group-hover:opacity-10 transition-opacity duration-300"
                       />
                     </svg>
-                  </div>
+                  </a>
                 )}
               </div>
             </div>

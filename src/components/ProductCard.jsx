@@ -1,65 +1,109 @@
 import { useState, useEffect } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 
+// Hook reutilizable para cargar imágenes de producto
+function useProductImages(imageIds) {
+  const [imageUrls, setImageUrls] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchImageUrls = async () => {
+      setIsLoading(true);
+      const ids = Array.isArray(imageIds) ? imageIds.filter(Boolean) : [];
+
+      if (ids.length === 0) {
+        if (isMounted) setImageUrls(['/placeholder-image.jpg']);
+        if (isMounted) setIsLoading(false);
+        return;
+      }
+
+      try {
+        const urls = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const res = await fetch(`http://localhost:5000/api/images/${id}`, {
+                method: 'GET',
+              }
+              );
+              if (!res.ok) return '/placeholder-image.jpg';
+              const data = await res.json();
+              return data.url || '/placeholder-image.jpg';
+            } catch {
+              return '/placeholder-image.jpg';
+            }
+          })
+        );
+
+        const valid = urls.filter(u => u !== '/placeholder-image.jpg');
+        if (isMounted) {
+          setImageUrls(valid.length ? valid : ['/placeholder-image.jpg']);
+        }
+      } catch {
+        if (isMounted) setImageUrls(['/placeholder-image.jpg']);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchImageUrls();
+    return () => {
+      isMounted = false;
+    };
+  }, [imageIds]);
+
+  return { imageUrls, isLoading };
+}
+
 const ProductCard = ({ producto }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  
-  // Asegurar que images_path siempre sea un array
-  const images = producto?.images_path 
-    ? Array.isArray(producto.images_path) 
-      ? producto.images_path 
-      : [producto.images_path]
-    : ['/placeholder-image.jpg'];
+  const { imageUrls, isLoading: isLoadingImages } = useProductImages(producto?.images_path);
 
-  // Efecto para el carousel automático (mejorado)
+  // Ciclar imágenes mientras se hace hover
   useEffect(() => {
-    if (images.length <= 1) return; // No hacer nada si solo hay una imagen
-    
-    const interval = setInterval(() => {
-      setCurrentImageIndex(prev => (prev + 1) % images.length);
-    }, 3000); // Cambia cada 3 segundos
+    if (!isLoadingImages && isHovered && imageUrls.length > 1) {
+      const id = setInterval(() => {
+        setCurrentImageIndex(i => (i + 1) % imageUrls.length);
+      }, 1500); // Cambia cada 3 segundos
+      return () => clearInterval(id);
+    }
+  }, [isHovered, isLoadingImages, imageUrls]);
 
-    // Limpieza del intervalo al desmontar
-    return () => clearInterval(interval);
-  }, [images.length]); // Dependencia correcta
-
-  // Protección contra producto undefined
   if (!producto) return null;
-
-  const getStockColor = (stock) => {
-    if (!stock && stock !== 0) return "bg-gradient-to-r from-gray-500 to-gray-400";
-    if (stock > 10) return "bg-gradient-to-r from-violet-600 to-violet-400";
-    if (stock > 0) return "bg-gradient-to-r from-violet-500 to-violet-300";
-    return "bg-gradient-to-r from-gray-500 to-gray-400";
-  };
 
   return (
     <div 
-      className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white"
+      className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white w-90"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Contenedor de imágenes */}
-      <div className="relative w-full h-48 overflow-hidden group">
-        {images.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt={producto.name || "Producto sin nombre"}
-            className={`absolute w-full h-full object-cover transition-opacity duration-1000 ${
-              index === currentImageIndex ? "opacity-100" : "opacity-0"
-            }`}
-            onError={(e) => {
-              e.target.src = '/placeholder-image.jpg';
-            }}
-          />
-        ))}
+      <div className="relative h-48 overflow-hidden">
+        {isLoadingImages ? (
+          <div className="absolute w-full bg-gray-200 animate-pulse"></div>
+        ) : (
+          imageUrls.map((img, index) => (
+            (index === currentImageIndex ? (
+              <div key={index} className="image h-full flex items-center justify-center">
+                <img
+                  src={img}
+                  alt={producto.name || "Producto sin nombre"}
+                  className="absolute w-full object-cover"
+                  onError={(e) => {
+                    e.target.src = '/placeholder-image.jpg';
+                  }}
+                />
+              </div>
+            ) : null)
+          ))
+        )}
         
-        {/* Indicadores del carousel */}
-        {images.length > 1 && (
+        {/* Indicadores del carrusel */}
+        {!isLoadingImages && imageUrls.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
-            {images.map((_, index) => (
+            {imageUrls.map((_, index) => (
               <button
                 key={index}
                 className={`w-2 h-2 rounded-full transition-all ${
@@ -77,7 +121,7 @@ const ProductCard = ({ producto }) => {
           </div>
         )}
         
-        {/* Botón circular de añadir al carrito */}
+        {/* Botón de añadir al carrito */}
         <button
           className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
             isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
@@ -89,7 +133,7 @@ const ProductCard = ({ producto }) => {
         
         {/* Etiqueta de categoría */}
         {producto.category && (
-          <span className="absolute top-3 left-3 bg-white/90 text-violet-700 text-xs font-semibold px-2 py-1 rounded">
+          <span className="absolute top-3 left-3 bg-white text-violet-700 text-xs font-semibold px-2 py-1 rounded shadow-lg">
             {producto.category}
           </span>
         )}
@@ -119,7 +163,13 @@ const ProductCard = ({ producto }) => {
             </span>
           </div>
           
-          <span className={`text-xs text-white px-2 py-1 rounded-full ${getStockColor(producto.stock)}`}>
+          <span className={`text-xs text-white px-2 py-1 rounded-full ${
+            producto.stock > 10 
+              ? "bg-gradient-to-r from-violet-600 to-violet-400" 
+              : producto.stock > 0 
+                ? "bg-gradient-to-r from-violet-500 to-violet-300" 
+                : "bg-gradient-to-r from-gray-500 to-gray-400"
+          }`}>
             {producto.stock > 0 ? `${producto.stock} en stock` : "Agotado"}
           </span>
         </div>

@@ -10,6 +10,8 @@ import Productos from './pages/admin/Productos'
 import './App.css'
 import Dashboard from './pages/admin/Dashboard'
 
+import Login from './pages/Login'
+
 function App() {
   return (
     <Router>
@@ -18,6 +20,7 @@ function App() {
         <Route element={<ClienteLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/ofertas" element={<Ofertas />} />
+          <Route path='/login' element={<Login />} />
         </Route>
 
         {/* Rutas admin con su layout */}
