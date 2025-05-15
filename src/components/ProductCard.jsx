@@ -91,9 +91,9 @@ const ProductCard = ({ producto }) => {
                   src={img}
                   alt={producto.name || "Producto sin nombre"}
                   className="absolute w-full object-cover"
-                  onError={(e) => {
-                    e.target.src = '/placeholder-image.jpg';
-                  }}
+                  // onError={(e) => {
+                  //   e.target.src = '/placeholder-image.jpg';
+                  // }}
                 />
               </div>
             ) : null)
