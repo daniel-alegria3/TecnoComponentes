@@ -148,7 +148,7 @@ export default function Home() {
         )}
       </section>
 
-      <section className="bg-white rounded-lg shadow p-6 flex flex-col md:flex-row items-center gap-6 mb-8">
+      <section className="bg-white rounded-lg shadow p-6 flex items-center justify-between gap-4 mx-6 mb-8 h-150">
         <div className="flex-1">
           <h2 className="text-2xl font-semibold mb-2">Arma Tu PC</h2>
           <p className="text-gray-600 mb-4">
@@ -161,11 +161,11 @@ export default function Home() {
             Comenzar a Armar
           </a>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 h-1/2 w-1/2">
           <img
             src="https://c1.neweggimages.com/productimage/nb1280/A1HJS250227062SB447.jpg"
             alt="Componentes de PC"
-            className="w-full h-auto rounded-lg object-cover"
+            className="w-auto h-auto rounded-lg object-cover"
           />
         </div>
       </section>
