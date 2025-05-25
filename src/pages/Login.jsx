@@ -89,7 +89,7 @@ export default function LoginForm() {
 
         <p className="text-center text-gray-400 text-sm">
           Don't have an account?
-          <a href="#" className="text-violet-400 hover:underline ml-1 flex items-center justify-center">
+          <a href="/register" className="text-violet-400 hover:underline ml-1 flex items-center justify-center">
             Sign up now <ArrowRightIcon className="h-4 w-4 ml-1" />
           </a>
         </p>

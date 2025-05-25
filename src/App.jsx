@@ -3,14 +3,17 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import ClienteLayout from './layouts/ClienteLayout'
 import AdminLayout from './layouts/AdminLayout'
 
+//CLIENTE
 import Home from './pages/Home'
 import Ofertas from './pages/Ofertas'
-import Productos from './pages/admin/Productos'
+import Register from './pages/Register'
+import Login from './pages/Login'
 
+//ADMIN
 import './App.css'
 import Dashboard from './pages/admin/Dashboard'
+import Productos from './pages/admin/Productos'
 
-import Login from './pages/Login'
 
 function App() {
   return (
@@ -21,6 +24,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/ofertas" element={<Ofertas />} />
           <Route path='/login' element={<Login />} />
+          <Route path='/register' element={<Register />} />
         </Route>
 
         {/* Rutas admin con su layout */}
