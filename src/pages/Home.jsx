@@ -17,7 +17,7 @@ export default function Home() {
         setError(null);
 
         const productsResponse = await fetch(
-          "http://localhost:5000/api/clients"
+          "http://localhost:5000/api/products"
         );
 
         if (!productsResponse.ok) {
