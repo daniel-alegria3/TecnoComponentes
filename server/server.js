@@ -3,6 +3,13 @@ const cors = require('cors');
 const path = require('path');
 const app = express();
 
+/// TODO: Aprender y usar crendeciales en Production
+// router.use(cors({
+//   origin: 'http://localhost:3000',
+//   credentials: true
+
+// }));
+
 // Enables Cross-Origin Resource Sharing
 app.use(cors());
 
