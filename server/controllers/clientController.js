@@ -25,6 +25,9 @@ const clientController = {
         `CALL agregar_cliente(?, ?)`,
         [mail.trim(), password]
       );
+      const [rows] = await pool.query('SELECT * FROM Client WHERE mail = ?', [mail.trim()]);
+      if (rows.length === 0) return res.status(404).json({ error: 'Cliente no encontrado' });
+      req.session.id_client = rows[0].id_client; // req.session provided by express-session
       res.status(201).json({ message: 'Cliente registrado correctamente'});
     } catch (error) {
       if (error?.sqlState === '45000') {
@@ -46,10 +49,12 @@ const clientController = {
     }
 
     try {
-      const [rows] = await pool.query(
+      await pool.query(
         `CALL login_cliente(?, ?)`,
         [mail.trim(), password]
       );
+      const [rows] = await pool.query('SELECT * FROM Client WHERE mail = ?', [mail.trim()]);
+      req.session.id_client = rows[0].id_client; // req.session provided by express-session
       res.status(201).json({ message: 'Login exitoso' });
     } catch (error) {
       if (error?.sqlState === '45000') {
@@ -61,8 +66,22 @@ const clientController = {
         res.status(500).json({ error: 'Error interno del servidor' });
       }
     }
-  }
+  },
 
+  logged_in: async (req, res) => {
+    if (req.session.id_client) {
+      res.json({ loggedIn: true, id_client: req.session.id_client});
+    } else {
+      res.json({ loggedIn: false });
+    }
+  },
+
+  logout: async (req, res) => {
+    req.session.destroy(() => {
+      res.clearCookie('my-client-cookie-name.sid');
+      res.json({ success: true });
+    });
+  },
 };
 
 module.exports = clientController;
