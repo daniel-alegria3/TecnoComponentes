@@ -7,8 +7,11 @@ import {
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -16,6 +19,7 @@ export default function RegisterForm() {
     password: '',
     confirmPassword: ''
   });
+  const [error, setError] = useState('');
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
@@ -25,7 +29,7 @@ export default function RegisterForm() {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({
@@ -41,7 +45,7 @@ export default function RegisterForm() {
       ...prev,
       [name]: true
     }));
-    
+
     // Validate password match on blur
     if (name === 'confirmPassword' || name === 'password') {
       validatePasswords();
@@ -59,9 +63,9 @@ export default function RegisterForm() {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate all fields
     const newErrors = {};
     if (!formData.firstName) newErrors.firstName = 'First name is required';
@@ -69,21 +73,41 @@ export default function RegisterForm() {
     if (!formData.email) newErrors.email = 'Email is required';
     if (!formData.password) newErrors.password = 'Password is required';
     if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     if (!validatePasswords()) return;
-    
-    // Submit form if valid
-    console.log('Form submitted:', formData);
-    // Here you would typically send data to your backend
+    // console.log('Form submitted:', formData);
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/clients/register`, {
+        method: "POST",
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({mail:formData.email, password:formData.password}),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Registro de cliente fallo");
+      }
+
+      if (data.loggedIn) {
+        navigate("/");
+      }
+    } catch (err) {
+      setError(err.message || 'Un error ocurrio durante login');
+    }
   };
 
   const isPasswordValid = formData.password.length >= 8;
-  const doPasswordsMatch = formData.password && formData.confirmPassword && 
+  const doPasswordsMatch = formData.password && formData.confirmPassword &&
                           formData.password === formData.confirmPassword;
 
   return (
@@ -98,9 +122,17 @@ export default function RegisterForm() {
         <h2 className="text-white text-2xl font-semibold mb-2 text-center">
           Join Us Today
         </h2>
-        <p className="text-gray-300 text-sm mb-6 text-center">
-          Create your account to get started
-        </p>
+
+        {error && (
+            <div className="mb-4 p-2 bg-red-500 text-white text-sm rounded">
+              {error}
+            </div>
+          ) || (
+            <p className="text-gray-300 text-sm mb-6 text-center">
+            Create your account to get started
+            </p>
+          )
+        }
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
