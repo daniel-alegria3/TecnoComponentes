@@ -7,8 +7,11 @@ import {
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -25,7 +28,7 @@ export default function RegisterForm() {
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({
@@ -41,7 +44,7 @@ export default function RegisterForm() {
       ...prev,
       [name]: true
     }));
-    
+
     // Validate password match on blur
     if (name === 'confirmPassword' || name === 'password') {
       validatePasswords();
@@ -59,9 +62,9 @@ export default function RegisterForm() {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate all fields
     const newErrors = {};
     if (!formData.firstName) newErrors.firstName = 'First name is required';
@@ -69,21 +72,45 @@ export default function RegisterForm() {
     if (!formData.email) newErrors.email = 'Email is required';
     if (!formData.password) newErrors.password = 'Password is required';
     if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     if (!validatePasswords()) return;
-    
+
     // Submit form if valid
     console.log('Form submitted:', formData);
     // Here you would typically send data to your backend
+    try {
+      const res = await fetch(`http://localhost:5000/api/clients/register`, {
+        method: "POST",
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({mail:formData.email, password:formData.password}),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error);
+      }
+
+      const rpta = await res.json();
+      if (rpta.loggedIn) {
+        navigate("/");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Error registrando al cliente");
+      throw err; // Re-lanzar el error para manejo adicional
+    }
   };
 
   const isPasswordValid = formData.password.length >= 8;
-  const doPasswordsMatch = formData.password && formData.confirmPassword && 
+  const doPasswordsMatch = formData.password && formData.confirmPassword &&
                           formData.password === formData.confirmPassword;
 
   return (
