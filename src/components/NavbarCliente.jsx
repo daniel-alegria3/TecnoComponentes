@@ -8,9 +8,9 @@ import {
   MenuItems,
 } from "@headlessui/react";
 import NavLink from "./NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const navigation = [
   { name: "Inicio", href: "/" },
@@ -23,6 +23,7 @@ function classNames(...classes) {
 }
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
   const [isHovered, setIsHovered] = useState(false);
@@ -31,9 +32,55 @@ export default function Navbar() {
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/clients/logout`, {
+        method: "POST",
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error);
+      }
+
+      const rpta = await res.json();
+    } catch (err) {
+      console.error("Error:", err);
+      alert("Error cerrando session del cliente");
+      throw err; // Re-lanzar el error para manejo adicional
+    } finally {
+      setIsLoggedIn(false);
+    }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
+          method: "GET",
+          credentials: 'include',
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error);
+        }
+
+        const rpta = await res.json();
+        setIsLoggedIn(rpta.loggedIn);
+      } catch (err) {
+        console.error("Error:", err);
+        alert("Error recuperando session del cliente");
+        throw err; // Re-lanzar el error para manejo adicional
+      }
+    };
+
+    fetchData();
+
+    return () => {};
+  }, [location.pathname]);
 
   return (
     <Disclosure as="nav" className="bg-gray-800">
