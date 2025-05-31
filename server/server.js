@@ -11,7 +11,10 @@ const app = express();
 // }));
 
 // Enables Cross-Origin Resource Sharing
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',  // frontend origin
+  credentials: true,
+}));
 
 // Init Middleware
 app.use(express.json());
