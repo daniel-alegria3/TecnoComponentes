@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
 
 // Hook reutilizable para cargar imágenes de producto
 function useProductImages(imageIds) {
@@ -74,8 +75,11 @@ const ProductCard = ({ producto }) => {
   if (!producto) return null;
 
   return (
+    <Link 
+      to={`/product/${producto.id_product}`}
+    >
     <div 
-      className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white w-90"
+      className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white w-90 h-85"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -175,6 +179,7 @@ const ProductCard = ({ producto }) => {
         </div>
       </div>
     </div>
+    </Link>
   );
 };
 

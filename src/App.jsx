@@ -8,12 +8,13 @@ import Home from './pages/Home'
 import Ofertas from './pages/Ofertas'
 import Register from './pages/Register'
 import Login from './pages/Login'
+import ProductDetail from './components/ProductDetail'
+
 
 //ADMIN
 import './App.css'
 import Dashboard from './pages/admin/Dashboard'
 import Productos from './pages/admin/Productos'
-
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/ofertas" element={<Ofertas />} />
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
         </Route>
 
         {/* Rutas admin con su layout */}
