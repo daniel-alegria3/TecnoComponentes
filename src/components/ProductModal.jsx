@@ -250,7 +250,6 @@ const ProductModal = ({
         : formData.images_path
         ? formData.images_path.split(",")
         : [];
-
       const allImageIds = [...currentImages, ...successfulIds];
 
       // 3. Preparar datos finales - convertir array a string para la BD
