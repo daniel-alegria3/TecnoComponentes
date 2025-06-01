@@ -1,21 +1,24 @@
 import { useState } from 'react';
-import { 
+import {
   EnvelopeIcon,
   LockClosedIcon,
   CheckIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { 
+import {
   ArrowRightIcon,
 } from '@heroicons/react/20/solid';
-import { 
-  GoogleIcon, 
+import {
+  GoogleIcon,
   FacebookIcon,
   MicrosoftIcon,
   LinkedInIcon,
 } from '../components/CustomBrandIcons';
+import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,29 +38,28 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
-      // Here you would typically send the data to your backend
-      const response = await fetch('/api/login', {
+      const response = await fetch('http://localhost:5000/api/clients/login', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({mail:formData.email, password:formData.password}),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || 'Login fallo');
       }
 
-      // Handle successful login (e.g., redirect, store token, etc.)
-      console.log('Login successful', data);
-      // You might want to redirect here or handle the auth state
-      
+      if (data.loggedIn) {
+        navigate("/");
+      }
     } catch (err) {
-      setError(err.message || 'An error occurred during login');
+      setError(err.message || 'Un error ocurrio durante login');
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +98,7 @@ export default function LoginForm() {
               />
             </div>
           </div>
-          
+
           <div className="mb-4">
             <label className="block text-gray-300 text-sm mb-1">Password</label>
             <div className="relative">
@@ -144,28 +146,28 @@ export default function LoginForm() {
         <div className="my-4 text-center text-gray-400">Or log in with</div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <button 
+          <button
             type="button"
             className="bg-black text-violet-400 py-2 rounded flex items-center justify-center gap-2 hover:bg-white hover:text-black"
           >
             <GoogleIcon className="h-5 w-5" />
             Google
           </button>
-          <button 
+          <button
             type="button"
             className="bg-black text-violet-400 py-2 rounded flex items-center justify-center gap-2 hover:bg-white hover:text-black"
           >
             <FacebookIcon className="h-5 w-5" />
             Facebook
           </button>
-          <button 
+          <button
             type="button"
             className="bg-black text-violet-400 py-2 rounded flex items-center justify-center gap-2 hover:bg-white hover:text-black"
           >
             <MicrosoftIcon className="h-5 w-5" />
             Microsoft
           </button>
-          <button 
+          <button
             type="button"
             className="bg-black text-violet-400 py-2 rounded flex items-center justify-center gap-2 hover:bg-white hover:text-black"
           >
