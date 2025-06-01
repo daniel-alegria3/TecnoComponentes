@@ -41,7 +41,7 @@ export default function Productos() {
 
         // 2. Luego obtiene los productos
         const productsResponse = await fetch(
-          "http://localhost:5000/api/products"
+          "http://localhost:5000/api/products/allproducts"
         );
         if (!productsResponse.ok) throw new Error("Error al obtener productos");
         const productsData = await productsResponse.json();
