@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ProductModal = ({
@@ -10,7 +10,6 @@ const ProductModal = ({
   categories = [],
   loadingCategories = false,
   categoriesError = null,
-  cloudName = "dtcrgpax8", // Añadido parámetro para el nombre de Cloudinary
 }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -26,6 +25,8 @@ const ProductModal = ({
   const [localImagePreviews, setLocalImagePreviews] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState([]); // Para seguir el estado de carga de cada imagen
+  const [imageUrls, setImageUrls] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(true);
 
   // Cargar datos del producto cuando se abre el modal
   useEffect(() => {
@@ -39,8 +40,8 @@ const ProductModal = ({
           // Si es un string, dividir por comas y eliminar espacios
           imagePaths = product.images_path
             .split(",")
-            .map((path) => path.trim())
-            .filter(Boolean);
+            .map(id => id.trim())
+            .filter(id => id.length > 0);
         }
       }
 
@@ -70,6 +71,12 @@ const ProductModal = ({
     setUploadingImages([]);
   }, [product, mode, isOpen]);
 
+  // Memoize the images_path to prevent unnecessary re-renders
+  const imageIds = useMemo(() => {
+    if (!formData?.images_path) return [];
+    return formData.images_path;
+  }, [formData?.images_path]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -81,6 +88,43 @@ const ProductModal = ({
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+
+  // Cargar datos del producto cuando se abre el modal
+  useEffect(() => {
+    setImagesLoading(true);
+
+    const fetchImageUrls = async () => {
+      const currentImageIds = Array.isArray(imageIds) ? [...imageIds] : [];
+      if (currentImageIds.length === 0) {
+        setImageUrls(['/placeholder-product.jpg']);
+        setImagesLoading(false);
+        return;
+      }
+
+      try {
+        const urls = await Promise.all(
+          currentImageIds.map(async (id) => {
+            try {
+              const res = await fetch(`http://localhost:5000/api/images/${id}`);
+              if (!res.ok) return '/placeholder-product.jpg';
+              const data = await res.json();
+              return data.url || '/placeholder-product.jpg';
+            } catch {
+              return '/placeholder-product.jpg';
+            }
+          })
+        );
+
+        setImageUrls(urls.length ? urls : ['/placeholder-product.jpg']);
+        setImagesLoading(false);
+      } catch {
+        setImageUrls(['/placeholder-product.jpg']);
+        setImagesLoading(false);
+      }
+    };
+
+    fetchImageUrls();
+  }, [imageIds]); // Only depend on imageIds
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
@@ -453,42 +497,46 @@ const ProductModal = ({
               </div>
 
               {/* Imágenes ya subidas */}
-              {Array.isArray(formData.images_path) &&
-                formData.images_path.length > 0 && (
-                  <div className="mt-3 grid grid-cols-3 gap-2">
+              {imagesLoading ? (
+                <div className="text-center text-gray-500">Cargando imágenes...</div>
+              ) : (
+                Array.isArray(formData.images_path) &&
+                  formData.images_path.length > 0 && (
+                    <div className="mt-3 grid grid-cols-3 gap-2">
                     {formData.images_path.map((imageId, index) => (
                       <div
-                        key={`cloud-${imageId}-${index}`}
-                        className="relative group"
+                      key={`cloud-${imageId}-${index}`}
+                      className="relative group"
                       >
-                        <img
-                          src={`https://res.cloudinary.com/${cloudName}/image/upload/w_200,h_200,c_fill/${imageId}`}
-                          alt={`Imagen ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg border shadow-sm"
-                          onError={(e) => {
-                            // Manejo de error de carga
-                            e.target.src =
-                              "https://via.placeholder.com/200?text=Error";
-                            e.target.classList.add("border-red-500");
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleRemoveImage(index);
-                          }}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                          disabled={isUploading}
-                          title="Eliminar imagen"
-                          aria-label="Eliminar imagen"
-                        >
-                          ×
-                        </button>
+                      <img
+                      src={imageUrls[index]}
+                      alt={`Imagen ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border shadow-sm"
+                      onError={(e) => {
+                        // Manejo de error de carga
+                        e.target.src =
+                          "https://via.placeholder.com/200?text=Error";
+                        e.target.classList.add("border-red-500");
+                      }}
+                      />
+                      <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleRemoveImage(index);
+                      }}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      disabled={isUploading}
+                      title="Eliminar imagen"
+                      aria-label="Eliminar imagen"
+                      >
+                      ×
+                      </button>
                       </div>
                     ))}
-                  </div>
-                )}
+                    </div>
+                  )
+              )}
             </div>
 
             {/* Marca */}
@@ -674,7 +722,7 @@ const ProductModal = ({
               <button
                 onClick={handleSave}
                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                disabled={isUploading}
+                disabled={isUploading || imagesLoading}
                 type="button"
                 aria-label={isUploading ? "Guardando..." : "Guardar"}
               >
