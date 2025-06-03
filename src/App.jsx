@@ -9,6 +9,7 @@ import Ofertas from './pages/Ofertas'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import ProductDetail from './components/ProductDetail'
+import Cart from './pages/Cart' // <— importar
 
 
 //ADMIN
@@ -27,6 +28,7 @@ function App() {
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />     {/* nueva ruta */}
         </Route>
 
         {/* Rutas admin con su layout */}
