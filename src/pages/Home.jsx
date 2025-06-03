@@ -4,6 +4,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import ProductCard from "../components/ProductCard";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const [productos, setProductos] = useState([]);
@@ -94,6 +95,16 @@ export default function Home() {
         <h1 className="text-2xl font-bold text-blue-600">
           Tecno<span className="text-violet-500">Components</span>
         </h1>
+
+        <div className="flex items-center gap-2">
+          {/* ← botón provisional al carrito */}
+          <Link
+            to="/cart"
+            className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
+          >
+            Ver Carrito
+          </Link>
+        </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-72">
