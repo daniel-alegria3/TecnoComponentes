@@ -12,7 +12,11 @@ router.get('/logged_in', cauth.isLoggedIn);
 router.post('/logout', cauth.requireLogin, cauth.logout);
 
 const clientController = require('../controllers/clientController.js')
-router.get('/', cauth.requireLogin, clientController.getAllProducts_client);
+router.get('/getproducts', clientController.getAllProducts_client);
+router.post('/llenarcarrito', clientController.llenarCarrito);
+router.get('/vercarrito/:id', clientController.verCarrito);
+router.delete('/vaciarcarrito', clientController.vaciarCarrito);
+router.post('/realizarcompra', clientController.realizarCompra);
 
 module.exports = router;
 
