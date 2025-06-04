@@ -10,7 +10,7 @@ const clientAuth = createAuthSession({
 /// NOTE: Usar 'req.session.variable' para guardar una 'variable' en la session
 
 clientAuth.register = async (req, res) => {
-    const { mail, password } = req.body;
+    const {name, surname, mail, password } = req.body;
 
     if (!mail || mail.trim() === '' || !password || password.trim() === '') {
         return res.status(400).json({ error: 'Datos inválidos' });
@@ -18,10 +18,10 @@ clientAuth.register = async (req, res) => {
 
     try {
         const [result] = await pool.query(
-            `CALL agregar_cliente(?, ?)`,
-            [mail.trim(), password]
+            `CALL agregar_cliente(?, ?, ?, ?)`,
+            [name.trim(), surname.trim(), mail.trim(), password]
         );
-        const [rows] = await pool.query('SELECT * FROM Client WHERE mail = ?', [mail.trim()]);
+        const [rows] = await pool.query('SELECT mail, password_encrypted FROM Client WHERE mail = ?', [mail.trim()]);
         if (rows.length === 0) return res.status(404).json({ error: 'Cliente no encontrado' });
         req.session.id_client = rows[0].id_client;
         res.status(201).json({ message: 'Cliente registrado correctamente', loggedIn: true});
@@ -49,7 +49,7 @@ clientAuth.login = async (req, res) => {
             `CALL login_cliente(?, ?)`,
             [mail.trim(), password]
         );
-        const [rows] = await pool.query('SELECT * FROM Client WHERE mail = ?', [mail.trim()]);
+        const [rows] = await pool.query('SELECT mail, password_encrypted FROM Client WHERE mail = ?', [mail.trim()]);
         req.session.id_client = rows[0].id_client;
         res.status(201).json({ message: 'Login exitoso', loggedIn: true});
     } catch (error) {
