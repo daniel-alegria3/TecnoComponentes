@@ -18,7 +18,9 @@ export default function Productos() {
   const [modalMode, setModalMode] = useState("add");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+
   // Obtener productos y establecer categorías al cargar el componente
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +43,7 @@ export default function Productos() {
 
         // 2. Luego obtiene los productos
         const productsResponse = await fetch(
-          "http://localhost:5000/api/products"
+          "http://localhost:5000/api/clients/getproducts"
         );
         if (!productsResponse.ok) throw new Error("Error al obtener productos");
         const productsData = await productsResponse.json();
@@ -59,9 +61,12 @@ export default function Productos() {
   }, []);
 
   // Filtrar productos
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    setFilteredProducts(products.filter((p) =>
+      p.name.toLowerCase().includes(search.toLowerCase())
+    ));
+  }, [products]);
+
 
   // CRUD Operations
   const addProduct = async (productData) => {

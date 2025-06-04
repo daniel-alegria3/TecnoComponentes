@@ -12,7 +12,8 @@ const clientAuth = createAuthSession({
 clientAuth.register = async (req, res) => {
     const {name, surname, mail, password } = req.body;
 
-    if (!mail || mail.trim() === '' || !password || password.trim() === '') {
+    if (!name || name.trim() === '' || !surname || surname.trim() === '' ||
+        !mail || mail.trim() === '' || !password || password.trim() === '') {
         return res.status(400).json({ error: 'Datos inválidos' });
     }
 
@@ -21,8 +22,9 @@ clientAuth.register = async (req, res) => {
             `CALL agregar_cliente(?, ?, ?, ?)`,
             [name.trim(), surname.trim(), mail.trim(), password]
         );
-        const [rows] = await pool.query('SELECT mail, password_encrypted FROM Client WHERE mail = ?', [mail.trim()]);
+        const [rows] = await pool.query('SELECT id_client, mail, password_encrypted FROM Client WHERE mail = ?', [mail.trim()]);
         if (rows.length === 0) return res.status(404).json({ error: 'Cliente no encontrado' });
+        console.log('reg:', rows)
         req.session.id_client = rows[0].id_client;
         res.status(201).json({ message: 'Cliente registrado correctamente', loggedIn: true});
     } catch (error) {
@@ -49,7 +51,8 @@ clientAuth.login = async (req, res) => {
             `CALL login_cliente(?, ?)`,
             [mail.trim(), password]
         );
-        const [rows] = await pool.query('SELECT mail, password_encrypted FROM Client WHERE mail = ?', [mail.trim()]);
+        const [rows] = await pool.query('SELECT id_client, mail, password_encrypted FROM Client WHERE mail = ?', [mail.trim()]);
+        console.log('log:', rows)
         req.session.id_client = rows[0].id_client;
         res.status(201).json({ message: 'Login exitoso', loggedIn: true});
     } catch (error) {
