@@ -89,7 +89,12 @@ export default function RegisterForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({mail:formData.email, password:formData.password}),
+        body: JSON.stringify({
+          name:formData.firstName,
+          surname:formData.lastName,
+          mail:formData.email,
+          password:formData.password
+        }),
       });
 
       const data = await res.json();
