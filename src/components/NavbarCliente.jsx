@@ -10,7 +10,8 @@ import {
 import NavLink from "./NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { CartContext } from "../context/CartContext";
 
 const navigation = [
   { name: "Inicio", href: "/" },
@@ -28,6 +29,7 @@ export default function Navbar() {
   const pathname = location.pathname;
   const [isHovered, setIsHovered] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { cartItems } = useContext(CartContext);
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -137,6 +139,7 @@ export default function Navbar() {
                 {/* Carrito */}
                 <button
                   type="button"
+                  onClick={() => navigate("/cart")}
                   className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none mr-2"
                 >
                   <span className="sr-only">Carrito</span>
@@ -155,7 +158,7 @@ export default function Navbar() {
                       />
                     </svg>
                     <span className="absolute top-0 right-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-600 text-xs font-semibold text-white">
-                      3
+                      {cartItems.length}
                     </span>
                   </div>
                 </button>

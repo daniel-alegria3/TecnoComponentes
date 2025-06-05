@@ -1,7 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useContext } from 'react';
+
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { CartContext } from "../context/CartContext";
+
 
 // Custom hook for fetching Cloudinary images
 function useProductImages(imageIds) {
@@ -64,6 +67,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
+  const { cartItems, setCartItems } = useContext(CartContext);
   
   // Memoize the images_path to prevent unnecessary re-renders
   const imagesPath = useMemo(() => {
@@ -77,7 +81,20 @@ export default function ProductDetail() {
       .filter(id => id.length > 0);
   }, [producto?.images_path]);
   const { imageUrls, isLoading: imagesLoading } = useProductImages(imagesPath);
-
+   const handleAddToCart = e => {
+    e.stopPropagation();
+    setCartItems(items => {
+      const exists = items.find(it => it.product.id_product === producto.id_product);
+      if (exists) {
+        return items.map(it =>
+          it.product.id_product === producto.id_product
+            ? { ...it, quantity: it.quantity + 1 }
+            : it
+        );
+      }
+      return [...items, { product: producto, quantity: 1 }];
+    });
+  };
   useEffect(() => {
     let isMounted = true;
 
@@ -257,6 +274,7 @@ export default function ProductDetail() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <button 
+                  onClick={handleAddToCart}
                   disabled={producto.stock <= 0}
                   className={`flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-medium transition-colors shadow-md ${
                     producto.stock > 0
