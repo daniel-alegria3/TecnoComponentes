@@ -19,7 +19,7 @@ function useProductImages(imageIds) {
       const currentImageIds = Array.isArray(imageIds) ? [...imageIds] : [];
       if (currentImageIds.length === 0) {
         if (isMounted) {
-          setImageUrls(['/placeholder-product.jpg']);
+          setImageUrls(["/placeholder-product.jpg"]);
           setIsLoading(false);
         }
         return;
@@ -30,22 +30,22 @@ function useProductImages(imageIds) {
           currentImageIds.map(async (id) => {
             try {
               const res = await fetch(`http://localhost:5000/api/images/${id}`);
-              if (!res.ok) return '/placeholder-product.jpg';
+              if (!res.ok) return "/placeholder-product.jpg";
               const data = await res.json();
-              return data.url || '/placeholder-product.jpg';
+              return data.url || "/placeholder-product.jpg";
             } catch {
-              return '/placeholder-product.jpg';
+              return "/placeholder-product.jpg";
             }
           })
         );
 
         if (isMounted) {
-          setImageUrls(urls.length ? urls : ['/placeholder-product.jpg']);
+          setImageUrls(urls.length ? urls : ["/placeholder-product.jpg"]);
           setIsLoading(false);
         }
       } catch {
         if (isMounted) {
-          setImageUrls(['/placeholder-product.jpg']);
+          setImageUrls(["/placeholder-product.jpg"]);
           setIsLoading(false);
         }
       }
@@ -72,13 +72,13 @@ export default function ProductDetail() {
   // Memoize the images_path to prevent unnecessary re-renders
   const imagesPath = useMemo(() => {
     if (!producto?.images_path) return [];
-    
+
     // Split the comma-separated string into an array of IDs
     // Trim whitespace and filter out any empty strings
     return producto.images_path
-      .split(',')
-      .map(id => id.trim())
-      .filter(id => id.length > 0);
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
   }, [producto?.images_path]);
   const { imageUrls, isLoading: imagesLoading } = useProductImages(imagesPath);
    const handleAddToCart = e => {
@@ -100,8 +100,10 @@ export default function ProductDetail() {
 
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/products/${id}`);
-        if (!response.ok) throw new Error('Producto no encontrado');
+        const response = await fetch(
+          `http://localhost:5000/api/products/${id}`
+        );
+        if (!response.ok) throw new Error("Producto no encontrado");
         const data = await response.json();
         if (isMounted) {
           setProducto(data);
@@ -126,53 +128,58 @@ export default function ProductDetail() {
 
   // ... rest of your component remains exactly the same ...
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-violet-50">
-      <div className="text-violet-700 font-medium">Cargando detalles del producto...</div>
-    </div>
-  );
-
-  if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-violet-50">
-      <div className="text-red-500 bg-white p-6 rounded-lg shadow-lg max-w-md text-center">
-        <p className="text-lg font-semibold mb-4">Error: {error}</p>
-        <Link 
-          to="/" 
-          className="inline-flex items-center bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors"
-        >
-          <ArrowLeftIcon className="w-5 h-5 mr-1" />
-          Volver al inicio
-        </Link>
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-violet-50">
+        <div className="text-violet-700 font-medium">
+          Cargando detalles del producto...
+        </div>
       </div>
-    </div>
-  );
+    );
 
-  if (!producto) return (
-    <div className="min-h-screen flex items-center justify-center bg-violet-50">
-      <div className="text-violet-800 bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
-        <h2 className="text-2xl font-bold mb-4">Producto no encontrado</h2>
-        <Link 
-          to="/" 
-          className="inline-flex items-center bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 transition-colors"
-        >
-          <ArrowLeftIcon className="w-5 h-5 mr-1" />
-          Explorar productos
-        </Link>
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-violet-50">
+        <div className="text-red-500 bg-white p-6 rounded-lg shadow-lg max-w-md text-center">
+          <p className="text-lg font-semibold mb-4">Error: {error}</p>
+          <Link
+            to="/"
+            className="inline-flex items-center bg-violet-600 text-white px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 mr-1" />
+            Volver al inicio
+          </Link>
+        </div>
       </div>
-    </div>
-  );
+    );
+
+  if (!producto)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-violet-50">
+        <div className="text-violet-800 bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-4">Producto no encontrado</h2>
+          <Link
+            to="/"
+            className="inline-flex items-center bg-violet-600 text-white px-6 py-2 rounded-lg hover:bg-violet-700 transition-colors"
+          >
+            <ArrowLeftIcon className="w-5 h-5 mr-1" />
+            Explorar productos
+          </Link>
+        </div>
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-violet-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center text-violet-600 hover:text-violet-800 mb-6 transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5 mr-2" />
           Volver a todos los productos
         </Link>
-            
+
         {/* Main product section */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2 gap-8 p-8">
@@ -183,8 +190,10 @@ export default function ProductDetail() {
                 {imagesLoading ? (
                   <div className="w-full h-full bg-gray-200 animate-pulse"></div>
                 ) : (
-                  <img 
-                    src={imageUrls[mainImageIndex] || '/placeholder-product.jpg'} 
+                  <img
+                    src={
+                      imageUrls[mainImageIndex] || "/placeholder-product.jpg"
+                    }
                     alt={producto.name}
                     className="w-full h-full object-contain"
                     // onError={(e) => {
@@ -193,7 +202,7 @@ export default function ProductDetail() {
                   />
                 )}
               </div>
-              
+
               {/* Thumbnail images */}
               {!imagesLoading && imageUrls.length > 1 && (
                 <div className="grid grid-cols-3 gap-2">
@@ -202,18 +211,18 @@ export default function ProductDetail() {
                       key={index}
                       onClick={() => setMainImageIndex(index)}
                       className={`bg-violet-50 rounded-md overflow-hidden border-2 transition-all ${
-                        index === mainImageIndex 
-                          ? "border-violet-600" 
+                        index === mainImageIndex
+                          ? "border-violet-600"
                           : "border-violet-200 hover:border-violet-400"
                       }`}
                     >
-                      <img 
-                        src={img} 
-                        alt={`${producto.name} ${index + 1}`} 
+                      <img
+                        src={img}
+                        alt={`${producto.name} ${index + 1}`}
                         className="w-full h-24 object-cover"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-product.jpg';
-                        }}
+                        // onError={(e) => {
+                        //   e.target.src = "/placeholder-product.jpg";
+                        // }}
                       />
                     </button>
                   ))}
@@ -228,7 +237,9 @@ export default function ProductDetail() {
                 <span className="inline-block bg-violet-100 text-violet-800 text-xs px-2 py-1 rounded-full uppercase font-semibold tracking-wide mb-2">
                   {producto.category}
                 </span>
-                <h1 className="text-3xl font-bold text-violet-900">{producto.name}</h1>
+                <h1 className="text-3xl font-bold text-violet-900">
+                  {producto.name}
+                </h1>
                 <p className="text-violet-600 font-medium">{producto.brand}</p>
               </div>
 
@@ -237,39 +248,70 @@ export default function ProductDetail() {
                 <span className="text-3xl font-bold text-violet-700">
                   ${Number(producto.price).toFixed(2)}
                 </span>
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                  producto.stock > 10 
-                    ? "bg-green-100 text-green-800" 
-                    : producto.stock > 0 
-                      ? "bg-yellow-100 text-yellow-800" 
+                <span
+                  className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    producto.stock > 10
+                      ? "bg-green-100 text-green-800"
+                      : producto.stock > 0
+                      ? "bg-yellow-100 text-yellow-800"
                       : "bg-red-100 text-red-800"
-                }`}>
-                  {producto.stock > 0 ? `${producto.stock} disponibles` : "Agotado"}
+                  }`}
+                >
+                  {producto.stock > 0
+                    ? `${producto.stock} disponibles`
+                    : "Agotado"}
                 </span>
               </div>
 
               {/* Description */}
               <div className="border-t border-violet-100 pt-4">
-                <h2 className="text-xl font-semibold text-violet-800 mb-3">Descripción</h2>
+                <h2 className="text-xl font-semibold text-violet-800 mb-3">
+                  Descripción
+                </h2>
                 <p className="text-violet-700 leading-relaxed whitespace-pre-line">
                   {producto.description || "No hay descripción disponible."}
                 </p>
               </div>
 
               {/* Specifications */}
-              {producto.specs && Object.keys(producto.specs).length > 0 && (
-                <div className="border-t border-violet-100 pt-4">
-                  <h2 className="text-xl font-semibold text-violet-800 mb-3">Especificaciones</h2>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-violet-700">
-                    {Object.entries(producto.specs).map(([key, value]) => (
-                      <li key={key} className="flex">
-                        <span className="font-medium text-violet-800 min-w-[120px]">{key}:</span>
-                        <span className="ml-2">{value || "-"}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {producto.specs &&
+                typeof producto.specs === "object" &&
+                !Array.isArray(producto.specs) && (
+                  <div className="border-t border-violet-100 pt-4">
+                    <h2 className="text-xl font-semibold text-violet-800 mb-3">
+                      Especificaciones
+                    </h2>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-violet-700">
+                      {Object.entries(producto.specs).map(([key, value]) => {
+                        // Format the key (capitalize first letter, replace underscores)
+                        const formattedKey = key
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (char) => char.toUpperCase());
+
+                        // Handle different value types
+                        let displayValue;
+                        if (value === null || value === undefined) {
+                          displayValue = "-";
+                        } else if (typeof value === "object") {
+                          displayValue = JSON.stringify(value);
+                        } else if (Array.isArray(value)) {
+                          displayValue = value.join(", ");
+                        } else {
+                          displayValue = String(value);
+                        }
+
+                        return (
+                          <li key={key} className="flex">
+                            <span className="font-medium text-violet-800 min-w-[120px]">
+                              {formattedKey}:
+                            </span>
+                            <span className="ml-2">{displayValue}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
 
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
@@ -285,7 +327,7 @@ export default function ProductDetail() {
                   <ShoppingBagIcon className="w-5 h-5" />
                   Añadir al carrito
                 </button>
-                <button 
+                <button
                   disabled={producto.stock <= 0}
                   className={`py-3 px-6 rounded-lg font-medium transition-colors border ${
                     producto.stock > 0
