@@ -14,4 +14,5 @@ mariadb -u root --password="$passwd" -v -e "
 
 mariadb -u root --password="$passwd" "$db_name" < "${script_dir}/db_tables.sql" && echo
 mariadb -u root --password="$passwd" "$db_name" < "${script_dir}/db_procedures.sql" && echo
+mariadb -u root --password="$passwd" "$db_name" < "${script_dir}/db_test_data.sql" && echo
 

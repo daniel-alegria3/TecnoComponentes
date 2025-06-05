@@ -1,57 +1,69 @@
 CREATE TABLE `Client` (
   `id_client` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  `mail` varchar(255),
+  `name` varchar(100),
+  `surname` varchar(100),
+  `mail` varchar(100) UNIQUE,
   `password_encrypted` varchar(255)
 );
 
 CREATE TABLE `Shopping_Cart` (
-  `id_client` int UNIQUE PRIMARY KEY NOT NULL
+  `id_cart` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `id_client` int
 );
 
-CREATE TABLE `Shopping_Cart_Detail` (
-  `id_client` int NOT NULL,
+CREATE TABLE `Shopping_Cart_Product` (
+  `id_cart` int NOT NULL,
   `id_product` int NOT NULL,
-  PRIMARY KEY (`id_client`, `id_product`)
+  `date_added` datetime
 );
 
 CREATE TABLE `Address` (
-  `id_cliente` int PRIMARY KEY NOT NULL,
-  `physical_address` varchar(255)
+  `id_address` int PRIMARY KEY AUTO_INCREMENT,
+  `id_client` int NOT NULL,
+  `city` varchar(50),
+  `country` varchar(50),
+  `physical_address` varchar(200)
 );
 
 CREATE TABLE `Product_Order` (
-  `id_product_order` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  `id_cliente` int,
-  `fecha` datetime
+  `id_order_detail` int,
+  `id_cart` int,
+  `id_product` int,
+  `price_at_buy` int,
+  `quantity` int
 );
 
 CREATE TABLE `Orden_Detail` (
-  `id_orden_detalle` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  `id_producto` int,
-  `id_orden` int,
-  `cantidad` int,
-  `fecha` datetime,
-  `precio_unitario` decimal(10,2)
+  `id_order_detail` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `date_added` datetime
 );
 
 CREATE TABLE `Product` (
   `id_product` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  `name` varchar(255),
-  `images_path` varchar(255),
-  `brand` varchar(255),
-  `category` varchar(255),
+  `name` varchar(100),
+  `images_path` varchar(100),
+  `brand` varchar(50),
+  `category` int,
   `description` text,
   `price` decimal(10,2),
-  `stock` int
+  `stock` int,
+  `on_sale` int,
+  `status` boolean,
+  `specs` blob
+);
+
+CREATE TABLE `Category` (
+  `id_category` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `name` varchar(50)
 );
 
 ALTER TABLE `Shopping_Cart` ADD FOREIGN KEY (`id_client`) REFERENCES `Client` (`id_client`);
-ALTER TABLE `Shopping_Cart_Detail` ADD FOREIGN KEY (`id_client`) REFERENCES `Shopping_Cart` (`id_client`);
-ALTER TABLE `Shopping_Cart_Detail` ADD FOREIGN KEY (`id_product`) REFERENCES `Product` (`id_product`);
-ALTER TABLE `Address` ADD FOREIGN KEY (`id_cliente`) REFERENCES `Client` (`id_client`);
-ALTER TABLE `Product_Order` ADD FOREIGN KEY (`id_cliente`) REFERENCES `Client` (`id_client`);
-ALTER TABLE `Orden_Detail` ADD FOREIGN KEY (`id_producto`) REFERENCES `Product` (`id_product`);
-ALTER TABLE `Orden_Detail` ADD FOREIGN KEY (`id_orden`) REFERENCES `Product_Order` (`id_product_order`);
+ALTER TABLE `Shopping_Cart_Product` ADD FOREIGN KEY (`id_cart`) REFERENCES `Shopping_Cart` (`id_cart`);
+ALTER TABLE `Shopping_Cart_Product` ADD FOREIGN KEY (`id_product`) REFERENCES `Product` (`id_product`);
+ALTER TABLE `Address` ADD FOREIGN KEY (`id_client`) REFERENCES `Client` (`id_client`);
+ALTER TABLE `Product_Order` ADD FOREIGN KEY (`id_order_detail`) REFERENCES `Orden_Detail` (`id_order_detail`);
+ALTER TABLE `Product_Order` ADD FOREIGN KEY (`id_cart`) REFERENCES `Shopping_Cart` (`id_cart`);
+ALTER TABLE `Product` ADD FOREIGN KEY (`category`) REFERENCES `Category` (`id_category`);
 
 SHOW FULL TABLES;
 
