@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
+import { CartContext } from "../context/CartContext";
 
 // Hook reutilizable para cargar imágenes de producto
 function useProductImages(imageIds) {
@@ -57,7 +58,8 @@ function useProductImages(imageIds) {
   return { imageUrls, isLoading };
 }
 
-const ProductCard = ({ producto }) => {
+export default function ProductCard({ producto }) {
+  const { cartItems, setCartItems } = useContext(CartContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { imageUrls, isLoading: isLoadingImages } = useProductImages(producto?.images_path);
@@ -72,12 +74,25 @@ const ProductCard = ({ producto }) => {
     }
   }, [isHovered, isLoadingImages, imageUrls]);
 
+  const handleAddToCart = e => {
+    e.stopPropagation();
+    setCartItems(items => {
+      const exists = items.find(it => it.product.id_product === producto.id_product);
+      if (exists) {
+        return items.map(it =>
+          it.product.id_product === producto.id_product
+            ? { ...it, quantity: it.quantity + 1 }
+            : it
+        );
+      }
+      return [...items, { product: producto, quantity: 1 }];
+    });
+  };
+
   if (!producto) return null;
 
   return (
-    <Link 
-      to={`/product/${producto.id_product}`}
-    >
+    
     <div 
       className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white w-90 h-85"
       onMouseEnter={() => setIsHovered(true)}
@@ -127,6 +142,7 @@ const ProductCard = ({ producto }) => {
         
         {/* Botón de añadir al carrito */}
         <button
+          onClick={handleAddToCart}
           className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
             isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
           }`}
@@ -142,7 +158,9 @@ const ProductCard = ({ producto }) => {
           </span>
         )}
       </div>
-      
+      <Link 
+      to={`/product/${producto.id_product}`}
+    >
       {/* Contenido de la card */}
       <div className="p-4">
         <div className="flex justify-between items-start mb-1">
@@ -178,9 +196,7 @@ const ProductCard = ({ producto }) => {
           </span>
         </div>
       </div>
-    </div>
     </Link>
+    </div>
   );
 };
-
-export default ProductCard;

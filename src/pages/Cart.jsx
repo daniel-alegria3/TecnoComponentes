@@ -1,17 +1,13 @@
-import { useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
+import { CartContext } from "../context/CartContext";
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem("cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  // 1) Sustituye useState por useContext
+  const { cartItems, setCartItems } = useContext(CartContext);
+
+  // esto sigue local (no forma parte del carrito compartido)
   const [shippingCost, setShippingCost] = useState(0);
   const [promoCode, setPromoCode] = useState("");
-
-  // Persistir en localStorage
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -19,6 +15,7 @@ export default function Cart() {
   );
   const total = subtotal + shippingCost;
 
+  // 2) updateQty usa setCartItems del contexto
   const updateQty = (id, delta) => {
     setCartItems((items) =>
       items
@@ -31,11 +28,8 @@ export default function Cart() {
     );
   };
 
-  const removeItem = (id) => {
-    setCartItems((items) =>
-      items.filter((it) => it.product.id_product !== id)
-    );
-  };
+  const removeItem = (id) =>
+    setCartItems((items) => items.filter((it) => it.product.id_product !== id));
 
   const handleShipping = (e) => {
     const val = e.target.value;
@@ -133,7 +127,7 @@ export default function Cart() {
                 </div>
                 <div className="text-right">
                   <p className="text-gray-700">
-                    €{product.price.toFixed(2)}
+                    €{product.price}
                   </p>
                   <p className="font-semibold">
                     €{(product.price * quantity).toFixed(2)}
