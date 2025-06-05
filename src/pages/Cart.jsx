@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import ProductCard from "../components/ProductCard";
 import { CartContext } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 
 export default function Cart() {
+  const navigate = useNavigate();
+
   // 1) Sustituye useState por useContext
   const { cartItems, setCartItems } = useContext(CartContext);
-  
 
   const [shippingCost, setShippingCost] = useState(0);
   const [promoCode, setPromoCode] = useState("");
@@ -300,7 +302,10 @@ export default function Cart() {
             <span>Total</span>
             <span>€{total.toFixed(2)}</span>
           </div>
-          <button className="w-full bg-orange-500 text-white py-3 rounded">
+          <button
+            onClick={() =>  navigate("/sales")}
+            className="w-full bg-orange-500 text-white py-3 rounded"
+          >
             Tramitar Pedido
           </button>
         </div>

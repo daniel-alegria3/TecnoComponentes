@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProductDetail from "./components/ProductDetail";
 import Cart from "./pages/Cart"; // <— importar
+import Sales from "./pages/Sales";
 
 // ADMIN
 import "./App.css";
@@ -27,6 +28,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} /> {/* nueva ruta */}
+        <Route path="/sales" element={<Sales />} />
       </Route>
 
       {/* Rutas admin con su layout */}
