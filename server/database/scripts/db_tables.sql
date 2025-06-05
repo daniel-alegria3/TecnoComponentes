@@ -39,6 +39,7 @@ CREATE TABLE `Product` (
   `name` varchar(255),
   `images_path` varchar(255),
   `brand` varchar(255),
+  `category` varchar(255),
   `description` text,
   `price` decimal(10,2),
   `stock` int
