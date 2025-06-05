@@ -20,11 +20,15 @@ export default function Productos() {
   const [error, setError] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
 
-
-  // Obtener productos y establecer categorías al cargar el componente
+  // Obtener categorias
   useEffect(() => {
-    const fetchData = async () => {
+    if (productModalOpen) {
+      return;
+    }
+
+    const fetchCats= async () => {
       try {
+        /*
         const defaultCategories = [
           { id: 1, name: "Procesadores" },
           { id: 2, name: "RAM" },
@@ -37,11 +41,29 @@ export default function Productos() {
           { id: 9, name: "Fuente de poder" },
           { id: 10, name: "Audifonos" },
         ];
+        */
+
+        const catsResponse = await fetch(
+          "http://localhost:5000/api/products/allcategory"
+        );
+        if (!catsResponse.ok) throw new Error("Error al obtener categorias");
+        const cats = await catsResponse.json();
+        setCategories(cats || []);
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+
+    fetchCats();
+  }, [productModalOpen]);
+
+  // Obtener productos y establecer categorías al cargar el componente
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
         setLoading(true);
         setError(null);
-        setCategories(defaultCategories);
 
-        // 2. Luego obtiene los productos
         const productsResponse = await fetch(
           "http://localhost:5000/api/clients/getproducts"
         );
