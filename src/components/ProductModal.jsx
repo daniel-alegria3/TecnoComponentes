@@ -642,9 +642,29 @@ const ProductModal = ({
                   )}
                 </>
               ) : (
-                <div className="text-yellow-600 text-sm mt-1">
-                  No hay categorías disponibles
-                </div>
+                <>
+                  <div className="text-yellow-600 text-sm mt-1">
+                    No hay categorías disponibles
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={formData.category}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
+                      placeholder="Crear nueva categoría"
+                      className={`w-full border rounded px-3 py-2 ${
+                        errors.category ? "border-red-500" : ""
+                      }`}
+                      required
+                      autoFocus
+                      disabled={isUploading}
+                      aria-invalid={errors.category ? "true" : "false"}
+                    />
+                  </div>
+                </>
               )}
             </div>
 
