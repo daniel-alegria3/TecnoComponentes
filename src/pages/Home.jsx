@@ -96,16 +96,7 @@ export default function Home() {
           Tecno<span className="text-violet-500">Components</span>
         </h1>
 
-        <div className="flex items-center gap-2">
-          {/* ← botón provisional al carrito */}
-          <Link
-            to="/cart"
-            className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
-          >
-            Ver Carrito
-          </Link>
-        </div>
-
+       
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-72">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
