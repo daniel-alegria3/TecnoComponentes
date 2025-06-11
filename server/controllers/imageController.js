@@ -79,15 +79,15 @@ const productController = {
             transformation: defaultOpts.transformation
           },
           (error, result) => {
-            if (error) {
+            if (error && !result.public_id) {
               console.error('Error en Cloudinary:', error);
               return res.status(500).json({ error: 'Error al subir la imagen' });
             }
             res.status(201).json({
               public_id: result.public_id,
-              url: cloudinary.url(result.public_id, {
-                transformation: defaultOpts.transformation
-              })
+              // url: cloudinary.url(result.public_id, {
+              //   transformation: defaultOpts.transformation
+              // })
             });
           }
         );
