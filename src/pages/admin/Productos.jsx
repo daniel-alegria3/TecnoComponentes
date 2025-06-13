@@ -70,7 +70,7 @@ export default function Productos() {
         if (!productsResponse.ok) throw new Error("Error al obtener productos");
         const productsData = await productsResponse.json();
 
-        setProducts(Array.isArray(productsData) ? productsData : []);
+        setProducts(productsData);
       } catch (err) {
         console.error("Error:", err);
         setError(err.message);

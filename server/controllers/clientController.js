@@ -4,13 +4,12 @@ const clientController = {
   getAllProducts_client: async (req, res) => {
     try {
       const [result] = await pool.query('CALL ObtenerProductosActivos()');
-      
+
       // CALL devuelve un array de arrays, el primero contiene los resultados
       const products = result[0];
-  
-      const productsWithParsedSpecs = products.map(product => {
+
+      const productsWithParsed = products.map(product => {
         let specsParsed = null;
-  
         if (product.specs !== null) {
           try {
             const specsString = product.specs.toString('utf-8');
@@ -20,14 +19,25 @@ const clientController = {
             specsParsed = null;
           }
         }
-  
+
+        let images_path_parsed = [];
+        if (product.images_path !== null) {
+          try {
+            images_path_parsed = product.images_path.split(',');
+          } catch (error) {
+            console.warn(`Images path inválido para el producto ID ${product.id_product}:`, error.message);
+            images_path_parsed = null;
+          }
+        }
+
         return {
           ...product,
+          images_path: images_path_parsed,
           specs: specsParsed
         };
       });
-  
-      res.json(productsWithParsedSpecs);
+
+      res.json(Array.isArray(productsWithParsed) ? productsWithParsed : []);
     } catch (error) {
       console.error('Error en <getAllProducts_client>:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
@@ -35,14 +45,14 @@ const clientController = {
   },
   llenarCarrito: async (req, res) => {
     const { id_client, id_product } = req.body;
-  
+
     try {
       if (!id_client || !id_product) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
-  
+
       await pool.query('CALL llenar_carrito(?, ?)', [id_client, id_product]);
-  
+
       res.status(200).json({ message: 'Producto agregado al carrito correctamente.' });
     } catch (error) {
       console.error('Error en llenarCarrito:', error);
@@ -51,10 +61,10 @@ const clientController = {
   },
   verCarrito: async (req, res) => {
     const clientId = req.params.id;
-  
+
     try {
       const [rows] = await pool.query('CALL ver_carrito(?)', [clientId]);
-  
+
       // CALL devuelve un array de arrays, por eso accedemos a rows[0]
       res.json(rows[0]);
     } catch (error) {
@@ -79,37 +89,37 @@ const clientController = {
 
   realizarCompra: async (req, res) => {
     const { id_client, productos } = req.body;
-  
+
     if (!id_client || !Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'Datos incompletos' });
     }
-  
+
     const connection = await pool.getConnection();
-  
+
     try {
       await connection.beginTransaction();
-  
+
       // Crear orden y obtener su ID
       const [ordenResult] = await connection.query('CALL crear_orden()');
       const id_order_detail = ordenResult[0][0].id;
-  
+
       // Insertar productos usando id_client
       for (const prod of productos) {
         const { id_product, quantity } = prod;
-  
+
         if (!id_product || !quantity || quantity <= 0) {
           throw new Error(`Producto inválido: ${JSON.stringify(prod)}`);
         }
-  
+
         await connection.query(
           'CALL agregar_producto_orden(?, ?, ?, ?)',
           [id_order_detail, id_client, id_product, quantity]
         );
       }
-  
+
       await connection.commit();
       res.json({ message: 'Compra realizada exitosamente', id_order_detail });
-  
+
     } catch (error) {
       await connection.rollback();
       console.error('Error en realizarCompra:', error);
@@ -118,8 +128,8 @@ const clientController = {
       connection.release();
     }
   }
-  
-  
+
+
 };
 
 module.exports = clientController;

@@ -108,17 +108,7 @@ export default function Cart() {
 
         const data = await response.json();
 
-        // Transformar images_path para los productos recomendados
-        const recommendedWithImages = data.map((product) => ({
-          ...product,
-          images_path: Array.isArray(product.images_path)
-            ? product.images_path
-            : typeof product.images_path === "string"
-            ? product.images_path.split(",")
-            : [],
-        }));
-
-        setRecommended(recommendedWithImages);
+        setRecommended(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching recommended products:", err);
@@ -180,14 +170,7 @@ export default function Cart() {
       return [
         ...items,
         {
-          product: {
-            ...prod,
-            images_path: Array.isArray(prod.images_path)
-              ? prod.images_path
-              : typeof prod.images_path === "string"
-              ? prod.images_path.split(",")
-              : [],
-          },
+          product: prod,
           quantity: 1,
         },
       ];
@@ -336,11 +319,7 @@ export default function Cart() {
                       category: producto.category || "Sin categoría",
                       brand: producto.brand || "Sin marca",
                       price: Number(producto.price || 0),
-                      images_path: Array.isArray(producto.images_path)
-                        ? producto.images_path
-                        : typeof producto.images_path === "string"
-                        ? producto.images_path.split(",")
-                        : ["/placeholder.png"],
+                      images_path: producto.images_path ? producto.images_path : ["/placeholder.png"],
                     }}
                     onAddToCart={() => addRecommended(producto)}
                   />

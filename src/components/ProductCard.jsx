@@ -13,7 +13,7 @@ function useProductImages(imageIds) {
 
     const fetchImageUrls = async () => {
       setIsLoading(true);
-      const ids = Array.isArray(imageIds) ? imageIds.filter(Boolean) : [];
+      const ids = imageIds;
 
       if (ids.length === 0) {
         if (isMounted) setImageUrls(['/placeholder-image.jpg']);
@@ -62,7 +62,7 @@ export default function ProductCard({ producto }) {
   const { cartItems, setCartItems } = useContext(CartContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const { imageUrls, isLoading: isLoadingImages } = useProductImages(producto?.images_path);
+  const { imageUrls, isLoading: isLoadingImages } = useProductImages(producto?.images_path || []);
 
   // Ciclar imágenes mientras se hace hover
   useEffect(() => {
@@ -92,33 +92,34 @@ export default function ProductCard({ producto }) {
   if (!producto) return null;
 
   return (
-    
-    <div 
+
+    <div
       className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white w-90 h-85"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Contenedor de imágenes */}
       <div className="relative h-48 overflow-hidden">
-        {isLoadingImages ? (
-          <div className="absolute w-full bg-gray-200 animate-pulse"></div>
-        ) : (
-          imageUrls.map((img, index) => (
-            (index === currentImageIndex ? (
-              <div key={index} className="image h-full flex items-center justify-center">
-                <img
-                  src={img}
-                  alt={producto.name || "Producto sin nombre"}
-                  className="absolute w-full object-cover"
-                  // onError={(e) => {
-                  //   e.target.src = '/placeholder-image.jpg';
-                  // }}
-                />
-              </div>
-            ) : null)
-          ))
-        )}
-        
+        <div className="image h-full flex items-center justify-center bg-gray-100">
+          {isLoadingImages ? (
+              <div className="w-32 h-32 border-4 border-dashed rounded-full border-gray-300 animate-spin"></div>
+          ) : (
+              imageUrls.map((img, index) => (
+                (index === currentImageIndex ? (
+                    <img
+                      key={index}
+                      src={img}
+                      alt={producto.name || "Producto sin nombre"}
+                      className="absolute w-full object-cover"
+                      // onError={(e) => {
+                      //   e.target.src = '/placeholder-image.jpg';
+                      // }}
+                    />
+                ) : null)
+              ))
+          )}
+        </div>
+
         {/* Indicadores del carrusel */}
         {!isLoadingImages && imageUrls.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
@@ -126,8 +127,8 @@ export default function ProductCard({ producto }) {
               <button
                 key={index}
                 className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentImageIndex 
-                    ? "bg-white w-4" 
+                  index === currentImageIndex
+                    ? "bg-white w-4"
                     : "bg-white/50 hover:bg-white/70"
                 }`}
                 onClick={(e) => {
@@ -139,7 +140,7 @@ export default function ProductCard({ producto }) {
             ))}
           </div>
         )}
-        
+
         {/* Botón de añadir al carrito */}
         <button
           onClick={handleAddToCart}
@@ -150,7 +151,7 @@ export default function ProductCard({ producto }) {
         >
           <ShoppingBagIcon className="h-5 w-5" />
         </button>
-        
+
         {/* Etiqueta de categoría */}
         {producto.category && (
           <span className="absolute top-3 left-3 bg-white text-violet-700 text-xs font-semibold px-2 py-1 rounded shadow-lg">
@@ -158,7 +159,7 @@ export default function ProductCard({ producto }) {
           </span>
         )}
       </div>
-      <Link 
+      <Link
       to={`/product/${producto.id_product}`}
     >
       {/* Contenido de la card */}
@@ -171,25 +172,25 @@ export default function ProductCard({ producto }) {
             <span className="text-xs text-gray-500">{producto.brand}</span>
           )}
         </div>
-        
+
         {producto.description && (
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">
             {producto.description}
           </p>
         )}
-        
+
         <div className="flex justify-between items-center">
           <div>
             <span className="text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
               ${producto.price ? Number(producto.price).toFixed(2) : "0.00"}
             </span>
           </div>
-          
+
           <span className={`text-xs text-white px-2 py-1 rounded-full ${
-            producto.stock > 10 
-              ? "bg-gradient-to-r from-violet-600 to-violet-400" 
-              : producto.stock > 0 
-                ? "bg-gradient-to-r from-violet-500 to-violet-300" 
+            producto.stock > 10
+              ? "bg-gradient-to-r from-violet-600 to-violet-400"
+              : producto.stock > 0
+                ? "bg-gradient-to-r from-violet-500 to-violet-300"
                 : "bg-gradient-to-r from-gray-500 to-gray-400"
           }`}>
             {producto.stock > 0 ? `${producto.stock} en stock` : "Agotado"}

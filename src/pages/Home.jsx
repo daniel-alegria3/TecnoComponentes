@@ -28,25 +28,7 @@ export default function Home() {
 
         const productsData = await productsResponse.json();
 
-        if (!Array.isArray(productsData)) {
-          throw new Error("La respuesta no contiene un array de productos");
-        }
-
-        const productosTransformados = productsData.map((producto) => {
-          let imagesArray = [];
-          if (Array.isArray(producto.images_path)) {
-            imagesArray = producto.images_path;
-          } else if (typeof producto.images_path === "string") {
-            imagesArray = producto.images_path.split(",");
-          }
-
-          return {
-            ...producto,
-            images_path: imagesArray,
-          };
-        });
-
-        setProductos(productosTransformados);
+        setProductos(productsData);
       } catch (err) {
         setError(err.message);
         setProductos([]);
@@ -96,7 +78,7 @@ export default function Home() {
           Tecno<span className="text-violet-500">Components</span>
         </h1>
 
-       
+
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
           <div className="relative w-full sm:w-72">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -137,12 +119,7 @@ export default function Home() {
               return (
                 <ProductCard
                   key={producto.id_product}
-                  producto={{
-                    ...producto,
-                    images_path: Array.isArray(producto.images_path)
-                      ? producto.images_path
-                      : [],
-                  }}
+                  producto={producto}
                 />
               );
             })}

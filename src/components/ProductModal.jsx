@@ -34,15 +34,7 @@ const ProductModal = ({
       // Asegurarse de que images_path siempre sea un array
       let imagePaths = [];
       if (product.images_path) {
-        if (Array.isArray(product.images_path)) {
-          imagePaths = product.images_path;
-        } else if (typeof product.images_path === "string") {
-          // Si es un string, dividir por comas y eliminar espacios
-          imagePaths = product.images_path
-            .split(",")
-            .map(id => id.trim())
-            .filter(id => id.length > 0);
-        }
+        imagePaths = product.images_path;
       }
 
       setFormData({
@@ -94,7 +86,7 @@ const ProductModal = ({
     setImagesLoading(true);
 
     const fetchImageUrls = async () => {
-      const currentImageIds = Array.isArray(imageIds) ? [...imageIds] : [];
+      const currentImageIds = imageIds;
       if (currentImageIds.length === 0) {
         setImageUrls(['/placeholder-product.jpg']);
         setImagesLoading(false);
@@ -289,19 +281,13 @@ const ProductModal = ({
 
       // 2. Combinar con imágenes existentes
       // Convertir formData.images_path de string a array si es necesario
-      const currentImages = Array.isArray(formData.images_path)
-        ? formData.images_path
-        : formData.images_path
-        ? formData.images_path.split(",")
-        : [];
+      const currentImages = formData.images_path ? formData.images_path : [];
       const allImageIds = [...currentImages, ...successfulIds];
 
       // 3. Preparar datos finales - convertir array a string para la BD
       const productData = {
         ...formData,
-        images_path: allImageIds.join(","), // Convertir a string separado por comas
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
+        images_path: allImageIds, // Convertir a string separado por comas
       };
       console.log("Datos del producto:", productData);
 
@@ -500,7 +486,7 @@ const ProductModal = ({
               {imagesLoading ? (
                 <div className="text-center text-gray-500">Cargando imágenes...</div>
               ) : (
-                Array.isArray(formData.images_path) &&
+                formData.images_path &&
                   formData.images_path.length > 0 && (
                     <div className="mt-3 grid grid-cols-3 gap-2">
                     {formData.images_path.map((imageId, index) => (

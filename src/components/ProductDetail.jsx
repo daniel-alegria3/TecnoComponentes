@@ -16,7 +16,7 @@ function useProductImages(imageIds) {
 
     const fetchImageUrls = async () => {
       setIsLoading(true);
-      const currentImageIds = Array.isArray(imageIds) ? [...imageIds] : [];
+      const currentImageIds = imageIds;
       if (currentImageIds.length === 0) {
         if (isMounted) {
           setImageUrls(["/placeholder-product.jpg"]);
@@ -68,20 +68,16 @@ export default function ProductDetail() {
   const [error, setError] = useState(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const { cartItems, setCartItems } = useContext(CartContext);
-  
+
   // Memoize the images_path to prevent unnecessary re-renders
   const imagesPath = useMemo(() => {
     if (!producto?.images_path) return [];
-
-    // Split the comma-separated string into an array of IDs
-    // Trim whitespace and filter out any empty strings
-    return producto.images_path
-      .split(",")
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0);
+    return producto.images_path;
   }, [producto?.images_path]);
+
   const { imageUrls, isLoading: imagesLoading } = useProductImages(imagesPath);
-   const handleAddToCart = e => {
+
+  const handleAddToCart = e => {
     e.stopPropagation();
     setCartItems(items => {
       const exists = items.find(it => it.product.id_product === producto.id_product);
@@ -95,6 +91,7 @@ export default function ProductDetail() {
       return [...items, { product: producto, quantity: 1 }];
     });
   };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -188,7 +185,7 @@ export default function ProductDetail() {
               {/* Main image */}
               <div className="bg-violet-100 rounded-lg overflow-hidden h-96 flex items-center justify-center">
                 {imagesLoading ? (
-                  <div className="w-full h-full bg-gray-200 animate-pulse"></div>
+                  <div className="w-32 h-32 border-4 border-dashed rounded-full border-gray-300 animate-spin"></div>
                 ) : (
                   <img
                     src={
@@ -274,9 +271,7 @@ export default function ProductDetail() {
               </div>
 
               {/* Specifications */}
-              {producto.specs &&
-                typeof producto.specs === "object" &&
-                !Array.isArray(producto.specs) && (
+              {producto.specs && (
                   <div className="border-t border-violet-100 pt-4">
                     <h2 className="text-xl font-semibold text-violet-800 mb-3">
                       Especificaciones
@@ -315,7 +310,7 @@ export default function ProductDetail() {
 
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                <button 
+                <button
                   onClick={handleAddToCart}
                   disabled={producto.stock <= 0}
                   className={`flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-medium transition-colors shadow-md ${

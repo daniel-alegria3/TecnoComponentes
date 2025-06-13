@@ -7,9 +7,8 @@ const productController = {
     try {
       const [rows] = await pool.query('SELECT * FROM Product');
 
-      const productsWithParsedSpecs = rows.map(product => {
+      const productsWithParsed = rows.map(product => {
         let specsParsed = null;
-
         // Solo intentar convertir specs si no es NULL
         if (product.specs !== null) {
           try {
@@ -23,13 +22,24 @@ const productController = {
           }
         }
 
+        let images_path_parsed = [];
+        if (product.images_path !== null) {
+          try {
+            images_path_parsed = product.images_path.split(',');
+          } catch (error) {
+            console.warn(`Images path inválido para el producto ID ${product.id_product}:`, error.message);
+            images_path_parsed = null;
+          }
+        }
+
         return {
           ...product,
+          images_path: images_path_parsed,
           specs: specsParsed // Devuelve el objeto JSON o null si estaba vacío o malformado
         };
       });
 
-      res.json(productsWithParsedSpecs);
+      res.json(productsWithParsed);
     } catch (error) {
       console.error('Error en <getAllProducts>:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
@@ -58,7 +68,21 @@ const productController = {
         return res.status(404).json({ error: 'Producto no encontrado' });
       }
 
-      res.json(result[0]);
+      const product = result[0];
+      if (product.specs !== null) {
+        try {
+          const specsString = product.specs.toString('utf-8');
+          product.specs = JSON.parse(specsString);
+        } catch (error) {
+          console.warn(`Specs inválido para el producto ID ${product.id_product}:`, error.message);
+          product.specs = null;
+        }
+      }
+      if (product.images_path !== null) {
+        product.images_path = product.images_path.split(',');
+      }
+
+      res.json(product);
     } catch (error) {
       console.error('Error en getProductById:', error);
       res.status(500).json({ error: 'Error interno del servidor' });
@@ -69,18 +93,23 @@ const productController = {
   createProduct: async (req, res) => {
     const { name, images_path, brand, category,description, price, stock } = req.body;
 
-    if (!name || name.trim() === '' || isNaN(price) || price < 0 || isNaN(stock) || stock < 0 || !Number.isInteger(stock)) {
+    if (!name || name.trim() === '' || isNaN(price) || parseFloat(price) < 0 || isNaN(stock) || parseInt(stock) < 0 || !Number.isInteger(parseInt(stock))) {
       return res.status(400).json({ error: 'Datos inválidos' });
     }
 
     try {
       let result;
       [result] = await pool.query(`CALL CrearProducto(?, ?, ?, ?, ?, ?, ?, @id)`,
-        [name.trim(), images_path, brand, category, description, price, stock]
+        [name.trim(),
+         (Array.isArray(images_path) && images_path.length > 0) ? images_path.join(',') : null,
+         brand.trim() !== "" ? brand.trim() : null,
+         category.trim(),
+         description.trim() !== "" ? description.trim() : null,
+         parseFloat(price),
+         parseInt(stock)
+        ]
       );
-      [result] = await pool.query(`SELECT @id AS id_product;`,
-        [name.trim(), images_path, brand, category, description, price, stock]
-      );
+      [result] = await pool.query(`SELECT @id AS id_product;`);
       console.log('res', result);
       res.status(201).json({
         message: 'Producto creado correctamente',
@@ -96,14 +125,21 @@ const productController = {
   updateProduct: async (req, res) => {
     const { name, images_path, brand, category, description, price, stock} = req.body;
 
-    if (!name || name.trim() === '' || isNaN(price) || price < 0 || isNaN(stock) || stock < 0 || !Number.isInteger(stock)) {
+    if (!name || name.trim() === '' || isNaN(price) || parseFloat(price) < 0 || isNaN(stock) || parseInt(stock) < 0 || !Number.isInteger(parseInt(stock))) {
       return res.status(400).json({ error: 'Datos inválidos' });
     }
 
     try {
       const [result] = await pool.query(
         `CALL ActualizarProducto(?, ?, ?, ?, ?, ?, ?, ?);`,
-        [req.params.id, name.trim(), images_path, brand, category, description, Number(price), Number(stock)]
+        [req.params.id, name.trim(),
+          (Array.isArray(images_path) && images_path.length > 0) ? images_path.join(',') : null,
+          brand.trim() !== "" ? brand.trim() : null,
+          category.trim(),
+          description.trim() !== "" ? description.trim() : null,
+          parseFloat(price),
+          parseInt(stock)
+        ]
       );
 
       if (result.affectedRows === 0) {
