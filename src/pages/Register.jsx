@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   EnvelopeIcon,
   LockClosedIcon,
   UserIcon,
   ExclamationCircleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { useNavigate } from "react-router-dom";
@@ -13,50 +13,54 @@ export default function RegisterForm() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     // Clear error when user types
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: null
+        [name]: null,
       }));
     }
   };
 
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      [name]: true
+      [name]: true,
     }));
 
     // Validate password match on blur
-    if (name === 'confirmPassword' || name === 'password') {
+    if (name === "confirmPassword" || name === "password") {
       validatePasswords();
     }
   };
 
   const validatePasswords = () => {
-    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
-      setErrors(prev => ({
+    if (
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    ) {
+      setErrors((prev) => ({
         ...prev,
-        confirmPassword: 'Passwords do not match'
+        confirmPassword: "Passwords do not match",
       }));
       return false;
     }
@@ -68,11 +72,12 @@ export default function RegisterForm() {
 
     // Validate all fields
     const newErrors = {};
-    if (!formData.firstName) newErrors.firstName = 'First name is required';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required';
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.password) newErrors.password = 'Password is required';
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+    if (!formData.firstName) newErrors.firstName = "First name is required";
+    if (!formData.lastName) newErrors.lastName = "Last name is required";
+    if (!formData.email) newErrors.email = "Email is required";
+    if (!formData.password) newErrors.password = "Password is required";
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -80,20 +85,40 @@ export default function RegisterForm() {
     }
 
     if (!validatePasswords()) return;
-    // console.log('Form submitted:', formData);
+
+    // Encrypt password before sending
+    const encryptPassword = async (password) => {
+      // Convert the password to an ArrayBuffer
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+
+      // Hash the password using SHA-256
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+      // Convert the ArrayBuffer to a hex string
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      return hashHex;
+    };
 
     try {
+      const hashedPassword = await encryptPassword(formData.password);
+
+      // Sending data to the server
       const res = await fetch(`http://localhost:5000/api/clients/register`, {
         method: "POST",
-        credentials: 'include',
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name:formData.firstName,
-          surname:formData.lastName,
-          mail:formData.email,
-          password:formData.password
+          name: formData.firstName,
+          surname: formData.lastName,
+          mail: formData.email,
+          password: hashedPassword, // Send the hashed password instead of plain text
         }),
       });
 
@@ -107,13 +132,15 @@ export default function RegisterForm() {
         navigate("/");
       }
     } catch (err) {
-      setError(err.message || 'Un error ocurrio durante login');
+      setError(err.message || "Un error ocurrio durante login");
     }
   };
 
   const isPasswordValid = formData.password.length >= 8;
-  const doPasswordsMatch = formData.password && formData.confirmPassword &&
-                          formData.password === formData.confirmPassword;
+  const doPasswordsMatch =
+    formData.password &&
+    formData.confirmPassword &&
+    formData.password === formData.confirmPassword;
 
   return (
     <div
@@ -128,21 +155,22 @@ export default function RegisterForm() {
           Join Us Today
         </h2>
 
-        {error && (
-            <div className="mb-4 p-2 bg-red-500 text-white text-sm rounded">
-              {error}
-            </div>
-          ) || (
-            <p className="text-gray-300 text-sm mb-6 text-center">
+        {(error && (
+          <div className="mb-4 p-2 bg-red-500 text-white text-sm rounded">
+            {error}
+          </div>
+        )) || (
+          <p className="text-gray-300 text-sm mb-6 text-center">
             Create your account to get started
-            </p>
-          )
-        }
+          </p>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-gray-300 text-sm mb-1">First Name<span className="text-violet-600">*</span></label>
+              <label className="block text-gray-300 text-sm mb-1">
+                First Name<span className="text-violet-600">*</span>
+              </label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
@@ -153,7 +181,7 @@ export default function RegisterForm() {
                   onBlur={handleBlur}
                   placeholder="First name"
                   className={`w-full pl-10 px-4 py-2 rounded bg-gray-800 text-white border ${
-                    errors.firstName ? 'border-red-500' : 'border-gray-600'
+                    errors.firstName ? "border-red-500" : "border-gray-600"
                   } focus:outline-none focus:ring-2 focus:ring-violet-500`}
                 />
               </div>
@@ -162,7 +190,9 @@ export default function RegisterForm() {
               )}
             </div>
             <div>
-              <label className="block text-gray-300 text-sm mb-1">Last Name<span className="text-violet-600">*</span></label>
+              <label className="block text-gray-300 text-sm mb-1">
+                Last Name<span className="text-violet-600">*</span>
+              </label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
@@ -173,7 +203,7 @@ export default function RegisterForm() {
                   onBlur={handleBlur}
                   placeholder="Last name"
                   className={`w-full pl-10 px-4 py-2 rounded bg-gray-800 text-white border ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-600'
+                    errors.lastName ? "border-red-500" : "border-gray-600"
                   } focus:outline-none focus:ring-2 focus:ring-violet-500`}
                 />
               </div>
@@ -197,7 +227,7 @@ export default function RegisterForm() {
                 onBlur={handleBlur}
                 placeholder="Enter your email"
                 className={`w-full pl-10 px-4 py-2 rounded bg-gray-800 text-white border ${
-                  errors.email ? 'border-red-500' : 'border-gray-600'
+                  errors.email ? "border-red-500" : "border-gray-600"
                 } focus:outline-none focus:ring-2 focus:ring-violet-500`}
               />
             </div>
@@ -207,7 +237,9 @@ export default function RegisterForm() {
           </div>
 
           <div className="mb-4">
-            <label className="block text-gray-300 text-sm mb-1">Password<span className="text-violet-600">*</span></label>
+            <label className="block text-gray-300 text-sm mb-1">
+              Password<span className="text-violet-600">*</span>
+            </label>
             <div className="relative">
               <LockClosedIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -218,7 +250,7 @@ export default function RegisterForm() {
                 onBlur={handleBlur}
                 placeholder="Create a password (min 8 chars)"
                 className={`w-full pl-10 px-4 py-2 rounded bg-gray-800 text-white border ${
-                  errors.password ? 'border-red-500' : 'border-gray-600'
+                  errors.password ? "border-red-500" : "border-gray-600"
                 } focus:outline-none focus:ring-2 focus:ring-violet-500`}
               />
               {formData.password && (
@@ -234,7 +266,8 @@ export default function RegisterForm() {
             {errors.password ? (
               <p className="mt-1 text-sm text-red-500">{errors.password}</p>
             ) : (
-              formData.password && !isPasswordValid && (
+              formData.password &&
+              !isPasswordValid && (
                 <p className="mt-1 text-sm text-yellow-500">
                   Password must be at least 8 characters
                 </p>
@@ -243,7 +276,9 @@ export default function RegisterForm() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm mb-1">Confirm Password<span className="text-violet-600">*</span></label>
+            <label className="block text-gray-300 text-sm mb-1">
+              Confirm Password<span className="text-violet-600">*</span>
+            </label>
             <div className="relative">
               <LockClosedIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -254,7 +289,7 @@ export default function RegisterForm() {
                 onBlur={handleBlur}
                 placeholder="Confirm your password"
                 className={`w-full pl-10 px-4 py-2 rounded bg-gray-800 text-white border ${
-                  errors.confirmPassword ? 'border-red-500' : 'border-gray-600'
+                  errors.confirmPassword ? "border-red-500" : "border-gray-600"
                 } focus:outline-none focus:ring-2 focus:ring-violet-500`}
               />
               {formData.confirmPassword && (
@@ -268,11 +303,17 @@ export default function RegisterForm() {
               )}
             </div>
             {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.confirmPassword}
+              </p>
             )}
-            {formData.confirmPassword && !doPasswordsMatch && !errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-500">Passwords do not match</p>
-            )}
+            {formData.confirmPassword &&
+              !doPasswordsMatch &&
+              !errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-500">
+                  Passwords do not match
+                </p>
+              )}
           </div>
 
           <div className="flex items-center mb-6">
@@ -283,7 +324,10 @@ export default function RegisterForm() {
               required
             />
             <label htmlFor="terms" className="ml-2 text-sm text-gray-300">
-              I agree to the <a href="#" className="text-violet-400 hover:underline">Terms and Conditions</a>
+              I agree to the{" "}
+              <a href="#" className="text-violet-400 hover:underline">
+                Terms and Conditions
+              </a>
             </label>
           </div>
 
@@ -295,7 +339,10 @@ export default function RegisterForm() {
           </button>
 
           <p className="text-gray-400 text-sm text-center">
-            Already have an account? <a href="/login" className="text-violet-400 hover:underline">Sign in</a>
+            Already have an account?{" "}
+            <a href="/login" className="text-violet-400 hover:underline">
+              Sign in
+            </a>
           </p>
         </form>
       </div>
