@@ -2,77 +2,23 @@ import React, { useState, useEffect, useContext } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
-
-// Hook reutilizable para cargar imágenes de producto
-function useProductImages(imageIds) {
-  const [imageUrls, setImageUrls] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchImageUrls = async () => {
-      setIsLoading(true);
-      const ids = imageIds;
-
-      if (ids.length === 0) {
-        if (isMounted) setImageUrls(['/placeholder-image.jpg']);
-        if (isMounted) setIsLoading(false);
-        return;
-      }
-
-      try {
-        const urls = await Promise.all(
-          ids.map(async (id) => {
-            try {
-              const res = await fetch(`http://localhost:5000/api/images/${id}`, {
-                method: 'GET',
-              }
-              );
-              if (!res.ok) return '/placeholder-image.jpg';
-              const data = await res.json();
-              return data.url || '/placeholder-image.jpg';
-            } catch {
-              return '/placeholder-image.jpg';
-            }
-          })
-        );
-
-        const valid = urls.filter(u => u !== '/placeholder-image.jpg');
-        if (isMounted) {
-          setImageUrls(valid.length ? valid : ['/placeholder-image.jpg']);
-        }
-      } catch {
-        if (isMounted) setImageUrls(['/placeholder-image.jpg']);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchImageUrls();
-    return () => {
-      isMounted = false;
-    };
-  }, [imageIds]);
-
-  return { imageUrls, isLoading };
-}
+import useProductImages from '../composables/useProductImages';
 
 export default function ProductCard({ producto }) {
   const { cartItems, setCartItems } = useContext(CartContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const { imageUrls, isLoading: isLoadingImages } = useProductImages(producto?.images_path || []);
+  const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
 
   // Ciclar imágenes mientras se hace hover
   useEffect(() => {
-    if (!isLoadingImages && isHovered && imageUrls.length > 1) {
+    if (!isImagesLoading && isHovered && imageUrls.length > 1) {
       const id = setInterval(() => {
         setCurrentImageIndex(i => (i + 1) % imageUrls.length);
       }, 1500); // Cambia cada 3 segundos
       return () => clearInterval(id);
     }
-  }, [isHovered, isLoadingImages, imageUrls]);
+  }, [isHovered, isImagesLoading, imageUrls]);
 
   const handleAddToCart = e => {
     e.stopPropagation();
@@ -101,7 +47,7 @@ export default function ProductCard({ producto }) {
       {/* Contenedor de imágenes */}
       <div className="relative h-48 overflow-hidden">
         <div className="image h-full flex items-center justify-center bg-gray-100">
-          {isLoadingImages ? (
+          {isImagesLoading ? (
               <div className="w-32 h-32 border-4 border-dashed rounded-full border-gray-300 animate-spin"></div>
           ) : (
               imageUrls.map((img, index) => (
@@ -121,7 +67,7 @@ export default function ProductCard({ producto }) {
         </div>
 
         {/* Indicadores del carrusel */}
-        {!isLoadingImages && imageUrls.length > 1 && (
+        {!isImagesLoading && imageUrls.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
             {imageUrls.map((_, index) => (
               <button

@@ -1,65 +1,10 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState, useMemo, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { CartContext } from "../context/CartContext";
-
-
-// Custom hook for fetching Cloudinary images
-function useProductImages(imageIds) {
-  const [imageUrls, setImageUrls] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchImageUrls = async () => {
-      setIsLoading(true);
-      const currentImageIds = imageIds;
-      if (currentImageIds.length === 0) {
-        if (isMounted) {
-          setImageUrls(["/placeholder-product.jpg"]);
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      try {
-        const urls = await Promise.all(
-          currentImageIds.map(async (id) => {
-            try {
-              const res = await fetch(`http://localhost:5000/api/images/${id}`);
-              if (!res.ok) return "/placeholder-product.jpg";
-              const data = await res.json();
-              return data.url || "/placeholder-product.jpg";
-            } catch {
-              return "/placeholder-product.jpg";
-            }
-          })
-        );
-
-        if (isMounted) {
-          setImageUrls(urls.length ? urls : ["/placeholder-product.jpg"]);
-          setIsLoading(false);
-        }
-      } catch {
-        if (isMounted) {
-          setImageUrls(["/placeholder-product.jpg"]);
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchImageUrls();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [imageIds]); // Only depend on imageIds
-
-  return { imageUrls, isLoading };
-}
+import useProductImages from '../composables/useProductImages';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -69,13 +14,7 @@ export default function ProductDetail() {
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const { cartItems, setCartItems } = useContext(CartContext);
 
-  // Memoize the images_path to prevent unnecessary re-renders
-  const imagesPath = useMemo(() => {
-    if (!producto?.images_path) return [];
-    return producto.images_path;
-  }, [producto?.images_path]);
-
-  const { imageUrls, isLoading: imagesLoading } = useProductImages(imagesPath);
+  const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
 
   const handleAddToCart = e => {
     e.stopPropagation();
@@ -184,7 +123,7 @@ export default function ProductDetail() {
             <div className="space-y-4">
               {/* Main image */}
               <div className="bg-violet-100 rounded-lg overflow-hidden h-96 flex items-center justify-center">
-                {imagesLoading ? (
+                {isImagesLoading ? (
                   <div className="w-32 h-32 border-4 border-dashed rounded-full border-gray-300 animate-spin"></div>
                 ) : (
                   <img
@@ -201,7 +140,7 @@ export default function ProductDetail() {
               </div>
 
               {/* Thumbnail images */}
-              {!imagesLoading && imageUrls.length > 1 && (
+              {!isImagesLoading && imageUrls.length > 1 && (
                 <div className="grid grid-cols-3 gap-2">
                   {imageUrls.map((img, index) => (
                     <button

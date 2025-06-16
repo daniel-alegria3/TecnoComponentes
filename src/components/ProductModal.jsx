@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import useProductImages from '../composables/useProductImages';
 
 const ProductModal = ({
   isOpen,
@@ -25,8 +26,7 @@ const ProductModal = ({
   const [localImagePreviews, setLocalImagePreviews] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState([]); // Para seguir el estado de carga de cada imagen
-  const [imageUrls, setImageUrls] = useState([]);
-  const [imagesLoading, setImagesLoading] = useState(true);
+  const { imageUrls, isImagesLoading } = useProductImages(formData?.images_path || []);
 
   // Cargar datos del producto cuando se abre el modal
   useEffect(() => {
@@ -63,12 +63,6 @@ const ProductModal = ({
     setUploadingImages([]);
   }, [product, mode, isOpen]);
 
-  // Memoize the images_path to prevent unnecessary re-renders
-  const imageIds = useMemo(() => {
-    if (!formData?.images_path) return [];
-    return formData.images_path;
-  }, [formData?.images_path]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -80,43 +74,6 @@ const ProductModal = ({
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
-
-  // Cargar datos del producto cuando se abre el modal
-  useEffect(() => {
-    setImagesLoading(true);
-
-    const fetchImageUrls = async () => {
-      const currentImageIds = imageIds;
-      if (currentImageIds.length === 0) {
-        setImageUrls(['/placeholder-product.jpg']);
-        setImagesLoading(false);
-        return;
-      }
-
-      try {
-        const urls = await Promise.all(
-          currentImageIds.map(async (id) => {
-            try {
-              const res = await fetch(`http://localhost:5000/api/images/${id}`);
-              if (!res.ok) return '/placeholder-product.jpg';
-              const data = await res.json();
-              return data.url || '/placeholder-product.jpg';
-            } catch {
-              return '/placeholder-product.jpg';
-            }
-          })
-        );
-
-        setImageUrls(urls.length ? urls : ['/placeholder-product.jpg']);
-        setImagesLoading(false);
-      } catch {
-        setImageUrls(['/placeholder-product.jpg']);
-        setImagesLoading(false);
-      }
-    };
-
-    fetchImageUrls();
-  }, [imageIds]); // Only depend on imageIds
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
@@ -483,7 +440,7 @@ const ProductModal = ({
               </div>
 
               {/* Imágenes ya subidas */}
-              {imagesLoading ? (
+              {isImagesLoading ? (
                 <div className="text-center text-gray-500">Cargando imágenes...</div>
               ) : (
                 formData.images_path &&
@@ -728,7 +685,7 @@ const ProductModal = ({
               <button
                 onClick={handleSave}
                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                disabled={isUploading || imagesLoading}
+                disabled={isUploading || isImagesLoading}
                 type="button"
                 aria-label={isUploading ? "Guardando..." : "Guardar"}
               >
