@@ -1,36 +1,25 @@
-import { useState } from "react";
-import { 
+import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import {
   CreditCardIcon,
   TruckIcon,
   HomeIcon,
   BuildingStorefrontIcon
 } from "@heroicons/react/24/outline";
+import { CartContext } from "../context/CartContext";
+import useProductImages from '../composables/useProductImages';
 
 export default function Checkout() {
+  const navigate = useNavigate();
+
   const [direccion, setDireccion] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
   const [metodoEntrega, setMetodoEntrega] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Datos de ejemplo del carrito
-  const productos = [
-    {
-      id: 1,
-      name: "Case Gaming RGB",
-      price: 19.50,
-      quantity: 1,
-      image: "https://via.placeholder.com/80x80/333/fff?text=PC"
-    },
-    {
-      id: 2,
-      name: "Case Mini ITX",
-      price: 1.50,
-      quantity: 1,
-      image: "https://via.placeholder.com/80x80/333/fff?text=PC"
-    }
-  ];
+  const { cartItems, setCartItems } = useContext(CartContext);
 
-  const subtotal = productos.reduce((acc, producto) => acc + (producto.price * producto.quantity), 0);
+  const subtotal = cartItems.reduce( (sum, item) => sum + item.product.price * item.quantity, 0);
   const entrega = 0.0;
   const total = subtotal + entrega;
 
@@ -41,13 +30,37 @@ export default function Checkout() {
     }
 
     setLoading(true);
-    
+
     // Simular procesamiento de pago
     setTimeout(() => {
       alert("¡Pago procesado exitosamente!");
       setLoading(false);
     }, 2000);
   };
+
+  function SalesItem({ product, quantity }) {
+    const { imageUrls, isLoading: isImagesLoading } = useProductImages(product?.images_path || []);
+
+    return (
+      <div>
+        <div key={product.product_id} className="text-center">
+          <div className="w-20 h-20 bg-gray-800 rounded-lg mb-2 flex items-center justify-center">
+            {isImagesLoading ? (
+              <div></div>
+            ) : (
+              <img
+                src={imageUrls[0]}
+                alt={product.name}
+                onClick={() => navigate(`/product/${product.id_product}`)}
+              />
+            )}
+          </div>
+          <div className="text-sm font-medium">${parseFloat(product.price).toFixed(2)}</div>
+          <div className="text-xs text-gray-500">x {quantity}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-monofur min-h-screen bg-gray-50">
@@ -61,7 +74,7 @@ export default function Checkout() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna izquierda - Formulario */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Dirección de entrega */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Dirección de entrega</h2>
@@ -166,14 +179,11 @@ export default function Checkout() {
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Detalles de ítems</h2>
               <div className="flex gap-4">
-                {productos.map((producto) => (
-                  <div key={producto.id} className="text-center">
-                    <div className="w-20 h-20 bg-gray-800 rounded-lg mb-2 flex items-center justify-center">
-                      <div className="text-white text-xs">PC</div>
-                    </div>
-                    <div className="text-sm font-medium">${producto.price.toFixed(2)}</div>
-                    <div className="text-xs text-gray-500">x {producto.quantity}</div>
-                  </div>
+                {cartItems.map(({product, quantity}) => (
+                  <SalesItem
+                    product={product}
+                    quantity={quantity}
+                  />
                 ))}
               </div>
             </div>
@@ -183,10 +193,10 @@ export default function Checkout() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-6 sticky top-8">
               <h2 className="text-lg font-semibold mb-4">Resumen</h2>
-              
+
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Productos ({productos.length})</span>
+                  <span className="text-gray-600">Productos ({cartItems.length})</span>
                   <span>${subtotal.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
