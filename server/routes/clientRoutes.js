@@ -16,7 +16,12 @@ router.get('/getproducts', clientController.getAllProducts_client);
 router.post('/llenarcarrito', clientController.llenarCarrito);
 router.get('/vercarrito/:id', clientController.verCarrito);
 router.delete('/vaciarcarrito', clientController.vaciarCarrito);
+router.get('/vaciarhistcompras', clientController.obtenerHistorialCompras);
 router.post('/realizarcompra', clientController.realizarCompra);
+router.post('/creardireccion', clientController.crearDireccionCliente);
+router.get('/verdireccion/:id', clientController.verDireccionesCliente);
+router.post('/editardireccion/', clientController.editarDireccionCliente);
+router.delete('/eliminardireccion/', clientController.eliminarDireccionCliente);
 
 module.exports = router;
 
