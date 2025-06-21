@@ -1,5 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+
 import {
   CreditCardIcon,
   TruckIcon,
@@ -23,6 +25,8 @@ export default function Checkout() {
   const entrega = 0.0;
   const total = subtotal + entrega;
 
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+
   const handlePagar = async () => {
     if (!metodoPago || !metodoEntrega) {
       alert("Por favor completa todos los campos requeridos");
@@ -30,12 +34,12 @@ export default function Checkout() {
     }
 
     setLoading(true);
-
     // Simular procesamiento de pago
     setTimeout(() => {
-      alert("¡Pago procesado exitosamente!");
+      // alert("¡Pago procesado exitosamente!");
       setLoading(false);
     }, 2000);
+    setPaymentSuccess(true);
   };
 
   function SalesItem({ product, quantity }) {
@@ -222,6 +226,40 @@ export default function Checkout() {
               >
                 {loading ? "Procesando..." : "Pagar"}
               </button>
+
+              {/* Modal */}
+              <AnimatePresence>
+                {paymentSuccess && (
+                   <motion.div
+                      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <motion.div
+                        className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <h2 className="text-2xl font-semibold text-green-600">
+                          Pago Exitoso!
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                          Gracias por su preferencia. Revise su orden su la pagina de Ordenes.
+                        </p>
+                        <button
+                          onClick={() => setPaymentSuccess(false)}
+                          className="mt-4 px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
+                        >
+                          OK
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                )}
+              </AnimatePresence>
+
             </div>
           </div>
         </div>
