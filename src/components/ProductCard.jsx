@@ -3,12 +3,14 @@ import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
+import { useSession } from "../context/SessionContext";
 
 export default function ProductCard({ producto }) {
   const { cartItems, setCartItems } = useContext(CartContext);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
+  const { isLoggedIn } = useSession();
 
   // Ciclar imágenes mientras se hace hover
   useEffect(() => {
@@ -88,15 +90,17 @@ export default function ProductCard({ producto }) {
         )}
 
         {/* Botón de añadir al carrito */}
-        <button
-          onClick={handleAddToCart}
-          className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
-            isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
-          }`}
-          aria-label="Añadir al carrito"
-        >
-          <ShoppingBagIcon className="h-5 w-5" />
-        </button>
+        {isLoggedIn && (
+          <button
+            onClick={handleAddToCart}
+            className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
+              isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
+            }`}
+            aria-label="Añadir al carrito"
+          >
+            <ShoppingBagIcon className="h-5 w-5" />
+          </button>
+        )}
 
         {/* Etiqueta de categoría */}
         {producto.category && (

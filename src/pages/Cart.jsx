@@ -3,8 +3,18 @@ import { useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { CartContext } from "../context/CartContext";
 import CartItem from "../components/CartItem";
+import { useSession } from "../context/SessionContext";
 
 export default function Cart() {
+  const { isLoggedIn } = useSession();
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <h2>Iniciar session para ver la pagina de Carrito</h2>
+      </div>
+    )
+  }
+
   const navigate = useNavigate();
 
   // 1) Sustituye useState por useContext

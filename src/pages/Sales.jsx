@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "../context/SessionContext";
 
 import {
   CreditCardIcon,
@@ -12,6 +13,15 @@ import { CartContext } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 
 export default function Checkout() {
+  const { isLoggedIn } = useSession();
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <h2>Iniciar session para ver la pagina de Venta</h2>
+      </div>
+    )
+  }
+
   const navigate = useNavigate();
 
   const [direccion, setDireccion] = useState("");
