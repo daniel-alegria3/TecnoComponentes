@@ -8,6 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { useNavigate } from "react-router-dom";
+import { useSession } from "../context/SessionContext";
 
 export default function RegisterForm() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function RegisterForm() {
   const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const session = useSession();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,54 +88,14 @@ export default function RegisterForm() {
 
     if (!validatePasswords()) return;
 
-    // Encrypt password before sending
-    const encryptPassword = async (password) => {
-      // Convert the password to an ArrayBuffer
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-
-      // Hash the password using SHA-256
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-
-      // Convert the ArrayBuffer to a hex string
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      return hashHex;
-    };
-
     try {
-      const hashedPassword = await encryptPassword(formData.password);
-
-      // Sending data to the server
-      const res = await fetch(`http://localhost:5000/api/clients/register`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.firstName,
-          surname: formData.lastName,
-          mail: formData.email,
-          password: hashedPassword, // Send the hashed password instead of plain text
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Registro de cliente fallo");
-      }
-
-      if (data.loggedIn) {
-        navigate("/");
-      }
+      await session.doRegister(formData.firstName, formData.lastName,
+                               formData.email, formData.password);
+      navigate("/");
     } catch (err) {
-      setError(err.message || "Un error ocurrio durante login");
+      setError(err.message || "Error durante el registro");
     }
+
   };
 
   const isPasswordValid = formData.password.length >= 8;

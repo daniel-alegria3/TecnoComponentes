@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import React, { useContext, useEffect, useState } from "react";
 import { CartContext } from "../context/CartContext";
+import { useSession } from "../context/SessionContext";
 
 const navigation = [
   { name: "Inicio", href: "/" },
@@ -28,61 +29,17 @@ export default function Navbar() {
   const location = useLocation();
   const pathname = location.pathname;
   const [isHovered, setIsHovered] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { cartItems } = useContext(CartContext);
-
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-  };
+  const session = useSession();
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/clients/logout`, {
-        method: "POST",
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error);
-      }
-
-      const rpta = await res.json();
+      await session.doLogout();
     } catch (err) {
-      console.error("Error:", err);
+      console.error("Error:", err.message);
       alert("Error cerrando session del cliente");
-      throw err; // Re-lanzar el error para manejo adicional
-    } finally {
-      setIsLoggedIn(false);
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
-          method: "GET",
-          credentials: 'include',
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error);
-        }
-
-        const rpta = await res.json();
-        setIsLoggedIn(rpta.loggedIn);
-      } catch (err) {
-        console.error("Error:", err);
-        alert("Error recuperando session del cliente");
-        throw err; // Re-lanzar el error para manejo adicional
-      }
-    };
-
-    fetchData();
-
-    return () => {};
-  }, [location.pathname]);
 
   return (
     <Disclosure as="nav" className="bg-gray-800">
@@ -137,34 +94,36 @@ export default function Navbar() {
               {/* Elementos del lado derecho */}
               <div className="flex items-center">
                 {/* Carrito */}
-                <button
-                  type="button"
-                  onClick={() => navigate("/cart")}
-                  className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none mr-2"
-                >
-                  <span className="sr-only">Carrito</span>
-                  <div className="relative bg-white rounded-full p-1">
-                    <svg
-                      className="h-6 w-6 text-black"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-600 text-xs font-semibold text-white">
-                      {cartItems.length}
-                    </span>
-                  </div>
-                </button>
+                { session.isLoggedIn && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/cart")}
+                    className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none mr-2"
+                  >
+                    <span className="sr-only">Carrito</span>
+                    <div className="relative bg-white rounded-full p-1">
+                      <svg
+                        className="h-6 w-6 text-black"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                      <span className="absolute top-0 right-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-600 text-xs font-semibold text-white">
+                        {cartItems.length}
+                      </span>
+                    </div>
+                  </button>
+                )}
 
                 {/* Login/Perfil */}
-                {isLoggedIn ? (
+                {session.isLoggedIn ? (
                   <Menu as="div" className="relative ml-2">
                     <MenuButton className="flex rounded-full bg-gray-800 text-sm focus:outline-none">
                       <img
@@ -318,15 +277,6 @@ export default function Navbar() {
                   {item.name}
                 </DisclosureButton>
               ))}
-              {!isLoggedIn && (
-                <DisclosureButton
-                  as="button"
-                  onClick={handleLogin}
-                  className="block w-full rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white text-left"
-                >
-                  Ingresar/Registro
-                </DisclosureButton>
-              )}
             </div>
           </DisclosurePanel>
         </>
