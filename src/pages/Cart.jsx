@@ -6,6 +6,7 @@ import CartItem from "../components/CartItem";
 import { useSession } from "../context/SessionContext";
 
 export default function Cart() {
+  const { cartItems, addProdToCart } = useCart();
   const { isLoggedIn } = useSession();
   if (!isLoggedIn) {
     return (
@@ -18,7 +19,6 @@ export default function Cart() {
   const navigate = useNavigate();
 
   // 1) Sustituye useState por useContext
-  const { cartItems, addProdToCart } = useCart();
 
   const [shippingCost, setShippingCost] = useState(0);
   const [promoCode, setPromoCode] = useState("");

@@ -5,8 +5,18 @@ import {
 } from "@heroicons/react/24/outline";
 import ProductCard from "../components/ProductCard";
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
 export default function Home() {
+  ///[ ensure cartItems are loaded first thing
+  const location = useLocation();
+  const { initCartUserData } = useCart();
+  useEffect(() => {
+    initCartUserData();
+  }, [location]);
+  ///]
+
   const [productos, setProductos] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);

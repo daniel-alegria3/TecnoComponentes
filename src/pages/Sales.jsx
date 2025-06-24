@@ -13,6 +13,7 @@ import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 
 export default function Checkout() {
+  const { cartItems } = useCart();
   const { isLoggedIn } = useSession();
   if (!isLoggedIn) {
     return (
@@ -28,8 +29,6 @@ export default function Checkout() {
   const [metodoPago, setMetodoPago] = useState("");
   const [metodoEntrega, setMetodoEntrega] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const { cartItems } = useCart();
 
   const subtotal = cartItems.reduce( (sum, item) => sum + item.product.price * item.quantity, 0);
   const entrega = 0.0;

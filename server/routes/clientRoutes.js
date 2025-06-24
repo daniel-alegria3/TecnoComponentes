@@ -13,10 +13,10 @@ router.post('/logout', cauth.requireLogin, cauth.logout);
 
 const clientController = require('../controllers/clientController.js')
 router.get('/getproducts', clientController.getAllProducts_client);
-router.post('/agregarcarrito', clientController.agregarCarrito);
-router.get('/vercarrito/:id', clientController.verCarrito);
-router.delete('/vaciarcarrito', clientController.vaciarCarrito);
-router.get('/vaciarhistcompras', clientController.obtenerHistorialCompras);
+router.post('/agregarcarrito', cauth.requireLogin, clientController.agregarCarrito);
+router.get('/vercarrito/:id', cauth.requireLogin, clientController.verCarrito);
+router.delete('/vaciarcarrito', cauth.requireLogin, clientController.vaciarCarrito);
+router.post('/realizarcompra', cauth.requireLogin, clientController.realizarCompra);
 router.post('/realizarcompra', clientController.realizarCompra);
 router.post('/creardireccion', clientController.crearDireccionCliente);
 router.get('/verdireccion/:id', clientController.verDireccionesCliente);

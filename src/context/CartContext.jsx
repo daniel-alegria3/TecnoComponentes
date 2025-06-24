@@ -5,84 +5,149 @@ const CartContext = createContext({
   addProdToCart: () => {},
   updateProdFromCart: () => {},
   removeProdFromCart: () => {},
+  initCartUserData: () => {},
 });
 
 export const useCart = () => useContext(CartContext)
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
-  const [anyError, setAnyError] = useState("");
   // TODO: recuperar del database esta informacion
-  let PRODUCT_STOCK_AVAILABLE = 10;
+  let PRODUCT_STOCK_AVAILABLE = 999;
+
+  const initCartUserData = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/clients/vercarrito/42069`, {
+        method: "GET",
+        credentials: 'include',
+      });
+
+      const rpta = await res.json();
+
+      if (!res.ok) {
+        throw new Error(rpta.error);
+      }
+
+      if (!rpta?.error) {
+        let carrito = []
+        if (Array.isArray(rpta)) {
+          carrito = rpta.map(obj => {
+            const { quantity, ...product } = obj;
+            return {
+              product: product,
+              quantity: Number(quantity),
+            };
+          })
+        }
+        setCartItems(carrito);
+      }
+    } catch (err) {
+      console.log("Error: ", err.message || "Error obteniendo informacion del Carrito")
+    }
+  };
+
 
   useEffect(() => {
-    const queryCart = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
-          method: "GET",
-          credentials: 'include',
-        });
-
-        const rpta = await res.json();
-
-        if (!res.ok) {
-          throw new Error(rpta.error);
-        }
-
-        if (!rpta.loggedIn)
-          return;
-
-        // setCartItems(rpta.???);
-      } catch (err) {
-        setAnyError(err.message || "Error obteniendo informacion del login");
-      }
-    };
-
-    queryCart();
+    initCartUserData();
   }, []);
 
   const addProdToCart = async(producto) => {
-    setCartItems(items => {
-      const exists = items.find(it => it.product.id_product === producto.id_product);
-      if (exists) {
-        return items.map(it => {
-          let val = it.quantity; // no incrementes nada
-          return it.product.id_product === producto.id_product
-               ? { ...it, quantity: val }
-               : it;
-        });
-      }
+    if (1 > PRODUCT_STOCK_AVAILABLE)
+      return;
 
-      return [...items, { product: producto, quantity: 1 }];
+    let exists = true;
+    // Añade solo 1 producto al carrito (si este todavia no esta ahi)
+    setCartItems(items => {
+      exists = items.find(it => it.product.id_product == producto.id_product);
+      if (!exists) {
+        return [...items, { product: producto, quantity: 1 }];
+      }
+      return items
     });
+
+    if (!exists) {
+      await api_set_prod_to_cart(producto.id_product, 1);
+      PRODUCT_STOCK_AVAILABLE -= 1;
+    }
   }
 
   const updateProdFromCart = async(producto, delta) => {
-    let id = producto.id_product;
+    if (delta > PRODUCT_STOCK_AVAILABLE)
+      return;
+
     setCartItems((items) =>
-      items
-      .map((it) => {
-        let val;
-        if (delta > PRODUCT_STOCK_AVAILABLE)
-          val = it.quantity; // no incrementes nada
-        else {
-          val = Math.max(1, it.quantity + delta)
-          PRODUCT_STOCK_AVAILABLE -= delta
+      items.map((it) => {
+        if (it.product.id_product == producto.id_product) {
+          const qty = Math.max(1, it.quantity + delta);
+          return { ...it, quantity: qty };
+        } else {
+          return it;
         }
-        return it.product.id_product === id
-          ? { ...it, quantity: val }
-          : it
       }).filter((it) => it.quantity > 0)
     );
+
+    const item = cartItems.find(it => it.product.id_product === producto.id_product);
+    const safeQty = Math.max(1, item.quantity + delta);
+    await api_set_prod_to_cart(producto.id_product, safeQty);
+    PRODUCT_STOCK_AVAILABLE -= delta;
   }
 
-  const removeProdFromCart = (producto) => {
+  const removeProdFromCart = async(producto) => {
     let id = producto.id_product;
     setCartItems((items) => items.filter((it) => it.product.id_product !== id));
+
+    // PRODUCT_STOCK_AVAILABLE += it.quantity;
+    await api_del_prod_from_cart(id);
+  }
+
+  //====================== {funciones (api) auxiliares} ========================
+  const api_set_prod_to_cart = async(id_product, quantity) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/clients/agregarcarrito`, {
+        method: "POST",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_product: id_product,
+          quantity: quantity,
+        }),
+      });
+
+      const rpta = await res.json();
+
+      if (!res.ok) {
+        throw new Error(rpta.error);
+      }
+
+    } catch (err) {
+      console.log(err.message || "Error: api call 'agregar_carrito'");
+    }
+  }
+
+  const api_del_prod_from_cart = async(id_product) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/clients/vaciarcarrito`, {
+        method: "DELETE",
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_product: id_product,
+        }),
+      });
+
+      const rpta = await res.json();
+
+      if (!res.ok) {
+        throw new Error(rpta.error);
+      }
+
+    } catch (err) {
+      console.log(err.message || "Error: api call 'vaciarcarrito'");
+    }
   }
 
   return (
-    <CartContext.Provider value={{ cartItems, addProdToCart, updateProdFromCart, removeProdFromCart }}>
+    <CartContext.Provider value={{ cartItems, addProdToCart, updateProdFromCart, removeProdFromCart, initCartUserData }}>
       {children}
     </CartContext.Provider>
   );
