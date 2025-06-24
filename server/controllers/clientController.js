@@ -43,15 +43,15 @@ const clientController = {
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   },
-  llenarCarrito: async (req, res) => {
-    const { id_client, id_product } = req.body;
+  agregarCarrito: async (req, res) => {
+    const { id_client, id_product, quantity } = req.body;
 
     try {
-      if (!id_client || !id_product) {
+      if (!id_client || !id_product || !quantity || isNaN(quantity) || parseInt(quantity) < 0) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
 
-      await pool.query('CALL llenar_carrito(?, ?)', [id_client, id_product]);
+      await pool.query('CALL agregar_carrito(?, ?, ?)', [id_client, id_product, parseInt(quantity)]);
 
       res.status(200).json({ message: 'Producto agregado al carrito correctamente.' });
     } catch (error) {

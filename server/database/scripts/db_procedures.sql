@@ -131,7 +131,17 @@ BEGIN
     END IF;
 
     -- Seleccionar los productos en el carrito del cliente
-    SELECT p.id_product, p.name, p.brand, p.category, p.description, p.images_path, p.price, scp.date_added
+    -- CHANGELOG: added quantity
+    SELECT
+        p.id_product as id_product,
+        p.name,
+        p.brand,
+        p.category,
+        p.description,
+        p.images_path,
+        p.price,
+        scp.quantity as quantity,
+        scp.date_added
     FROM Product p
     JOIN Shopping_Cart_Product scp ON p.id_product = scp.id_product
     WHERE scp.id_cart = client_cart_id
@@ -140,9 +150,10 @@ END;
 //
 
 -- Procedimiento para que un cliente pueda agregar algo a su carrito (cliente.agregar_carrito)
-CREATE PROCEDURE llenar_carrito(
+CREATE PROCEDURE agregar_carrito(
     IN in_id_client INT,
-    IN in_id_product INT
+    IN in_id_product INT,
+    IN in_quantity INT
 )
 BEGIN
     DECLARE client_cart_id INT;
@@ -172,13 +183,17 @@ BEGIN
         SELECT 1 FROM Shopping_Cart_Product
         WHERE id_cart = client_cart_id AND id_product = in_id_product
     ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El producto ya está en el carrito.';
+        -- Actualizar la columna 'quantity'
+        -- TODO: actualizar 'date_added'?
+        UPDATE Shopping_Cart_Product
+        SET quantity = in_quantity
+        WHERE id_cart = client_cart_id AND id_product = in_id_product;
+    ELSE
+        -- Insertar el producto en el carrito
+        INSERT INTO Shopping_Cart_Product (id_cart, id_product, quantity, date_added)
+        VALUES (client_cart_id, in_id_product, in_quantity, NOW());
     END IF;
 
-    -- Insertar el producto en el carrito
-    INSERT INTO Shopping_Cart_Product (id_cart, id_product, date_added)
-    VALUES (client_cart_id, in_id_product, NOW());
 END;
 //
 

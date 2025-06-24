@@ -1,59 +1,90 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 
-export const CartContext = createContext({
+const CartContext = createContext({
   cartItems: [],
-  setCartItems: () => {}
+  addProdToCart: () => {},
+  updateProdFromCart: () => {},
+  removeProdFromCart: () => {},
 });
 
+export const useCart = () => useContext(CartContext)
+
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem("cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [cartItems, setCartItems] = useState([]);
+  const [anyError, setAnyError] = useState("");
+  // TODO: recuperar del database esta informacion
+  let PRODUCT_STOCK_AVAILABLE = 10;
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  useEffect(() => {
-    const fetchData = async () => {
+    const queryCart = async () => {
       try {
-        let res, rpta;
-
-        res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
+        const res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
           method: "GET",
           credentials: 'include',
         });
+
+        const rpta = await res.json();
+
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error);
+          throw new Error(rpta.error);
         }
-        rpta = await res.json();
 
         if (!rpta.loggedIn)
           return;
 
-        // res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
-        //   method: "GET",
-        //   credentials: 'include',
-        // });
-        // if (!res.ok) {
-        //   const errorData = await res.json();
-        //   throw new Error(errorData.error);
-        // }
-        // rpta = await res.json();
+        // setCartItems(rpta.???);
       } catch (err) {
-        console.error("Error:", err);
+        setAnyError(err.message || "Error obteniendo informacion del login");
       }
     };
 
-    fetchData();
-  }, [cartItems]);
+    queryCart();
+  }, []);
 
+  const addProdToCart = async(producto) => {
+    setCartItems(items => {
+      const exists = items.find(it => it.product.id_product === producto.id_product);
+      if (exists) {
+        return items.map(it => {
+          let val = it.quantity; // no incrementes nada
+          return it.product.id_product === producto.id_product
+               ? { ...it, quantity: val }
+               : it;
+        });
+      }
+
+      return [...items, { product: producto, quantity: 1 }];
+    });
+  }
+
+  const updateProdFromCart = async(producto, delta) => {
+    let id = producto.id_product;
+    setCartItems((items) =>
+      items
+      .map((it) => {
+        let val;
+        if (delta > PRODUCT_STOCK_AVAILABLE)
+          val = it.quantity; // no incrementes nada
+        else {
+          val = Math.max(1, it.quantity + delta)
+          PRODUCT_STOCK_AVAILABLE -= delta
+        }
+        return it.product.id_product === id
+          ? { ...it, quantity: val }
+          : it
+      }).filter((it) => it.quantity > 0)
+    );
+  }
+
+  const removeProdFromCart = (producto) => {
+    let id = producto.id_product;
+    setCartItems((items) => items.filter((it) => it.product.id_product !== id));
+  }
 
   return (
-    <CartContext.Provider value={{ cartItems, setCartItems }}>
+    <CartContext.Provider value={{ cartItems, addProdToCart, updateProdFromCart, removeProdFromCart }}>
       {children}
     </CartContext.Provider>
   );
 }
+

@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
-import { CartContext } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 import { useSession } from "../context/SessionContext";
 
 export default function ProductCard({ producto }) {
-  const { cartItems, setCartItems } = useContext(CartContext);
+  const { addProdToCart  } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
@@ -24,17 +24,7 @@ export default function ProductCard({ producto }) {
 
   const handleAddToCart = e => {
     e.stopPropagation();
-    setCartItems(items => {
-      const exists = items.find(it => it.product.id_product === producto.id_product);
-      if (exists) {
-        return items.map(it =>
-          it.product.id_product === producto.id_product
-            ? { ...it, quantity: it.quantity + 1 }
-            : it
-        );
-      }
-      return [...items, { product: producto, quantity: 1 }];
-    });
+    addProdToCart(producto);
   };
 
   if (!producto) return null;

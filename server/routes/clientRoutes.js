@@ -13,7 +13,7 @@ router.post('/logout', cauth.requireLogin, cauth.logout);
 
 const clientController = require('../controllers/clientController.js')
 router.get('/getproducts', clientController.getAllProducts_client);
-router.post('/llenarcarrito', clientController.llenarCarrito);
+router.post('/agregarcarrito', clientController.agregarCarrito);
 router.get('/vercarrito/:id', clientController.verCarrito);
 router.delete('/vaciarcarrito', clientController.vaciarCarrito);
 router.post('/realizarcompra', clientController.realizarCompra);

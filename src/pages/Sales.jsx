@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "../context/SessionContext";
@@ -9,7 +9,7 @@ import {
   HomeIcon,
   BuildingStorefrontIcon
 } from "@heroicons/react/24/outline";
-import { CartContext } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 
 export default function Checkout() {
@@ -29,7 +29,7 @@ export default function Checkout() {
   const [metodoEntrega, setMetodoEntrega] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { cartItems, setCartItems } = useContext(CartContext);
+  const { cartItems } = useCart();
 
   const subtotal = cartItems.reduce( (sum, item) => sum + item.product.price * item.quantity, 0);
   const entrega = 0.0;

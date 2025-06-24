@@ -11,7 +11,7 @@ import NavLink from "./NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import React, { useContext, useEffect, useState } from "react";
-import { CartContext } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import { useSession } from "../context/SessionContext";
 
 const navigation = [
@@ -29,7 +29,7 @@ export default function Navbar() {
   const location = useLocation();
   const pathname = location.pathname;
   const [isHovered, setIsHovered] = useState(false);
-  const { cartItems } = useContext(CartContext);
+  const { cartItems } = useCart();
   const session = useSession();
 
   const handleLogout = async () => {

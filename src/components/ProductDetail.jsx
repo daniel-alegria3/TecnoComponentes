@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState, useContext, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { CartContext } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 
 export default function ProductDetail() {
@@ -12,24 +12,14 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
-  const { cartItems, setCartItems } = useContext(CartContext);
+  const { addProdToCart } = useCart();
 
   const images = useMemo(() => producto?.images_path ?? [], [producto]);
   const { imageUrls, isImagesLoading } = useProductImages(images);
 
   const handleAddToCart = e => {
     e.stopPropagation();
-    setCartItems(items => {
-      const exists = items.find(it => it.product.id_product === producto.id_product);
-      if (exists) {
-        return items.map(it =>
-          it.product.id_product === producto.id_product
-            ? { ...it, quantity: it.quantity + 1 }
-            : it
-        );
-      }
-      return [...items, { product: producto, quantity: 1 }];
-    });
+    addProdToCart(producto);
   };
 
   useEffect(() => {

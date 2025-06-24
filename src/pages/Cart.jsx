@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
-import { CartContext } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import CartItem from "../components/CartItem";
 import { useSession } from "../context/SessionContext";
 
@@ -18,7 +18,7 @@ export default function Cart() {
   const navigate = useNavigate();
 
   // 1) Sustituye useState por useContext
-  const { cartItems, setCartItems } = useContext(CartContext);
+  const { cartItems, addProdToCart } = useCart();
 
   const [shippingCost, setShippingCost] = useState(0);
   const [promoCode, setPromoCode] = useState("");
@@ -150,28 +150,6 @@ export default function Cart() {
     console.log("Aplicar código:", promoCode);
   };
 
-  const addRecommended = (prod) => {
-    setCartItems((items) => {
-      const exists = items.find(
-        (it) => it.product.id_product === prod.id_product
-      );
-      if (exists) {
-        return items.map((it) =>
-          it.product.id_product === prod.id_product
-            ? { ...it, quantity: it.quantity + 1 }
-            : it
-        );
-      }
-      return [
-        ...items,
-        {
-          product: prod,
-          quantity: 1,
-        },
-      ];
-    });
-  };
-
   return (
     <div className="px-6 py-8">
       <h1 className="text-3xl font-semibold mb-6">Tu Carrito de Compras</h1>
@@ -275,7 +253,7 @@ export default function Cart() {
                       price: Number(producto.price || 0),
                       images_path: producto.images_path ? producto.images_path : ["/placeholder.png"],
                     }}
-                    onAddToCart={() => addRecommended(producto)}
+                    onAddToCart={() => addProdToCart(producto)}
                   />
                 </div>
               ))}

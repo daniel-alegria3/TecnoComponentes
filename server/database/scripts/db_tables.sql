@@ -14,6 +14,7 @@ CREATE TABLE `Shopping_Cart` (
 CREATE TABLE `Shopping_Cart_Product` (
   `id_cart` int NOT NULL,
   `id_product` int NOT NULL,
+  `quantity` int NOT NULL,
   `date_added` datetime
 );
 
