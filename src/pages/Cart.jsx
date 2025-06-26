@@ -248,7 +248,7 @@ export default function Cart() {
                       id_product: producto.id_product,
                       name: producto.name || "Producto sin nombre",
                       description: producto.description || "",
-                      stock: producto.stock || 0,
+                      available_stock: producto.available_stock || 0,
                       category: producto.category || "Sin categoría",
                       brand: producto.brand || "Sin marca",
                       price: Number(producto.price || 0),

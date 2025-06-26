@@ -177,15 +177,15 @@ export default function ProductDetail() {
                 </span>
                 <span
                   className={`text-sm font-medium px-3 py-1 rounded-full ${
-                    producto.stock > 10
+                    producto.available_stock > 10
                       ? "bg-green-100 text-green-800"
-                      : producto.stock > 0
+                      : producto.available_stock > 0
                       ? "bg-yellow-100 text-yellow-800"
                       : "bg-red-100 text-red-800"
                   }`}
                 >
-                  {producto.stock > 0
-                    ? `${producto.stock} disponibles`
+                  {producto.available_stock > 0
+                    ? `${producto.available_stock} disponibles`
                     : "Agotado"}
                 </span>
               </div>
@@ -242,9 +242,9 @@ export default function ProductDetail() {
               <div className="flex flex-col sm:flex-row gap-4 pt-6">
                 <button
                   onClick={handleAddToCart}
-                  disabled={producto.stock <= 0}
+                  disabled={producto.available_stock <= 0}
                   className={`flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-medium transition-colors shadow-md ${
-                    producto.stock > 0
+                    producto.available_stock > 0
                       ? "bg-violet-600 hover:bg-violet-700 text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
@@ -253,9 +253,9 @@ export default function ProductDetail() {
                   Añadir al carrito
                 </button>
                 <button
-                  disabled={producto.stock <= 0}
+                  disabled={producto.available_stock <= 0}
                   className={`py-3 px-6 rounded-lg font-medium transition-colors border ${
-                    producto.stock > 0
+                    producto.available_stock > 0
                       ? "border-violet-600 text-violet-600 hover:bg-violet-50"
                       : "border-gray-300 text-gray-500 cursor-not-allowed"
                   }`}

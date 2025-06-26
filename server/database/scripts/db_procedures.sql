@@ -97,11 +97,22 @@ BEGIN
         p.description,
         p.price,
         p.stock,
+        -- Calculate available stock by subtracting total quantities in all shopping carts
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
         p.on_sale,
         p.status,
         p.specs
     FROM Product p
     JOIN Category c ON p.category = c.id_category
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE p.status = TRUE;
 END;
 //
@@ -348,11 +359,22 @@ BEGIN
         p.description,
         p.price,
         p.stock,
+        -- Calculate available stock by subtracting total quantities in all shopping carts
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
         p.on_sale,
         p.status,
         p.specs
     FROM Product p
     JOIN Category c ON p.category = c.id_category
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE p.id_product = id_product_in;
 END;
 //
@@ -403,7 +425,7 @@ CREATE PROCEDURE agregar_producto_orden(
 BEGIN
     DECLARE client_cart_id INT;
     DECLARE product_price INT;
-    DECLARE stock_actual INT;
+    DECLARE available_stock INT;
 
     -- Validaciones
     IF in_id_order_detail IS NULL OR in_id_client IS NULL OR in_id_product IS NULL THEN
@@ -431,14 +453,26 @@ BEGIN
         SET MESSAGE_TEXT = 'El producto no está en el carrito del cliente.';
     END IF;
 
-    -- Obtener precio del producto
-    SELECT price, stock INTO product_price, stock_actual
-    FROM Product
-    WHERE id_product = in_id_product;
+    -- Obtener precio y stock disponible usando la misma lógica que ObtenerProductosActivos
+    SELECT
+        p.price,
+        COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock)
+    INTO product_price, available_stock
+    FROM Product p
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
+    WHERE p.id_product = in_id_product AND p.status = TRUE;
 
-    IF stock_actual IS NULL OR stock_actual < in_quantity THEN
+      -- Validar stock disponible (considerando lo que está en carritos)
+    IF available_stock IS NULL OR available_stock < in_quantity THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Stock insuficiente.';
+        SET MESSAGE_TEXT = 'Stock insuficiente considerando productos en carritos.';
     END IF;
 
     -- Insertar en Product_Order

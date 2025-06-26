@@ -127,13 +127,13 @@ export default function ProductCard({ producto }) {
           </div>
 
           <span className={`text-xs text-white px-2 py-1 rounded-full ${
-            producto.stock > 10
+            producto.available_stock > 10
               ? "bg-gradient-to-r from-violet-600 to-violet-400"
-              : producto.stock > 0
+              : producto.available_stock > 0
                 ? "bg-gradient-to-r from-violet-500 to-violet-300"
                 : "bg-gradient-to-r from-gray-500 to-gray-400"
           }`}>
-            {producto.stock > 0 ? `${producto.stock} en stock` : "Agotado"}
+            {producto.available_stock > 0 ? `${producto.available_stock} en stock` : "Agotado"}
           </span>
         </div>
       </div>
