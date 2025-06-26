@@ -12,18 +12,11 @@ import {
 import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 
+
 export default function Checkout() {
+  const navigate = useNavigate();
   const { cartItems } = useCart();
   const { isLoggedIn } = useSession();
-  if (!isLoggedIn) {
-    return (
-      <div>
-        <h2>Iniciar session para ver la pagina de Venta</h2>
-      </div>
-    )
-  }
-
-  const navigate = useNavigate();
 
   const [direccion, setDireccion] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
@@ -54,6 +47,13 @@ export default function Checkout() {
   function SalesItem({ product, quantity }) {
     const { imageUrls, isLoading: isImagesLoading } = useProductImages(product?.images_path || []);
 
+    if (!isLoggedIn) {
+      return (
+        <div>
+          <h2>Iniciar session para ver la pagina de Venta</h2>
+        </div>
+      )
+    }
     return (
       <div>
         <div key={product.product_id} className="text-center">

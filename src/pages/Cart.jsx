@@ -6,17 +6,9 @@ import CartItem from "../components/CartItem";
 import { useSession } from "../context/SessionContext";
 
 export default function Cart() {
+  const navigate = useNavigate();
   const { cartItems, addProdToCart } = useCart();
   const { isLoggedIn } = useSession();
-  if (!isLoggedIn) {
-    return (
-      <div>
-        <h2>Iniciar session para ver la pagina de Carrito</h2>
-      </div>
-    )
-  }
-
-  const navigate = useNavigate();
 
   // 1) Sustituye useState por useContext
 
@@ -150,6 +142,14 @@ export default function Cart() {
     console.log("Aplicar código:", promoCode);
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <h2>Iniciar session para ver la pagina de Carrito</h2>
+      </div>
+    )
+  }
+
   return (
     <div className="px-6 py-8">
       <h1 className="text-3xl font-semibold mb-6">Tu Carrito de Compras</h1>
@@ -161,6 +161,7 @@ export default function Cart() {
           ) : (
             cartItems.map(({ product, quantity }) => (
               <CartItem
+                key={product.id_product}
                 product={product}
                 quantity={quantity}
               />

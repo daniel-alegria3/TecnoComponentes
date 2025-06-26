@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 
 const CartContext = createContext({
   cartItems: [],
@@ -11,7 +11,11 @@ const CartContext = createContext({
 export const useCart = () => useContext(CartContext)
 
 export function CartProvider({ children }) {
+  const CART_PURCHASE_TIMEOUT_SECS = 1500;
+
   const [cartItems, setCartItems] = useState([]);
+  const timer = useRef(null);
+
   // TODO: recuperar del database esta informacion
   let PRODUCT_STOCK_AVAILABLE = 999;
 
@@ -145,6 +149,28 @@ export function CartProvider({ children }) {
       console.log(err.message || "Error: api call 'vaciarcarrito'");
     }
   }
+
+  //====================== {eventos con timer} ========================
+  const on_cart_timeout = () => {
+    console.log("EMPTIED CLIENT'S CART");
+    cartItems.map((it) => {
+      api_del_prod_from_cart(it.product.id_product);
+    })
+    clearTimeout(timer.current);
+  };
+
+  const start_timer = () => {
+    timer.current = setTimeout(() => {
+      on_cart_timeout();
+    }, CART_PURCHASE_TIMEOUT_SECS * 1000);
+  };
+
+  // resetear timer cuando se actualiza cartItems
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      start_timer();
+    }
+  }, [cartItems]);
 
   return (
     <CartContext.Provider value={{ cartItems, addProdToCart, updateProdFromCart, removeProdFromCart, initCartUserData }}>
