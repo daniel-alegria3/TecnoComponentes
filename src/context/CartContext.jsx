@@ -16,9 +16,6 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const timer = useRef(null);
 
-  // TODO: recuperar del database esta informacion
-  let PRODUCT_STOCK_AVAILABLE = 999;
-
   const initCartUserData = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/clients/vercarrito/42069`, {
@@ -56,7 +53,7 @@ export function CartProvider({ children }) {
   }, []);
 
   const addProdToCart = async(producto) => {
-    if (1 > PRODUCT_STOCK_AVAILABLE)
+    if (1 > producto.available_stock)
       return;
 
     let exists = true;
@@ -71,12 +68,13 @@ export function CartProvider({ children }) {
 
     if (!exists) {
       await api_set_prod_to_cart(producto.id_product, 1);
-      PRODUCT_STOCK_AVAILABLE -= 1;
+      producto.available_stock -= 1;
     }
   }
 
   const updateProdFromCart = async(producto, delta) => {
-    if (delta > PRODUCT_STOCK_AVAILABLE)
+    console.log("STOCK BEGIN:", producto.available_stock)
+    if (delta > producto.available_stock)
       return;
 
     setCartItems((items) =>
@@ -93,15 +91,16 @@ export function CartProvider({ children }) {
     const item = cartItems.find(it => it.product.id_product === producto.id_product);
     const safeQty = Math.max(1, item.quantity + delta);
     await api_set_prod_to_cart(producto.id_product, safeQty);
-    PRODUCT_STOCK_AVAILABLE -= delta;
+    producto.available_stock -= delta;
+    console.log("STOCK END:", producto.available_stock)
   }
 
   const removeProdFromCart = async(producto) => {
-    let id = producto.id_product;
-    setCartItems((items) => items.filter((it) => it.product.id_product !== id));
+    const item = cartItems.find(it => it.product.id_product === producto.id_product);
+    setCartItems((items) => items.filter((it) => it.product.id_product != producto.id_product));
 
-    // PRODUCT_STOCK_AVAILABLE += it.quantity;
-    await api_del_prod_from_cart(id);
+    await api_del_prod_from_cart(producto.id_product);
+    producto.available_stock += item.quantity;
   }
 
   //====================== {funciones (api) auxiliares} ========================
