@@ -47,12 +47,20 @@ export function CartProvider({ children }) {
     }
   };
 
+  ///[ DEBUG FUNCTION
+  useEffect(() => {
+        console.log("=== RELOADED ============================\n")
+        console.log(cartItems)
+        console.log("=\n")
+  }, [cartItems]);
+  ///[ END DEBUG FUNCTION
 
   useEffect(() => {
     initCartUserData();
   }, []);
 
   const addProdToCart = async(producto) => {
+    /// here lies the problem?
     if (1 > producto.available_stock)
       return;
 
@@ -61,7 +69,7 @@ export function CartProvider({ children }) {
     setCartItems(items => {
       exists = items.find(it => it.product.id_product == producto.id_product);
       if (!exists) {
-        return [...items, { product: producto, quantity: 1 }];
+        return [...items, { product: {...producto, available_stock: producto.available_stock - 1}, quantity: 1 }];
       }
       return items
     });
@@ -70,10 +78,12 @@ export function CartProvider({ children }) {
       await api_set_prod_to_cart(producto.id_product, 1);
       producto.available_stock -= 1;
     }
+    console.log(producto)
+    console.log(`addProdToCart: ${producto.available_stock}\n`)
+    console.log("================\n")
   }
 
   const updateProdFromCart = async(producto, delta) => {
-    console.log("STOCK BEGIN:", producto.available_stock)
     if (delta > producto.available_stock)
       return;
 
@@ -81,26 +91,31 @@ export function CartProvider({ children }) {
       items.map((it) => {
         if (it.product.id_product == producto.id_product) {
           const qty = Math.max(1, it.quantity + delta);
-          return { ...it, quantity: qty };
+          return { product: {...it.product, available_stock: it.product.available_stock - delta}, quantity: qty };
         } else {
           return it;
         }
       }).filter((it) => it.quantity > 0)
     );
 
-    const item = cartItems.find(it => it.product.id_product === producto.id_product);
+    const item = cartItems.find(it => it.product.id_product == producto.id_product);
     const safeQty = Math.max(1, item.quantity + delta);
     await api_set_prod_to_cart(producto.id_product, safeQty);
     producto.available_stock -= delta;
-    console.log("STOCK END:", producto.available_stock)
+    console.log(`updateProdFromCart: ${producto.available_stock}\n`)
+    console.log("================\n")
   }
 
   const removeProdFromCart = async(producto) => {
     const item = cartItems.find(it => it.product.id_product === producto.id_product);
+    if (!item) return;
+
     setCartItems((items) => items.filter((it) => it.product.id_product != producto.id_product));
 
     await api_del_prod_from_cart(producto.id_product);
     producto.available_stock += item.quantity;
+    console.log(`removeProdFromCart: ${producto.available_stock}\n`)
+    console.log("================\n")
   }
 
   //====================== {funciones (api) auxiliares} ========================
@@ -155,6 +170,7 @@ export function CartProvider({ children }) {
     cartItems.map((it) => {
       api_del_prod_from_cart(it.product.id_product);
     })
+    setCartItems([]);
     clearTimeout(timer.current);
   };
 

@@ -151,10 +151,21 @@ BEGIN
         p.description,
         p.images_path,
         p.price,
+        p.stock,
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
         scp.quantity as quantity,
         scp.date_added
     FROM Product p
     JOIN Shopping_Cart_Product scp ON p.id_product = scp.id_product
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE scp.id_cart = client_cart_id
     ORDER BY scp.date_added DESC;
 END;
@@ -456,7 +467,7 @@ BEGIN
     -- Obtener precio y stock disponible usando la misma lógica que ObtenerProductosActivos
     SELECT
         p.price,
-        COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock)
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int)
     INTO product_price, available_stock
     FROM Product p
     LEFT JOIN (
