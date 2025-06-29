@@ -17,6 +17,7 @@ import { useSession } from "../context/SessionContext";
 const navigation = [
   { name: "Inicio", href: "/" },
   { name: "Ofertas", href: "/ofertas" },
+  { name: "Arma tu PC", href: "/arma-tu-pc" }, // Añadir esta línea
   { name: "Ayuda", href: "/ayuda" },
 ];
 

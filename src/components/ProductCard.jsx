@@ -5,8 +5,8 @@ import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 import { useSession } from "../context/SessionContext";
 
-export default function ProductCard({ producto }) {
-  const { addProdToCart  } = useCart();
+export default function ProductCard({ producto, onSelect, isSelected, view }) {
+  const { addProdToCart } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
@@ -29,37 +29,66 @@ export default function ProductCard({ producto }) {
 
   if (!producto) return null;
 
-  return (
+  const isCompact = view === 'compact';
 
+  const cardClasses = `
+    relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white
+    ${isCompact ? 'w-full h-auto' : 'w-90 h-85'}
+    ${onSelect ? 'cursor-pointer' : ''}
+    ${isSelected ? 'border-violet-500 ring-2 ring-violet-500' : 'border-gray-200'}
+  `;
+
+  const handleCardClick = () => {
+    if (onSelect) {
+      onSelect(producto);
+    }
+  };
+
+  return (
     <div
-      className="relative border rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white w-90 h-85"
+      className={cardClasses}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Contenedor de imágenes */}
-      <div className="relative h-48 overflow-hidden">
+      {/* Contenedor de imágenes (para seleccionar) */}
+      <div
+        className={`relative overflow-hidden ${isCompact ? 'h-32' : 'h-48'} ${onSelect ? 'cursor-pointer' : ''}`}
+        onClick={onSelect ? handleCardClick : undefined}
+      >
         <div className="image h-full flex items-center justify-center bg-gray-100">
           {isImagesLoading ? (
-              <div className="w-32 h-32 border-4 border-dashed rounded-full border-gray-300 animate-spin"></div>
+            <div className="w-32 h-32 border-4 border-dashed rounded-full border-gray-300 animate-spin"></div>
+          ) : imageUrls.length > 0 ? (
+            imageUrls.map((img, index) =>
+              index === currentImageIndex ? (
+                <img
+                  key={index}
+                  src={img}
+                  alt={producto.name || "Producto sin nombre"}
+                  className="absolute w-full object-cover"
+                />
+              ) : null
+            )
           ) : (
-              imageUrls.map((img, index) => (
-                (index === currentImageIndex ? (
-                    <img
-                      key={index}
-                      src={img}
-                      alt={producto.name || "Producto sin nombre"}
-                      className="absolute w-full object-cover"
-                      // onError={(e) => {
-                      //   e.target.src = '/placeholder-image.jpg';
-                      // }}
-                    />
-                ) : null)
-              ))
+            <img
+              src="/Logo.png"
+              alt="Producto sin imagen"
+              className="h-32 w-32 object-contain"
+            />
           )}
         </div>
 
+        {/* Overlay de selección para la vista compacta */}
+        {isCompact && isHovered && (
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300 pointer-events-none">
+            <span className="bg-white text-violet-700 font-semibold px-4 py-2 rounded-lg shadow-md">
+              Seleccionar
+            </span>
+          </div>
+        )}
+
         {/* Indicadores del carrusel */}
-        {!isImagesLoading && imageUrls.length > 1 && (
+        {!isImagesLoading && imageUrls.length > 1 && !isCompact && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
             {imageUrls.map((_, index) => (
               <button
@@ -80,7 +109,7 @@ export default function ProductCard({ producto }) {
         )}
 
         {/* Botón de añadir al carrito */}
-        {isLoggedIn && (
+        {isLoggedIn && !isCompact && (
           <button
             onClick={handleAddToCart}
             className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
@@ -99,45 +128,52 @@ export default function ProductCard({ producto }) {
           </span>
         )}
       </div>
-      <Link
-      to={`/product/${producto.id_product}`}
-    >
-      {/* Contenido de la card */}
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-1">
-          <h4 className="font-semibold text-lg text-gray-800 truncate">
-            {producto.name || "Producto sin nombre"}
-          </h4>
-          {producto.brand && (
-            <span className="text-xs text-gray-500">{producto.brand}</span>
-          )}
-        </div>
 
-        {producto.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {producto.description}
-          </p>
-        )}
+      {/* Contenido de la card (para ver detalles) */}
+      <div className="relative">
+        <Link to={`/product/${producto.id_product}`} className="block">
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-1">
+              <h4 className={`font-semibold text-gray-800 truncate ${isCompact ? 'text-base' : 'text-lg'}`}>
+                {producto.name || "Producto sin nombre"}
+              </h4>
+              {producto.brand && (
+                <span className="text-xs text-gray-500">{producto.brand}</span>
+              )}
+            </div>
 
-        <div className="flex justify-between items-center">
-          <div>
-            <span className="text-xl font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
-              ${producto.price ? Number(producto.price).toFixed(2) : "0.00"}
-            </span>
+            <p className={`text-sm text-gray-600 mb-3 line-clamp-2 ${isCompact ? 'h-auto' : 'h-10'}`}>
+              {producto.description || "Descripción no disponible."}
+            </p>
+
+            <div className="flex justify-between items-center">
+              <div>
+                <span className={`font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent ${isCompact ? 'text-lg' : 'text-xl'}`}>
+                  ${producto.price ? Number(producto.price).toFixed(2) : "0.00"}
+                </span>
+              </div>
+
+              <span className={`text-xs text-white px-2 py-1 rounded-full ${
+                producto.available_stock > 10
+                  ? "bg-gradient-to-r from-violet-600 to-violet-400"
+                  : producto.available_stock > 0
+                    ? "bg-gradient-to-r from-violet-500 to-violet-300"
+                    : "bg-gradient-to-r from-gray-500 to-gray-400"
+              }`}>
+                {producto.available_stock > 0 ? `${producto.available_stock} en stock` : "Agotado"}
+              </span>
+            </div>
           </div>
-
-          <span className={`text-xs text-white px-2 py-1 rounded-full ${
-            producto.available_stock > 10
-              ? "bg-gradient-to-r from-violet-600 to-violet-400"
-              : producto.available_stock > 0
-                ? "bg-gradient-to-r from-violet-500 to-violet-300"
-                : "bg-gradient-to-r from-gray-500 to-gray-400"
-          }`}>
-            {producto.available_stock > 0 ? `${producto.available_stock} en stock` : "Agotado"}
-          </span>
-        </div>
+          {/* Overlay para "Ver Detalles" en vista compacta */}
+          {isCompact && isHovered && (
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300 pointer-events-none">
+              <span className="bg-white text-gray-800 font-semibold px-4 py-2 rounded-lg shadow-md">
+                Ver Detalles
+              </span>
+            </div>
+          )}
+        </Link>
       </div>
-    </Link>
     </div>
   );
 };

@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import ProductDetail from "./components/ProductDetail";
 import Cart from "./pages/Cart"; // <— importar
 import Sales from "./pages/Sales";
+import ArmaTuPC from "./pages/ArmaTuPC"; // <— importar
 
 // ADMIN
 import "./App.css";
@@ -29,6 +30,7 @@ function App() {
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} /> {/* nueva ruta */}
         <Route path="/sales" element={<Sales />} />
+        <Route path="/arma-tu-pc" element={<ArmaTuPC />} /> {/* nueva ruta */}
       </Route>
 
       {/* Rutas admin con su layout */}
