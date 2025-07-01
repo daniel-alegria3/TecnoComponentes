@@ -97,11 +97,22 @@ BEGIN
         p.description,
         p.price,
         p.stock,
+        -- Calculate available stock by subtracting total quantities in all shopping carts
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
         p.on_sale,
         p.status,
         p.specs
     FROM Product p
     JOIN Category c ON p.category = c.id_category
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE p.status = TRUE;
 END;
 //
@@ -131,18 +142,40 @@ BEGIN
     END IF;
 
     -- Seleccionar los productos en el carrito del cliente
-    SELECT p.id_product, p.name, p.brand, p.category, p.description, p.images_path, p.price, scp.date_added
+    -- CHANGELOG: added quantity
+    SELECT
+        p.id_product as id_product,
+        p.name,
+        p.brand,
+        p.category,
+        p.description,
+        p.images_path,
+        p.price,
+        p.stock,
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
+        scp.quantity as quantity,
+        scp.date_added
     FROM Product p
     JOIN Shopping_Cart_Product scp ON p.id_product = scp.id_product
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE scp.id_cart = client_cart_id
     ORDER BY scp.date_added DESC;
 END;
 //
 
 -- Procedimiento para que un cliente pueda agregar algo a su carrito (cliente.agregar_carrito)
-CREATE PROCEDURE llenar_carrito(
+CREATE PROCEDURE agregar_carrito(
     IN in_id_client INT,
-    IN in_id_product INT
+    IN in_id_product INT,
+    IN in_quantity INT
 )
 BEGIN
     DECLARE client_cart_id INT;
@@ -172,13 +205,17 @@ BEGIN
         SELECT 1 FROM Shopping_Cart_Product
         WHERE id_cart = client_cart_id AND id_product = in_id_product
     ) THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'El producto ya está en el carrito.';
+        -- Actualizar la columna 'quantity'
+        -- TODO: actualizar 'date_added'?
+        UPDATE Shopping_Cart_Product
+        SET quantity = in_quantity
+        WHERE id_cart = client_cart_id AND id_product = in_id_product;
+    ELSE
+        -- Insertar el producto en el carrito
+        INSERT INTO Shopping_Cart_Product (id_cart, id_product, quantity, date_added)
+        VALUES (client_cart_id, in_id_product, in_quantity, NOW());
     END IF;
 
-    -- Insertar el producto en el carrito
-    INSERT INTO Shopping_Cart_Product (id_cart, id_product, date_added)
-    VALUES (client_cart_id, in_id_product, NOW());
 END;
 //
 
@@ -333,11 +370,22 @@ BEGIN
         p.description,
         p.price,
         p.stock,
+        -- Calculate available stock by subtracting total quantities in all shopping carts
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
         p.on_sale,
         p.status,
         p.specs
     FROM Product p
     JOIN Category c ON p.category = c.id_category
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE p.id_product = id_product_in;
 END;
 //
@@ -388,7 +436,7 @@ CREATE PROCEDURE agregar_producto_orden(
 BEGIN
     DECLARE client_cart_id INT;
     DECLARE product_price INT;
-    DECLARE stock_actual INT;
+    DECLARE available_stock INT;
 
     -- Validaciones
     IF in_id_order_detail IS NULL OR in_id_client IS NULL OR in_id_product IS NULL THEN
@@ -416,14 +464,26 @@ BEGIN
         SET MESSAGE_TEXT = 'El producto no está en el carrito del cliente.';
     END IF;
 
-    -- Obtener precio del producto
-    SELECT price, stock INTO product_price, stock_actual
-    FROM Product
-    WHERE id_product = in_id_product;
+    -- Obtener precio y stock disponible usando la misma lógica que ObtenerProductosActivos
+    SELECT
+        p.price,
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int)
+    INTO product_price, available_stock
+    FROM Product p
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
+    WHERE p.id_product = in_id_product AND p.status = TRUE;
 
-    IF stock_actual IS NULL OR stock_actual < in_quantity THEN
+      -- Validar stock disponible (considerando lo que está en carritos)
+    IF available_stock IS NULL OR available_stock < in_quantity THEN
         SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Stock insuficiente.';
+        SET MESSAGE_TEXT = 'Stock insuficiente considerando productos en carritos.';
     END IF;
 
     -- Insertar en Product_Order
@@ -440,6 +500,271 @@ BEGIN
     WHERE id_cart = client_cart_id AND id_product = in_id_product;
 END;
 //
+
+--cliente.crearDireccionCliente
+CREATE PROCEDURE crear_direccion_cliente(
+    IN p_id_client INT,
+    IN p_city VARCHAR(50),
+    IN p_country VARCHAR(50),
+    IN p_physical_address VARCHAR(200)
+)
+BEGIN
+    DECLARE client_exists INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO client_exists
+    FROM Client
+    WHERE id_client = p_id_client;
+
+    -- Validar campos no nulos
+    IF p_id_client IS NULL THEN
+        SET error_message = 'Error: El ID del cliente no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF client_exists = 0 THEN
+        SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_city IS NULL OR p_city = '' THEN
+        SET error_message = 'Error: La ciudad no puede estar vacía.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_country IS NULL OR p_country = '' THEN
+        SET error_message = 'Error: El país no puede estar vacío.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_physical_address IS NULL OR p_physical_address = '' THEN
+        SET error_message = 'Error: La dirección física no puede estar vacía.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Todos los datos son válidos, proceder con la inserción
+        INSERT INTO Address (id_client, city, country, physical_address)
+        VALUES (p_id_client, p_city, p_country, p_physical_address);
+
+    END IF;
+END;
+//
+
+CREATE PROCEDURE obtener_direcciones_cliente(
+    IN p_id_client INT
+)
+BEGIN
+    DECLARE client_exists INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO client_exists
+    FROM Client
+    WHERE id_client = p_id_client;
+
+    -- Validar parámetro
+    IF p_id_client IS NULL THEN
+        SET error_message = 'Error: El ID del cliente no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF client_exists = 0 THEN
+        SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Obtener todas las direcciones del cliente
+        SELECT
+            id_address,
+            id_client,
+            city,
+            country,
+            physical_address,
+            created_at,
+            updated_at
+        FROM Address
+        WHERE id_client = p_id_client
+        ORDER BY created_at DESC;
+    END IF;
+END;
+//
+
+CREATE PROCEDURE ver_direcciones_cliente(
+    IN p_id_client INT
+)
+BEGIN
+    DECLARE client_exists INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO client_exists
+    FROM Client
+    WHERE id_client = p_id_client;
+
+    -- Validar parámetro
+    IF p_id_client IS NULL THEN
+        SET error_message = 'Error: El ID del cliente no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF client_exists = 0 THEN
+        SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Obtener todas las direcciones del cliente (solo con los campos existentes)
+        SELECT
+            id_address,
+            id_client,
+            city,
+            country,
+            physical_address
+        FROM Address
+        WHERE id_client = p_id_client;
+    END IF;
+END;
+//
+
+-- cliente.editarDireccionCliente
+CREATE PROCEDURE editar_direccion_cliente(
+    IN p_id_client INT,
+    IN p_id_address INT,
+    IN p_city VARCHAR(50),
+    IN p_country VARCHAR(50),
+    IN p_physical_address VARCHAR(200)
+)
+BEGIN
+    DECLARE client_exists INT;
+    DECLARE address_exists INT;
+    DECLARE address_belongs_to_client INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO client_exists FROM Client WHERE id_client = p_id_client;
+
+    -- Verificar si la dirección existe
+    SELECT COUNT(*) INTO address_exists FROM Address WHERE id_address = p_id_address;
+
+    -- Verificar que la dirección pertenezca al cliente
+    SELECT COUNT(*) INTO address_belongs_to_client
+    FROM Address
+    WHERE id_address = p_id_address AND id_client = p_id_client;
+
+    -- Validaciones
+    IF p_id_client IS NULL THEN
+        SET error_message = 'Error: El ID del cliente no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_id_address IS NULL THEN
+        SET error_message = 'Error: El ID de la dirección no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF client_exists = 0 THEN
+        SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF address_exists = 0 THEN
+        SET error_message = CONCAT('Error: La dirección con ID ', p_id_address, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF address_belongs_to_client = 0 THEN
+        SET error_message = 'Error: La dirección no pertenece al cliente especificado.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_city IS NULL OR p_city = '' THEN
+        SET error_message = 'Error: La ciudad no puede estar vacía.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_country IS NULL OR p_country = '' THEN
+        SET error_message = 'Error: El país no puede estar vacío.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_physical_address IS NULL OR p_physical_address = '' THEN
+        SET error_message = 'Error: La dirección física no puede estar vacía.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Actualización sin mensaje de confirmación
+        UPDATE Address
+        SET
+            city = p_city,
+            country = p_country,
+            physical_address = p_physical_address
+        WHERE
+            id_address = p_id_address AND
+            id_client = p_id_client;
+    END IF;
+END;
+//
+
+CREATE PROCEDURE eliminar_direccion_cliente(
+    IN p_id_client INT,
+    IN p_id_address INT
+)
+BEGIN
+    DECLARE client_exists INT;
+    DECLARE address_exists INT;
+    DECLARE address_belongs_to_client INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO client_exists FROM Client WHERE id_client = p_id_client;
+
+    -- Verificar si la dirección existe
+    SELECT COUNT(*) INTO address_exists FROM Address WHERE id_address = p_id_address;
+
+    -- Verificar que la dirección pertenezca al cliente
+    SELECT COUNT(*) INTO address_belongs_to_client
+    FROM Address
+    WHERE id_address = p_id_address AND id_client = p_id_client;
+
+    -- Validaciones
+    IF p_id_client IS NULL THEN
+        SET error_message = 'Error: El ID del cliente no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_id_address IS NULL THEN
+        SET error_message = 'Error: El ID de la dirección no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF client_exists = 0 THEN
+        SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF address_exists = 0 THEN
+        SET error_message = CONCAT('Error: La dirección con ID ', p_id_address, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF address_belongs_to_client = 0 THEN
+        SET error_message = 'Error: La dirección no pertenece al cliente especificado.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Eliminar la dirección
+        DELETE FROM Address
+        WHERE id_address = p_id_address AND id_client = p_id_client;
+    END IF;
+END;
+//
+
+-- cliente.obtenerHistorialCompras
+CREATE PROCEDURE obtener_historial_compras_cliente(
+    IN p_id_client INT
+)
+BEGIN
+    DECLARE client_exists INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el cliente existe
+    SELECT COUNT(*) INTO client_exists FROM Client WHERE id_client = p_id_client;
+
+    IF p_id_client IS NULL THEN
+        SET error_message = 'Error: El ID del cliente no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF client_exists = 0 THEN
+        SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Obtener historial de compras
+        SELECT
+            od.id_order_detail,
+            od.date_added AS fecha_compra,
+            po.id_product,
+            p.name AS nombre_producto,
+            p.images_path,
+            po.price_at_buy AS precio_compra,
+            po.quantity AS cantidad,
+            (po.price_at_buy * po.quantity) AS subtotal,
+            cat.name AS categoria
+        FROM
+            Orden_Detail od
+        JOIN
+            Product_Order po ON od.id_order_detail = po.id_order_detail
+        JOIN
+            Product p ON po.id_product = p.id_product
+        JOIN
+            Category cat ON p.category = cat.id_category
+        WHERE
+            po.id_cart IN (SELECT id_cart FROM Shopping_Cart WHERE id_client = p_id_client)
+        ORDER BY
+            od.date_added DESC;
+    END IF;
+END;
+//
+
 
 DELIMITER ;
 

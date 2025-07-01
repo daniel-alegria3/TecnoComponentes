@@ -39,7 +39,8 @@ function createAuthSession({ cookie_name, secret, primary_key }) {
 
     auth.requireLogin = (req, res, next) => {
         if (!req.session[auth.primary_key]) {
-            return res.status(401).json({ error: 'No ha iniciado sesión.' });
+            // return res.status(401).json({ error: 'No ha iniciado sesión.' });
+            return res.json({ error: 'No ha iniciado sesión.' });
         }
         next();
     };

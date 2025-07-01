@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
-import { CartContext } from "../context/CartContext";
+import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
+import { useSession } from "../context/SessionContext";
 
 export default function ProductCard({ producto }) {
-  const { cartItems, setCartItems } = useContext(CartContext);
+  const { addProdToCart  } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
+  const { isLoggedIn } = useSession();
 
   // Ciclar imágenes mientras se hace hover
   useEffect(() => {
@@ -22,17 +24,7 @@ export default function ProductCard({ producto }) {
 
   const handleAddToCart = e => {
     e.stopPropagation();
-    setCartItems(items => {
-      const exists = items.find(it => it.product.id_product === producto.id_product);
-      if (exists) {
-        return items.map(it =>
-          it.product.id_product === producto.id_product
-            ? { ...it, quantity: it.quantity + 1 }
-            : it
-        );
-      }
-      return [...items, { product: producto, quantity: 1 }];
-    });
+    addProdToCart(producto);
   };
 
   if (!producto) return null;
@@ -88,15 +80,17 @@ export default function ProductCard({ producto }) {
         )}
 
         {/* Botón de añadir al carrito */}
-        <button
-          onClick={handleAddToCart}
-          className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
-            isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
-          }`}
-          aria-label="Añadir al carrito"
-        >
-          <ShoppingBagIcon className="h-5 w-5" />
-        </button>
+        {isLoggedIn && (
+          <button
+            onClick={handleAddToCart}
+            className={`absolute top-3 right-3 bg-gradient-to-r from-violet-600 to-violet-400 text-white p-2.5 rounded-full shadow-lg transform transition-all duration-300 hover:from-violet-700 hover:to-violet-500 ${
+              isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
+            }`}
+            aria-label="Añadir al carrito"
+          >
+            <ShoppingBagIcon className="h-5 w-5" />
+          </button>
+        )}
 
         {/* Etiqueta de categoría */}
         {producto.category && (
@@ -133,13 +127,13 @@ export default function ProductCard({ producto }) {
           </div>
 
           <span className={`text-xs text-white px-2 py-1 rounded-full ${
-            producto.stock > 10
+            producto.available_stock > 10
               ? "bg-gradient-to-r from-violet-600 to-violet-400"
-              : producto.stock > 0
+              : producto.available_stock > 0
                 ? "bg-gradient-to-r from-violet-500 to-violet-300"
                 : "bg-gradient-to-r from-gray-500 to-gray-400"
           }`}>
-            {producto.stock > 0 ? `${producto.stock} en stock` : "Agotado"}
+            {producto.available_stock > 0 ? `${producto.available_stock} en stock` : "Agotado"}
           </span>
         </div>
       </div>

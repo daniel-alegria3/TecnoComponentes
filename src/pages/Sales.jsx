@@ -1,23 +1,78 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "../context/SessionContext";
+import Modal from "../components/TarjetaModal";
+import ModalDireccion from "../components/DireccionModal";
+
 import {
   CreditCardIcon,
   TruckIcon,
   HomeIcon,
-  BuildingStorefrontIcon
+  BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
-import { CartContext } from "../context/CartContext";
-import useProductImages from '../composables/useProductImages';
+import { useCart } from "../context/CartContext";
+import useProductImages from "../composables/useProductImages";
 
 export default function Checkout() {
+  // 1. Primero TODOS los Hooks - en orden consistente
   const navigate = useNavigate();
+  const { isLoggedIn } = useSession();
+  const { cartItems } = useCart();
 
-  const [direccion, setDireccion] = useState("");
+  // Todos los estados con useState
+  const [isTarjetaModalOpen, setIsTarjetaModalOpen] = useState(false);
   const [metodoPago, setMetodoPago] = useState("");
   const [metodoEntrega, setMetodoEntrega] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [tarjetaGuardada, setTarjetaGuardada] = useState(null);
+  const [showCardFeedback, setShowCardFeedback] = useState(false);
 
-  const { cartItems, setCartItems } = useContext(CartContext);
+  // Estados para dirección
+  const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
+  const [direccionGuardada, setDireccionGuardada] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  // 2. Funciones del componente
+  const openModalTarjeta = () => {
+    setIsTarjetaModalOpen(true);
+  };
+
+  const closeModalTarjeta = () => {
+    setIsTarjetaModalOpen(false);
+  };
+
+  const handleGuardarTarjeta = (tarjetaData) => {
+    setTarjetaGuardada(tarjetaData);
+    setShowCardFeedback(true);
+    setMetodoPago("tarjeta");
+    setTimeout(() => {
+      setShowCardFeedback(false);
+    }, 2000);
+    closeModalTarjeta();
+  };
+
+  // Funciones para dirección
+  const openModalDireccion = () => {
+    setIsDireccionModalOpen(true);
+  };
+
+  const closeModalDireccion = () => {
+    setIsDireccionModalOpen(false);
+  };
+
+  const handleGuardarDireccion = (direccionData) => {
+    setDireccionGuardada(direccionData);
+    setShowFeedback(true);
+
+    // Ocultar el feedback después de 3 segundos
+    setTimeout(() => {
+      setShowFeedback(false);
+    }, 2000);
+
+    closeModalDireccion();
+  };
 
   const subtotal = cartItems.reduce( (sum, item) => sum + item.product.price * item.quantity, 0);
   const entrega = 0.0;
@@ -30,17 +85,24 @@ export default function Checkout() {
     }
 
     setLoading(true);
-
-    // Simular procesamiento de pago
     setTimeout(() => {
-      alert("¡Pago procesado exitosamente!");
       setLoading(false);
     }, 2000);
+    setPaymentSuccess(true);
   };
 
   function SalesItem({ product, quantity }) {
-    const { imageUrls, isLoading: isImagesLoading } = useProductImages(product?.images_path || []);
+    const { imageUrls, isLoading: isImagesLoading } = useProductImages(
+      product?.images_path || []
+    );
 
+    if (!isLoggedIn) {
+      return (
+        <div>
+          <h2>Iniciar session para ver la pagina de Venta</h2>
+        </div>
+      )
+    }
     return (
       <div>
         <div key={product.product_id} className="text-center">
@@ -55,7 +117,9 @@ export default function Checkout() {
               />
             )}
           </div>
-          <div className="text-sm font-medium">${parseFloat(product.price).toFixed(2)}</div>
+          <div className="text-sm font-medium">
+            ${parseFloat(product.price).toFixed(2)}
+          </div>
           <div className="text-xs text-gray-500">x {quantity}</div>
         </div>
       </div>
@@ -63,6 +127,7 @@ export default function Checkout() {
   }
 
   return (
+
     <div className="font-monofur min-h-screen bg-gray-50">
       <header className="bg-white border-b px-6 py-4">
         <h1 className="text-2xl font-bold text-blue-600">
@@ -74,16 +139,53 @@ export default function Checkout() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Columna izquierda - Formulario */}
           <div className="lg:col-span-2 space-y-6">
-
             {/* Dirección de entrega */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">Dirección de entrega</h2>
+              <h2 className="text-lg font-semibold mb-4">
+                Dirección de entrega
+              </h2>
               <div className="space-y-4">
-                <p className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border">
-                  RECUPERADA DE LA BD
-                </p>
+                <div className="flex justify-between items-center">
+                  <p
+                    className={`text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full ${
+                      direccionGuardada ? "text-violet-600 font-medium" : ""
+                    }`}
+                  >
+                    {direccionGuardada
+                      ? `${direccionGuardada.receptorName} - ${direccionGuardada.codigoPostal}`
+                      : "Ninguna"}
+                  </p>
+                  <button
+                    onClick={openModalDireccion}
+                    className="ml-3 text-blue-600 hover:text-blue-700 text-sm font-medium underline whitespace-nowrap"
+                  >
+                    {direccionGuardada ? "Cambiar" : "Agregar"}
+                  </button>
+                </div>
+
+                {/* Feedback de dirección guardada */}
+                <AnimatePresence>
+                  {showFeedback && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-green-600 text-sm"
+                    >
+                      ¡Dirección guardada correctamente!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
+
+            {/* Modal de dirección */}
+            <ModalDireccion
+              isOpen={isDireccionModalOpen}
+              onClose={closeModalDireccion}
+              onSave={handleGuardarDireccion}
+            />
 
             {/* Método de pago */}
             <div className="bg-white rounded-lg shadow p-6">
@@ -100,14 +202,35 @@ export default function Checkout() {
                       className="h-4 w-4 text-violet-600 focus:ring-violet-500"
                     />
                     <CreditCardIcon className="h-5 w-5 text-gray-500" />
-                    <span>Tarjeta de débito/crédito</span>
+                    <span className={tarjetaGuardada ? "text-violet-600" : ""}>
+                      {tarjetaGuardada
+                        ? `Tarjeta terminada en ${tarjetaGuardada.lastFourDigits} (${tarjetaGuardada.ownerName})`
+                        : "Tarjeta de débito/crédito"}
+                    </span>
                   </div>
                   {metodoPago === "tarjeta" && (
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium underline">
-                      Cambiar
+                    <button
+                      onClick={openModalTarjeta}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+                    >
+                      {tarjetaGuardada ? "Cambiar" : "Agregar"}
                     </button>
                   )}
                 </label>
+                {/* Feedback de dirección guardada */}
+                <AnimatePresence>
+                  {showCardFeedback && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-green-600 text-sm"
+                    >
+                      ¡Tarjeta guardada correctamente!
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <label className="flex items-center justify-between cursor-pointer">
                   <div className="flex items-center space-x-3">
                     <input
@@ -118,7 +241,9 @@ export default function Checkout() {
                       onChange={(e) => setMetodoPago(e.target.value)}
                       className="h-4 w-4 text-violet-600 focus:ring-violet-500"
                     />
-                    <div className="h-5 w-5 bg-purple-600 rounded text-white text-xs flex items-center justify-center font-bold">Y</div>
+                    <div className="h-5 w-5 bg-purple-600 rounded text-white text-xs flex items-center justify-center font-bold">
+                      Y
+                    </div>
                     <span>Yape</span>
                   </div>
                   {metodoPago === "yape" && (
@@ -129,7 +254,11 @@ export default function Checkout() {
                 </label>
               </div>
             </div>
-
+            <Modal
+              isOpen={isTarjetaModalOpen}
+              onClose={closeModalTarjeta}
+              onSave={handleGuardarTarjeta}
+            />
             {/* Método de entrega */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Método de entrega</h2>
@@ -179,11 +308,8 @@ export default function Checkout() {
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Detalles de ítems</h2>
               <div className="flex gap-4">
-                {cartItems.map(({product, quantity}) => (
-                  <SalesItem
-                    product={product}
-                    quantity={quantity}
-                  />
+                {cartItems.map(({ product, quantity }) => (
+                  <SalesItem product={product} quantity={quantity} />
                 ))}
               </div>
             </div>
@@ -196,7 +322,9 @@ export default function Checkout() {
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Productos ({cartItems.length})</span>
+                  <span className="text-gray-600">
+                    Productos ({cartItems.length})
+                  </span>
                   <span>${subtotal.toFixed(1)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -222,6 +350,40 @@ export default function Checkout() {
               >
                 {loading ? "Procesando..." : "Pagar"}
               </button>
+
+              {/* Modal */}
+              <AnimatePresence>
+                {paymentSuccess && (
+                  <motion.div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <motion.div
+                      className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <h2 className="text-2xl font-semibold text-green-600">
+                        Pago Exitoso!
+                      </h2>
+                      <p className="text-gray-600 mt-2">
+                        Gracias por su preferencia. Revise su orden su la pagina
+                        de Ordenes.
+                      </p>
+                      <button
+                        onClick={() => setPaymentSuccess(false)}
+                        className="mt-4 px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
+                      >
+                        OK
+                      </button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>

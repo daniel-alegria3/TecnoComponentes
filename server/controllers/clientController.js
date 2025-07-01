@@ -43,15 +43,17 @@ const clientController = {
       res.status(500).json({ error: 'Error interno del servidor' });
     }
   },
-  llenarCarrito: async (req, res) => {
-    const { id_client, id_product } = req.body;
+  agregarCarrito: async (req, res) => {
+    const { id_product, quantity } = req.body;
+
+    const id_client = req.session.id_client; // from using 'clientAuth' on the router
 
     try {
-      if (!id_client || !id_product) {
+      if (!id_client || !id_product || !quantity || isNaN(quantity) || parseInt(quantity) < 0) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
 
-      await pool.query('CALL llenar_carrito(?, ?)', [id_client, id_product]);
+      await pool.query('CALL agregar_carrito(?, ?, ?)', [id_client, id_product, parseInt(quantity)]);
 
       res.status(200).json({ message: 'Producto agregado al carrito correctamente.' });
     } catch (error) {
@@ -60,7 +62,11 @@ const clientController = {
     }
   },
   verCarrito: async (req, res) => {
-    const clientId = req.params.id;
+    let clientId = req.params.id;
+
+    if (req.session?.id_client) {
+      clientId = req.session.id_client; // from using 'clientAuth' on the router
+    }
 
     try {
       const [rows] = await pool.query('CALL ver_carrito(?)', [clientId]);
@@ -73,7 +79,10 @@ const clientController = {
     }
   },
   vaciarCarrito: async (req, res) => {
-    const { id_client, id_product } = req.body;
+    const { id_product } = req.body;
+
+    const id_client = req.session.id_client; // from using 'clientAuth' on the router
+
     console.log(req.body)
     try {
       if (!id_client || !id_product) {
@@ -90,7 +99,9 @@ const clientController = {
 
 
   realizarCompra: async (req, res) => {
-    const { id_client, productos } = req.body;
+    const { productos } = req.body;
+
+    const id_client = req.session.id_client; // from using 'clientAuth' on the router
 
     if (!id_client || !Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'Datos incompletos' });
@@ -137,17 +148,17 @@ const clientController = {
     try {
         // Validación del parámetro
         if (!id_client || isNaN(id_client)) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                error: 'Se requiere un ID de cliente válido' 
+                error: 'Se requiere un ID de cliente válido'
             });
         }
 
         const clientId = parseInt(id_client);
-        
+
         // Llamar al procedimiento almacenado
         const [historial] = await pool.query(
-            'CALL obtener_historial_compras_cliente(?)', 
+            'CALL obtener_historial_compras_cliente(?)',
             [clientId]
         );
 
@@ -171,7 +182,7 @@ const clientController = {
 
     } catch (error) {
         console.error('Error al obtener historial:', error);
-        
+
         const statusCode = error.sqlMessage?.includes('no existe') ? 404 : 500;
         const errorMessage = error.sqlMessage || 'Error al consultar el historial';
 
@@ -190,13 +201,13 @@ const clientController = {
 
   crearDireccionCliente: async (req, res) => {
     const { id_client, city, country, physical_address } = req.body;
-  
+
     try {
       // Validar parámetros obligatorios
       if (!id_client || !city || !country || !physical_address) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
-  
+
       // Llamar al procedimiento almacenado
       await pool.query('CALL crear_direccion_cliente(?, ?, ?, ?)', [
         id_client,
@@ -204,14 +215,14 @@ const clientController = {
         country,
         physical_address
       ]);
-  
+
       res.status(200).json({ message: 'Dirección creada correctamente.' });
     } catch (error) {
       console.error('Error en crearDireccionCliente:', error);
-      
+
       // Manejar errores específicos de MySQL/MariaDB
       const errorMessage = error.sqlMessage || 'Error al crear la dirección del cliente.';
-      res.status(500).json({ 
+      res.status(500).json({
         error: errorMessage,
         details: error.sql ? error.sql : undefined
       });
@@ -220,27 +231,27 @@ const clientController = {
 
   verDireccionesCliente: async (req, res) => {
     const id_client = req.params.id;
-    
+
     console.log(req.params.id)
     console.log(id_client)
     try {
         // Validar parámetro obligatorio
         if (!id_client || isNaN(id_client)) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                error: 'El ID del cliente es obligatorio y debe ser numérico.' 
+                error: 'El ID del cliente es obligatorio y debe ser numérico.'
             });
         }
 
         // Convertir a número (por si viene como string)
         const clientId = parseInt(id_client);
-        
+
         // Llamar al procedimiento almacenado
         const [direcciones] = await pool.query('CALL ver_direcciones_cliente(?)', [clientId]);
-        
+
         // Manejar diferentes formatos de respuesta de drivers de BD
         const resultado = Array.isArray(direcciones[0]) ? direcciones[0] : direcciones;
-        
+
         if (resultado.length === 0) {
             return res.status(200).json({
                 success: true,
@@ -249,26 +260,26 @@ const clientController = {
                 count: 0
             });
         }
-        
+
         res.status(200).json({
             success: true,
             data: resultado,
             count: resultado.length
         });
-        
+
     } catch (error) {
         console.error('Error en obtenerDireccionesCliente:', error);
-        
+
         // Manejar errores específicos
         let statusCode = 500;
         let errorMessage = 'Error al obtener las direcciones del cliente.';
-        
+
         if (error.sqlMessage && error.sqlMessage.includes('no existe')) {
             statusCode = 404;
             errorMessage = error.sqlMessage;
         }
-        
-        res.status(statusCode).json({ 
+
+        res.status(statusCode).json({
             success: false,
             error: errorMessage,
             details: process.env.NODE_ENV === 'development' ? {
@@ -281,7 +292,7 @@ const clientController = {
 
     editarDireccionCliente: async (req, res) => {
       const { id_client, id_address, city, country, physical_address } = req.body;
-  
+
       try {
           // Validar parámetros obligatorios
           if (!id_client || isNaN(id_client) || !id_address || isNaN(id_address)) {
@@ -290,7 +301,7 @@ const clientController = {
                   error: 'Se requieren IDs válidos de cliente y dirección.'
               });
           }
-  
+
           // Validar campos de dirección
           if (!city || !country || !physical_address) {
               return res.status(400).json({
@@ -298,17 +309,17 @@ const clientController = {
                   error: 'Todos los campos (ciudad, país, dirección física) son obligatorios.'
               });
           }
-  
+
           // Convertir a números
           const clientId = parseInt(id_client);
           const addressId = parseInt(id_address);
-  
+
           // Llamar al procedimiento almacenado
           await pool.query(
               'CALL editar_direccion_cliente(?, ?, ?, ?, ?)',
               [clientId, addressId, city, country, physical_address]
           );
-  
+
           // Respuesta exitosa
           res.status(200).json({
               success: true,
@@ -321,13 +332,13 @@ const clientController = {
                   physical_address
               }
           });
-  
+
       } catch (error) {
           console.error('Error al editar dirección:', error);
-          
+
           let statusCode = 500;
           let errorMessage = 'Error al procesar la solicitud';
-  
+
           if (error.sqlMessage) {
               if (error.sqlMessage.includes('no existe')) {
                   statusCode = 404;
@@ -340,7 +351,7 @@ const clientController = {
                   errorMessage = 'La dirección no pertenece al cliente especificado';
               }
           }
-  
+
           res.status(statusCode).json({
               success: false,
               error: errorMessage,
@@ -356,7 +367,7 @@ const clientController = {
 
     eliminarDireccionCliente: async (req, res) => {
       const { id_client, id_address } = req.body;
-  
+
       try {
           // Validar parámetros obligatorios
           if (!id_client || isNaN(id_client) || !id_address || isNaN(id_address)) {
@@ -365,17 +376,17 @@ const clientController = {
                   error: 'Se requieren IDs válidos de cliente y dirección.'
               });
           }
-  
+
           // Convertir a números
           const clientId = parseInt(id_client);
           const addressId = parseInt(id_address);
-  
+
           // Llamar al procedimiento almacenado
           await pool.query(
               'CALL eliminar_direccion_cliente(?, ?)',
               [clientId, addressId]
           );
-  
+
           // Respuesta exitosa
           res.status(200).json({
               success: true,
@@ -385,13 +396,13 @@ const clientController = {
                   id_address: addressId
               }
           });
-  
+
       } catch (error) {
           console.error('Error al eliminar dirección:', error);
-          
+
           let statusCode = 500;
           let errorMessage = 'Error al procesar la solicitud';
-  
+
           if (error.sqlMessage) {
               // Clasificación de errores conocidos
               if (error.sqlMessage.includes('no existe')) {
@@ -402,7 +413,7 @@ const clientController = {
                   errorMessage = 'La dirección no pertenece al cliente especificado';
               }
           }
-  
+
           res.status(statusCode).json({
               success: false,
               error: errorMessage,

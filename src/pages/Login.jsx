@@ -13,6 +13,7 @@ import {
   LinkedInIcon,
 } from "../components/CustomBrandIcons";
 import { useNavigate } from "react-router-dom";
+import { useSession } from "../context/SessionContext";
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export default function LoginForm() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const session = useSession();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,42 +47,13 @@ export default function LoginForm() {
     }
 
     try {
-      // Hash the password before sending (SHA-256)
-      const hashedPassword = await hashPassword(formData.password);
-
-      const response = await fetch("http://localhost:5000/api/clients/login", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mail: formData.email,
-          password: hashedPassword, // Send hashed password instead of plain text
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login fallo");
-      }
-
-      if (data.loggedIn) {
-        navigate("/");
-      }
+      await session.doLogin(formData.email, formData.password);
+      navigate("/");
     } catch (err) {
-      setError(err.message || "Un error ocurrio durante login");
+      setError(err.message || "Error durante el login");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to hash passwords (SHA-256)
-  const hashPassword = async (password) => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   };
 
   return (
