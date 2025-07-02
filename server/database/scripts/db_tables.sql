@@ -14,16 +14,19 @@ CREATE TABLE `Shopping_Cart` (
 CREATE TABLE `Shopping_Cart_Product` (
   `id_cart` int NOT NULL,
   `id_product` int NOT NULL,
-  `quantity` int NOT NULL,
+  `quantity` int,
   `date_added` datetime
 );
 
 CREATE TABLE `Address` (
   `id_address` int PRIMARY KEY AUTO_INCREMENT,
   `id_client` int NOT NULL,
-  `city` varchar(50),
-  `country` varchar(50),
-  `physical_address` varchar(200)
+  `name_surname` varchar(150),
+  `phone` varchar(25),
+  `physical_address` varchar(200),
+  `apartment` varchar(200),
+  `province` varchar(20),
+  `district` varchar(20)
 );
 
 CREATE TABLE `Product_Order` (
@@ -36,7 +39,8 @@ CREATE TABLE `Product_Order` (
 
 CREATE TABLE `Orden_Detail` (
   `id_order_detail` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-  `date_added` datetime
+  `date_added` datetime,
+  `shipping_address` blob
 );
 
 CREATE TABLE `Product` (
@@ -59,12 +63,15 @@ CREATE TABLE `Category` (
 );
 
 ALTER TABLE `Shopping_Cart` ADD FOREIGN KEY (`id_client`) REFERENCES `Client` (`id_client`);
+
 ALTER TABLE `Shopping_Cart_Product` ADD FOREIGN KEY (`id_cart`) REFERENCES `Shopping_Cart` (`id_cart`);
+
 ALTER TABLE `Shopping_Cart_Product` ADD FOREIGN KEY (`id_product`) REFERENCES `Product` (`id_product`);
+
 ALTER TABLE `Address` ADD FOREIGN KEY (`id_client`) REFERENCES `Client` (`id_client`);
+
 ALTER TABLE `Product_Order` ADD FOREIGN KEY (`id_order_detail`) REFERENCES `Orden_Detail` (`id_order_detail`);
+
 ALTER TABLE `Product_Order` ADD FOREIGN KEY (`id_cart`) REFERENCES `Shopping_Cart` (`id_cart`);
+
 ALTER TABLE `Product` ADD FOREIGN KEY (`category`) REFERENCES `Category` (`id_category`);
-
-SHOW FULL TABLES;
-
