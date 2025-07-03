@@ -99,46 +99,96 @@ const clientController = {
 
 
   realizarCompra: async (req, res) => {
-    const { productos } = req.body;
+    const { productos, id_address } = req.body;
+    const id_client = req.session.id_client;
 
-    const id_client = req.session.id_client; // from using 'clientAuth' on the router
-
-    if (!id_client || !Array.isArray(productos) || productos.length === 0) {
-      return res.status(400).json({ error: 'Datos incompletos' });
+    // Validaciones iniciales
+    if (!id_client || !Array.isArray(productos) || productos.length === 0 || !id_address) {
+        return res.status(400).json({ 
+            success: false,
+            error: 'Datos incompletos: se requieren productos y dirección de envío' 
+        });
     }
 
     const connection = await pool.getConnection();
 
     try {
-      await connection.beginTransaction();
+        await connection.beginTransaction();
 
-      // Crear orden y obtener su ID
-      const [ordenResult] = await connection.query('CALL crear_orden()');
-      const id_order_detail = ordenResult[0][0].id;
+        // 1. Obtener la dirección de envío
+        const [direccionResult] = await connection.query(
+            'CALL obtener_direccion_por_id(?)',
+            [id_address]
+        );
 
-      // Insertar productos usando id_client
-      for (const prod of productos) {
-        const { id_product, quantity } = prod;
-
-        if (!id_product || !quantity || quantity <= 0) {
-          throw new Error(`Producto inválido: ${JSON.stringify(prod)}`);
+        if (!direccionResult || direccionResult.length === 0) {
+            throw new Error('No se pudo obtener la dirección de envío');
         }
 
-        await connection.query(
-          'CALL agregar_producto_orden(?, ?, ?, ?)',
-          [id_order_detail, id_client, id_product, quantity]
-        );
-      }
+        const direccionEnvio = direccionResult[0][0];
 
-      await connection.commit();
-      res.json({ message: 'Compra realizada exitosamente', id_order_detail });
+        // 2. Convertir dirección a formato BLOB para almacenamiento
+        const shippingAddressBlob = Buffer.from(JSON.stringify({
+            nombre: direccionEnvio.name_surname,
+            telefono: direccionEnvio.phone,
+            direccion: direccionEnvio.physical_address,
+            departamento: direccionEnvio.apartment || '',
+            provincia: direccionEnvio.province,
+            distrito: direccionEnvio.district
+        }));
+
+        // 3. Crear orden con la dirección
+        const [ordenResult] = await connection.query(
+            'CALL crear_orden(?)',
+            [shippingAddressBlob]
+        );
+        const id_order_detail = ordenResult[0][0].id;
+
+        // 4. Procesar cada producto
+        for (const prod of productos) {
+            const { id_product, quantity } = prod;
+
+            if (!id_product || !quantity || quantity <= 0) {
+                throw new Error(`Producto inválido: ${JSON.stringify(prod)}`);
+            }
+
+            await connection.query(
+                'CALL agregar_producto_orden(?, ?, ?, ?)',
+                [id_order_detail, id_client, id_product, quantity]
+            );
+        }
+
+        await connection.commit();
+        
+        res.json({ 
+            success: true,
+            message: 'Compra realizada exitosamente', 
+            id_order_detail,
+            direccion_entrega: JSON.parse(shippingAddressBlob.toString())
+        });
 
     } catch (error) {
-      await connection.rollback();
-      console.error('Error en realizarCompra:', error);
-      res.status(500).json({ error: error.message });
+        await connection.rollback();
+        console.error('Error en realizarCompra:', error);
+        
+        // Manejo específico de errores del procedimiento almacenado
+        const errorMessage = error.sqlMessage || error.message;
+        const statusCode = error.sqlMessage?.includes('no existe') ? 404 : 
+                          error.sqlMessage?.includes('Stock insuficiente') ? 409 : 
+                          error.sqlMessage?.includes('carrito') ? 400 : 500;
+
+        res.status(statusCode).json({ 
+            success: false,
+            error: errorMessage,
+            ...(process.env.NODE_ENV === 'development' && {
+                details: {
+                    sqlMessage: error.sqlMessage,
+                    stack: error.stack
+                }
+            })
+        });
     } finally {
-      connection.release();
+        connection.release();
     }
   },
 
@@ -162,8 +212,8 @@ const clientController = {
             [clientId]
         );
 
-        // Manejar formato de respuesta
-        const resultado = Array.isArray(historial[0]) ? historial[0] : historial;
+        // Manejar formato de respuesta y convertir BLOB a JSON
+        let resultado = Array.isArray(historial[0]) ? historial[0] : historial;
 
         if (!resultado || resultado.length === 0) {
             return res.status(200).json({
@@ -173,6 +223,27 @@ const clientController = {
                 count: 0
             });
         }
+
+        // Procesar cada orden para convertir shipping_address
+        resultado = resultado.map(orden => {
+            try {
+                // Convertir BLOB a string y luego parsear a JSON
+                const direccionEnvio = orden.shipping_address ? 
+                    JSON.parse(orden.shipping_address.toString()) : 
+                    null;
+                
+                return {
+                    ...orden,
+                    shipping_address: direccionEnvio
+                };
+            } catch (error) {
+                console.error('Error al parsear dirección de envío:', error);
+                return {
+                    ...orden,
+                    shipping_address: null
+                };
+            }
+        });
 
         res.status(200).json({
             success: true,
@@ -192,7 +263,8 @@ const clientController = {
             ...(process.env.NODE_ENV === 'development' && {
                 details: {
                     message: error.message,
-                    stack: error.stack
+                    stack: error.stack,
+                    ...(error.sql && { sql: error.sql })
                 }
             })
         });
@@ -200,20 +272,31 @@ const clientController = {
   },
 
   crearDireccionCliente: async (req, res) => {
-    const { id_client, city, country, physical_address } = req.body;
+    const { 
+      id_client, 
+      name_surname, 
+      phone, 
+      physical_address, 
+      apartment, 
+      province, 
+      district 
+    } = req.body;
 
     try {
       // Validar parámetros obligatorios
-      if (!id_client || !city || !country || !physical_address) {
+      if (!id_client || !name_surname || !phone || !physical_address || !province || !district) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
 
-      // Llamar al procedimiento almacenado
-      await pool.query('CALL crear_direccion_cliente(?, ?, ?, ?)', [
+      // Llamar al procedimiento almacenado con todos los parámetros requeridos
+      await pool.query('CALL crear_direccion_cliente(?, ?, ?, ?, ?, ?, ?)', [
         id_client,
-        city,
-        country,
-        physical_address
+        name_surname,
+        phone,
+        physical_address,
+        apartment || null, // apartment es opcional
+        province,
+        district
       ]);
 
       res.status(200).json({ message: 'Dirección creada correctamente.' });
@@ -290,9 +373,18 @@ const clientController = {
       }
     },
 
-    editarDireccionCliente: async (req, res) => {
-      const { id_client, id_address, city, country, physical_address } = req.body;
-
+  editarDireccionCliente: async (req, res) => {
+      const { 
+          id_client, 
+          id_address, 
+          name_surname, 
+          phone, 
+          physical_address, 
+          apartment, 
+          province, 
+          district 
+      } = req.body;
+  
       try {
           // Validar parámetros obligatorios
           if (!id_client || isNaN(id_client) || !id_address || isNaN(id_address)) {
@@ -301,25 +393,49 @@ const clientController = {
                   error: 'Se requieren IDs válidos de cliente y dirección.'
               });
           }
-
-          // Validar campos de dirección
-          if (!city || !country || !physical_address) {
+  
+          // Validar campos obligatorios según el procedimiento
+          const requiredFields = {
+              name_surname: 'Nombre y apellido',
+              phone: 'Teléfono',
+              physical_address: 'Dirección física',
+              province: 'Provincia',
+              district: 'Distrito'
+          };
+  
+          const missingFields = [];
+          for (const [field, name] of Object.entries(requiredFields)) {
+              if (!req.body[field] || req.body[field].toString().trim() === '') {
+                  missingFields.push(name);
+              }
+          }
+  
+          if (missingFields.length > 0) {
               return res.status(400).json({
                   success: false,
-                  error: 'Todos los campos (ciudad, país, dirección física) son obligatorios.'
+                  error: `Los siguientes campos son obligatorios: ${missingFields.join(', ')}`
               });
           }
-
-          // Convertir a números
+  
+          // Convertir a números los IDs
           const clientId = parseInt(id_client);
           const addressId = parseInt(id_address);
-
-          // Llamar al procedimiento almacenado
+  
+          // Llamar al procedimiento almacenado con todos los parámetros
           await pool.query(
-              'CALL editar_direccion_cliente(?, ?, ?, ?, ?)',
-              [clientId, addressId, city, country, physical_address]
+              'CALL editar_direccion_cliente(?, ?, ?, ?, ?, ?, ?, ?)',
+              [
+                  clientId,
+                  addressId,
+                  name_surname,
+                  phone,
+                  physical_address,
+                  apartment || null, // apartment es opcional
+                  province,
+                  district
+              ]
           );
-
+  
           // Respuesta exitosa
           res.status(200).json({
               success: true,
@@ -327,23 +443,27 @@ const clientController = {
               updatedData: {
                   id_client: clientId,
                   id_address: addressId,
-                  city,
-                  country,
-                  physical_address
+                  name_surname,
+                  phone,
+                  physical_address,
+                  apartment: apartment || null,
+                  province,
+                  district
               }
           });
-
+  
       } catch (error) {
           console.error('Error al editar dirección:', error);
-
+  
           let statusCode = 500;
           let errorMessage = 'Error al procesar la solicitud';
-
+  
           if (error.sqlMessage) {
               if (error.sqlMessage.includes('no existe')) {
                   statusCode = 404;
                   errorMessage = error.sqlMessage;
-              } else if (error.sqlMessage.includes('no puede estar vac')) {
+              } else if (error.sqlMessage.includes('no puede estar vacío') || 
+                        error.sqlMessage.includes('no puede ser nulo')) {
                   statusCode = 400;
                   errorMessage = error.sqlMessage;
               } else if (error.sqlMessage.includes('no pertenece')) {
@@ -351,13 +471,14 @@ const clientController = {
                   errorMessage = 'La dirección no pertenece al cliente especificado';
               }
           }
-
+  
           res.status(statusCode).json({
               success: false,
               error: errorMessage,
               ...(process.env.NODE_ENV === 'development' && {
                   details: {
                       sqlMessage: error.sqlMessage,
+                      sql: error.sql,
                       stack: error.stack
                   }
               })
