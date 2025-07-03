@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "../context/SessionContext";
@@ -16,8 +16,8 @@ import useProductImages from "../composables/useProductImages";
 
 export default function Checkout() {
   // 1. Primero TODOS los Hooks - en orden consistente
-  const navigate = useNavigate();
   const { isLoggedIn } = useSession();
+  const navigate = useNavigate();
   const { cartItems } = useCart();
 
   // Todos los estados con useState
@@ -29,12 +29,57 @@ export default function Checkout() {
   const [tarjetaGuardada, setTarjetaGuardada] = useState(null);
   const [showCardFeedback, setShowCardFeedback] = useState(false);
 
-  // Estados para dirección
-  const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
-  const [direccionGuardada, setDireccionGuardada] = useState(null);
-  const [showFeedback, setShowFeedback] = useState(false);
+ // Estados para dirección
+ const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
+ const [direccionGuardada, setDireccionGuardada] = useState(null);
+ const [direcciones, setDirecciones] = useState([]);
+ const [showFeedback, setShowFeedback] = useState(false);
+ const [loadingDirecciones, setLoadingDirecciones] = useState(true);
 
-  // 2. Funciones del componente
+  // Cargar direcciones al montar el componente
+  useEffect(() => {
+  const fetchDirecciones = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/clients/listardirecciones', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.length > 0) {
+        setDirecciones(data);
+        // Establecer la primera dirección como la predeterminada
+        setDireccionGuardada({
+          receptorName: data[0].Nombre,
+          telefono: data[0].Telefono,
+          direccionCompleta: `${data[0].Direccion}${data[0].Apartamento ? `, ${data[0].Apartamento}` : ''}`,
+          provincia: data[0].Provincia,
+          distrito: data[0].Distrito,
+          codigoPostal: data[0].CodigoPostal
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar direcciones:', error);
+    } finally {
+      setLoadingDirecciones(false);
+    }
+  };
+
+  if (isLoggedIn) {
+    fetchDirecciones();
+  }
+  }, [isLoggedIn]);
+
+
+  // 2. Validaciones después de todos los Hooks
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <h2>Iniciar sesión para ver la página de Venta</h2>
+      </div>
+    );
+  }
+
+  // 3. Funciones del componente
   const openModalTarjeta = () => {
     setIsTarjetaModalOpen(true);
   };
@@ -73,8 +118,22 @@ export default function Checkout() {
 
     closeModalDireccion();
   };
+  const handleSeleccionarDireccion = (direccion) => {
+    setDireccionGuardada({
+      receptorName: direccion.Nombre,
+      telefono: direccion.Telefono,
+      direccionCompleta: `${direccion.Direccion}${direccion.Apartamento ? `, ${direccion.Apartamento}` : ''}`,
+      provincia: direccion.Provincia,
+      distrito: direccion.Distrito,
+      codigoPostal: direccion.CodigoPostal
+    });
+    closeModalDireccion();
+  };
 
-  const subtotal = cartItems.reduce( (sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
   const entrega = 0.0;
   const total = subtotal + entrega;
 
@@ -96,13 +155,6 @@ export default function Checkout() {
       product?.images_path || []
     );
 
-    if (!isLoggedIn) {
-      return (
-        <div>
-          <h2>Iniciar session para ver la pagina de Venta</h2>
-        </div>
-      )
-    }
     return (
       <div>
         <div key={product.product_id} className="text-center">
@@ -127,7 +179,6 @@ export default function Checkout() {
   }
 
   return (
-
     <div className="font-monofur min-h-screen bg-gray-50">
       <header className="bg-white border-b px-6 py-4">
         <h1 className="text-2xl font-bold text-blue-600">
@@ -146,15 +197,28 @@ export default function Checkout() {
               </h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <p
-                    className={`text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full ${
-                      direccionGuardada ? "text-violet-600 font-medium" : ""
-                    }`}
-                  >
-                    {direccionGuardada
-                      ? `${direccionGuardada.receptorName} - ${direccionGuardada.codigoPostal}`
-                      : "Ninguna"}
-                  </p>
+                  {loadingDirecciones ? (
+                    <div className="animate-pulse bg-gray-200 h-10 w-full rounded-md"></div>
+                  ) : direccionGuardada ? (
+                    <div className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full">
+                      <p className="text-violet-600 font-medium">
+                        {direccionGuardada.receptorName} -{" "}
+                        {direccionGuardada.telefono}
+                      </p>
+                      <p>{direccionGuardada.direccionCompleta}</p>
+                      <p>
+                        {direccionGuardada.distrito},{" "}
+                        {direccionGuardada.provincia}
+                      </p>
+                      {direccionGuardada.codigoPostal && (
+                        <p>Código Postal: {direccionGuardada.codigoPostal}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full">
+                      No hay direcciones registradas
+                    </p>
+                  )}
                   <button
                     onClick={openModalDireccion}
                     className="ml-3 text-blue-600 hover:text-blue-700 text-sm font-medium underline whitespace-nowrap"
@@ -163,7 +227,6 @@ export default function Checkout() {
                   </button>
                 </div>
 
-                {/* Feedback de dirección guardada */}
                 <AnimatePresence>
                   {showFeedback && (
                     <motion.div
@@ -180,13 +243,14 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Modal de dirección */}
+            {/* Modal de dirección modificado */}
             <ModalDireccion
               isOpen={isDireccionModalOpen}
               onClose={closeModalDireccion}
               onSave={handleGuardarDireccion}
+              direcciones={direcciones}
+              onSelect={handleSeleccionarDireccion}
             />
-
             {/* Método de pago */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Método de pago</h2>
