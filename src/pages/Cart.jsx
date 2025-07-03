@@ -7,7 +7,7 @@ import { useSession } from "../context/SessionContext";
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { cartItems, addProdToCart } = useCart();
+  const { cartItems } = useCart();
   const { isLoggedIn } = useSession();
 
   // 1) Sustituye useState por useContext
@@ -162,7 +162,7 @@ export default function Cart() {
             cartItems.map(({ product, quantity }) => (
               <CartItem
                 key={product.id_product}
-                product={product}
+                productoID={product.id_product}
                 quantity={quantity}
               />
             ))
@@ -244,17 +244,7 @@ export default function Cart() {
               {recommended.map((producto) => (
                 <div key={producto.id_product} className="flex-shrink-0 w-90">
                   <ProductCard
-                    producto={{
-                      id_product: producto.id_product,
-                      name: producto.name || "Producto sin nombre",
-                      description: producto.description || "",
-                      available_stock: producto.available_stock || 0,
-                      category: producto.category || "Sin categoría",
-                      brand: producto.brand || "Sin marca",
-                      price: Number(producto.price || 0),
-                      images_path: producto.images_path ? producto.images_path : ["/placeholder.png"],
-                    }}
-                    onAddToCart={() => addProdToCart(producto)}
+                    productoID={producto.id_product}
                   />
                 </div>
               ))}

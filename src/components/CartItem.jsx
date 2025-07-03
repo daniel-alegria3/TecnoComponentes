@@ -1,11 +1,39 @@
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
+import { useProduct } from "../context/ProductsContext";
 
-export default function CartItem({ product, quantity }) {
+export default function CartItem({ producto, productoID, quantity }) {
+  let [prod, setProduct] = useProduct(productoID);
+  const product = productoID ? prod : producto;
+
   const navigate = useNavigate();
   const { updateProdFromCart, removeProdFromCart } = useCart();
-  const { imageUrls, isImagesLoading } = useProductImages(product?.images_path || []);
+  const images = useMemo(() => product?.images_path ?? [], [product]);
+  const { imageUrls, isImagesLoading } = useProductImages(images);
+
+  const cartItemUpdate = async (amount) => {
+    const available_stock = await updateProdFromCart(product, amount);
+    if (available_stock != null) {
+      if (productoID) {
+        setProduct({available_stock: available_stock});
+      } else {
+        product.available_stock = available_stock;
+      }
+    }
+  };
+
+  const cartItemDrop = async (amount) => {
+    const available_stock = await removeProdFromCart(product);
+    if (available_stock != null) {
+      if (productoID) {
+        setProduct({available_stock: available_stock});
+      } else {
+        product.available_stock = available_stock;
+      }
+    }
+  };
 
   return (
     <div
@@ -29,14 +57,14 @@ export default function CartItem({ product, quantity }) {
         </p>
         <div className="flex items-center gap-2 mt-2">
           <button
-            onClick={() => updateProdFromCart(product, -1)}
+            onClick={() => cartItemUpdate(-1)}
             className="px-2 bg-gray-200 rounded"
           >
             −
           </button>
           <span>{quantity}</span>
           <button
-            onClick={() => updateProdFromCart(product, +1)}
+            onClick={() => cartItemUpdate(+1)}
             className="px-2 bg-gray-200 rounded"
           >
             +
@@ -52,7 +80,7 @@ export default function CartItem({ product, quantity }) {
         </p>
       </div>
       <button
-        onClick={() => removeProdFromCart(product)}
+        onClick={() => cartItemDrop()}
         className="ml-4 text-red-500"
       >
         🗑️
