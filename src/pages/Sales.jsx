@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "../context/SessionContext";
@@ -29,10 +29,46 @@ export default function Checkout() {
   const [tarjetaGuardada, setTarjetaGuardada] = useState(null);
   const [showCardFeedback, setShowCardFeedback] = useState(false);
 
-  // Estados para dirección
-  const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
-  const [direccionGuardada, setDireccionGuardada] = useState(null);
-  const [showFeedback, setShowFeedback] = useState(false);
+ // Estados para dirección
+ const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
+ const [direccionGuardada, setDireccionGuardada] = useState(null);
+ const [direcciones, setDirecciones] = useState([]);
+ const [showFeedback, setShowFeedback] = useState(false);
+ const [loadingDirecciones, setLoadingDirecciones] = useState(true);
+
+  // Cargar direcciones al montar el componente
+  useEffect(() => {
+  const fetchDirecciones = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/clients/listardirecciones', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.length > 0) {
+        setDirecciones(data);
+        // Establecer la primera dirección como la predeterminada
+        setDireccionGuardada({
+          receptorName: data[0].Nombre,
+          telefono: data[0].Telefono,
+          direccionCompleta: `${data[0].Direccion}${data[0].Apartamento ? `, ${data[0].Apartamento}` : ''}`,
+          provincia: data[0].Provincia,
+          distrito: data[0].Distrito,
+          codigoPostal: data[0].CodigoPostal
+        });
+      }
+    } catch (error) {
+      console.error('Error al cargar direcciones:', error);
+    } finally {
+      setLoadingDirecciones(false);
+    }
+  };
+
+  if (isLoggedIn) {
+    fetchDirecciones();
+  }
+  }, [isLoggedIn]);
+
 
   // 2. Validaciones después de todos los Hooks
   if (!isLoggedIn) {
@@ -80,6 +116,17 @@ export default function Checkout() {
       setShowFeedback(false);
     }, 2000);
 
+    closeModalDireccion();
+  };
+  const handleSeleccionarDireccion = (direccion) => {
+    setDireccionGuardada({
+      receptorName: direccion.Nombre,
+      telefono: direccion.Telefono,
+      direccionCompleta: `${direccion.Direccion}${direccion.Apartamento ? `, ${direccion.Apartamento}` : ''}`,
+      provincia: direccion.Provincia,
+      distrito: direccion.Distrito,
+      codigoPostal: direccion.CodigoPostal
+    });
     closeModalDireccion();
   };
 
@@ -150,15 +197,28 @@ export default function Checkout() {
               </h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <p
-                    className={`text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full ${
-                      direccionGuardada ? "text-violet-600 font-medium" : ""
-                    }`}
-                  >
-                    {direccionGuardada
-                      ? `${direccionGuardada.receptorName} - ${direccionGuardada.codigoPostal}`
-                      : "Ninguna"}
-                  </p>
+                  {loadingDirecciones ? (
+                    <div className="animate-pulse bg-gray-200 h-10 w-full rounded-md"></div>
+                  ) : direccionGuardada ? (
+                    <div className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full">
+                      <p className="text-violet-600 font-medium">
+                        {direccionGuardada.receptorName} -{" "}
+                        {direccionGuardada.telefono}
+                      </p>
+                      <p>{direccionGuardada.direccionCompleta}</p>
+                      <p>
+                        {direccionGuardada.distrito},{" "}
+                        {direccionGuardada.provincia}
+                      </p>
+                      {direccionGuardada.codigoPostal && (
+                        <p>Código Postal: {direccionGuardada.codigoPostal}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full">
+                      No hay direcciones registradas
+                    </p>
+                  )}
                   <button
                     onClick={openModalDireccion}
                     className="ml-3 text-blue-600 hover:text-blue-700 text-sm font-medium underline whitespace-nowrap"
@@ -167,7 +227,6 @@ export default function Checkout() {
                   </button>
                 </div>
 
-                {/* Feedback de dirección guardada */}
                 <AnimatePresence>
                   {showFeedback && (
                     <motion.div
@@ -184,13 +243,14 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Modal de dirección */}
+            {/* Modal de dirección modificado */}
             <ModalDireccion
               isOpen={isDireccionModalOpen}
               onClose={closeModalDireccion}
               onSave={handleGuardarDireccion}
+              direcciones={direcciones}
+              onSelect={handleSeleccionarDireccion}
             />
-
             {/* Método de pago */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Método de pago</h2>
