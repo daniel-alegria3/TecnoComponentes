@@ -40,11 +40,11 @@ export default function Checkout() {
   useEffect(() => {
   const fetchDirecciones = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/clients/listardirecciones', {
+      const response = await fetch('http://localhost:5000/api/clients/verdireccion', {
         credentials: 'include'
       });
       const data = await response.json();
-      
+      console.log('dataJohanxd',data)
       if (response.ok && data.length > 0) {
         setDirecciones(data);
         // Establecer la primera dirección como la predeterminada

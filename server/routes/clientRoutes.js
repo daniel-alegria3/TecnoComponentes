@@ -18,7 +18,7 @@ router.get('/vercarrito/:id', cauth.requireLogin, clientController.verCarrito);
 router.delete('/vaciarcarrito', cauth.requireLogin, clientController.vaciarCarrito);
 router.post('/realizarcompra', cauth.requireLogin, clientController.realizarCompra);
 router.post('/creardireccion', cauth.requireLogin, clientController.crearDireccionCliente);
-router.get('/verdireccion/:id', cauth.requireLogin, clientController.verDireccionesCliente);
+router.get('/verdireccion/', cauth.requireLogin, clientController.verDireccionesCliente);
 router.post('/editardireccion/', cauth.requireLogin, clientController.editarDireccionCliente);
 router.delete('/eliminardireccion/', cauth.requireLogin, clientController.eliminarDireccionCliente);
 

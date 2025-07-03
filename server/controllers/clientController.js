@@ -313,10 +313,8 @@ const clientController = {
   },
 
   verDireccionesCliente: async (req, res) => {
-    const id_client = req.params.id;
+    const id_client = req.session.id_client;
 
-    console.log(req.params.id)
-    console.log(id_client)
     try {
         // Validar parámetro obligatorio
         if (!id_client || isNaN(id_client)) {
