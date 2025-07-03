@@ -29,46 +29,58 @@ export default function Checkout() {
   const [tarjetaGuardada, setTarjetaGuardada] = useState(null);
   const [showCardFeedback, setShowCardFeedback] = useState(false);
 
- // Estados para dirección
- const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
- const [direccionGuardada, setDireccionGuardada] = useState(null);
- const [direcciones, setDirecciones] = useState([]);
- const [showFeedback, setShowFeedback] = useState(false);
- const [loadingDirecciones, setLoadingDirecciones] = useState(true);
+  // Estados para dirección
+  const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
+  const [direccionGuardada, setDireccionGuardada] = useState(null);
+  const [direcciones, setDirecciones] = useState([]);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [loadingDirecciones, setLoadingDirecciones] = useState(true);
 
   // Cargar direcciones al montar el componente
   useEffect(() => {
-  const fetchDirecciones = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/clients/verdireccion', {
-        credentials: 'include'
-      });
-      const data = await response.json();
-      console.log('dataJohanxd',data)
-      if (response.ok && data.length > 0) {
-        setDirecciones(data);
-        // Establecer la primera dirección como la predeterminada
-        setDireccionGuardada({
-          receptorName: data[0].Nombre,
-          telefono: data[0].Telefono,
-          direccionCompleta: `${data[0].Direccion}${data[0].Apartamento ? `, ${data[0].Apartamento}` : ''}`,
-          provincia: data[0].Provincia,
-          distrito: data[0].Distrito,
-          codigoPostal: data[0].CodigoPostal
-        });
+    const fetchDirecciones = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/clients/verdireccion",
+          {
+            credentials: "include",
+          }
+        );
+        const result = await response.json(); // Cambié el nombre a result para mayor claridad
+        console.log("dataJohanxd", result);
+
+        if (response.ok && result.success && result.data.length > 0) {
+          const direcciones = result.data; // Accedemos a result.data
+          setDirecciones(direcciones);
+
+          // Establecer la primera dirección como la predeterminada
+          const primeraDireccion = direcciones[0];
+          setDireccionGuardada({
+            idAdress: primeraDireccion.id_address, // Cambiado de IdAdress a id_adress
+            receptorName: primeraDireccion.name_surname, // Cambiado de Nombre a name_surname
+            telefono: primeraDireccion.phone, // Cambiado de Telefono a phone
+            direccionCompleta: `${primeraDireccion.physical_address}${
+              // Cambiado de Direccion a physical_address
+              primeraDireccion.apartment
+                ? `, ${primeraDireccion.apartment}`
+                : ""
+            }`,
+            provincia: primeraDireccion.province, // Cambiado de Provincia a province
+            distrito: primeraDireccion.district, // Cambiado de Distrito a district
+            codigoPostal: primeraDireccion.postal_code || "", // Añadido por si existe
+          });
+        }
+      } catch (error) {
+        console.error("Error al cargar direcciones:", error);
+      } finally {
+        setLoadingDirecciones(false);
       }
-    } catch (error) {
-      console.error('Error al cargar direcciones:', error);
-    } finally {
-      setLoadingDirecciones(false);
+    };
+
+    if (isLoggedIn) {
+      fetchDirecciones();
     }
-  };
-
-  if (isLoggedIn) {
-    fetchDirecciones();
-  }
   }, [isLoggedIn]);
-
 
   // 2. Validaciones después de todos los Hooks
   if (!isLoggedIn) {
@@ -120,16 +132,18 @@ export default function Checkout() {
   };
   const handleSeleccionarDireccion = (direccion) => {
     setDireccionGuardada({
-      receptorName: direccion.Nombre,
-      telefono: direccion.Telefono,
-      direccionCompleta: `${direccion.Direccion}${direccion.Apartamento ? `, ${direccion.Apartamento}` : ''}`,
-      provincia: direccion.Provincia,
-      distrito: direccion.Distrito,
-      codigoPostal: direccion.CodigoPostal
+      idAdress: direccion.idAdress,
+      receptorName: direccion.receptorName,  
+      telefono: direccion.telefono,            
+      direccionCompleta: direccion.direccionCompleta,                                   
+      provincia: direccion.provincia,        
+      distrito: direccion.distrito,         
+      codigoPostal: direccion.codigoPostal || "", 
     });
+    setShowFeedback(true);
+    setTimeout(() => setShowFeedback(false), 2000);
     closeModalDireccion();
   };
-
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
@@ -142,7 +156,37 @@ export default function Checkout() {
       alert("Por favor completa todos los campos requeridos");
       return;
     }
+    const productos = cartItems.map(item => ({
+      ...item.product,
+      quantity: item.quantity
+    }));
+    console.log("Productos a enviar:", productos);
+    const fetchRealizarPago = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/clients/realizarcompra", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productos: productos,
+            id_address: direccionGuardada.idAdress,
+          }),
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Error al procesar el pago");
+        }
+        return data;
+      } catch (error) {
+        console.error("Error al realizar el pago:", error);
+        alert("Error al procesar el pago. Por favor, inténtelo de nuevo.");
+        throw error;
+      }
+    };
 
+    fetchRealizarPago()
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -221,7 +265,7 @@ export default function Checkout() {
                   )}
                   <button
                     onClick={openModalDireccion}
-                    className="ml-3 text-blue-600 hover:text-blue-700 text-sm font-medium underline whitespace-nowrap"
+                    className="bg-violet-600 h-10 p-2 ml-3 text-white text-sm font-medium whitespace-nowrap border border-violet-600 rounded-md hover:bg-violet-700 transition"
                   >
                     {direccionGuardada ? "Cambiar" : "Agregar"}
                   </button>
@@ -275,7 +319,7 @@ export default function Checkout() {
                   {metodoPago === "tarjeta" && (
                     <button
                       onClick={openModalTarjeta}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+                      className="bg-violet-600 h-10 p-2 ml-3 text-white text-sm font-medium whitespace-nowrap border border-violet-600 rounded-md hover:bg-violet-700 transition"
                     >
                       {tarjetaGuardada ? "Cambiar" : "Agregar"}
                     </button>
@@ -340,11 +384,7 @@ export default function Checkout() {
                     <TruckIcon className="h-5 w-5 text-gray-500" />
                     <span>Envío a domicilio</span>
                   </div>
-                  {metodoEntrega === "domicilio" && (
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium underline">
-                      Cambiar
-                    </button>
-                  )}
+
                 </label>
                 <label className="flex items-center justify-between cursor-pointer">
                   <div className="flex items-center space-x-3">
@@ -359,11 +399,6 @@ export default function Checkout() {
                     <BuildingStorefrontIcon className="h-5 w-5 text-gray-500" />
                     <span>Recojo en tienda</span>
                   </div>
-                  {metodoEntrega === "tienda" && (
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium underline">
-                      Cambiar
-                    </button>
-                  )}
                 </label>
               </div>
             </div>

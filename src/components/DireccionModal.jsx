@@ -1,12 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const ModalDireccion = ({
-  isOpen,
-  onClose,
-  onSave,
-  direcciones = [],
-  onSelect,
-}) => {
+const ModalDireccion = ({ isOpen, onClose, onSave, onSelect }) => {
   const [directionData, setDirectionData] = useState({
     Nombre: "",
     Telefono: "",
@@ -26,6 +20,44 @@ const ModalDireccion = ({
   });
 
   const [activeTab, setActiveTab] = useState("list");
+  const [direcciones, setDirecciones] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Función para cargar las direcciones
+  const fetchDirecciones = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        "http://localhost:5000/api/clients/verdireccion",
+        {
+          credentials: "include",
+        }
+      );
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al cargar direcciones");
+      }
+
+      if (result.success && result.data) {
+        setDirecciones(result.data);
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching addresses:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar direcciones al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      fetchDirecciones();
+      setActiveTab("list");
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -79,7 +111,8 @@ const ModalDireccion = ({
     return "";
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Validación de campos
     const newErrors = {
       Nombre: validateNombre(directionData.Nombre),
       Telefono: validateTelefono(directionData.Telefono),
@@ -94,16 +127,55 @@ const ModalDireccion = ({
       return;
     }
 
-    onSave({
-      receptorName: directionData.Nombre.trim(),
-      telefono: directionData.Telefono,
-      direccionCompleta: `${directionData.Direccion}${
-        directionData.Apartamento ? `, ${directionData.Apartamento}` : ""
-      }`,
-      provincia: directionData.Provincia,
-      distrito: directionData.Distrito,
-      codigoPostal: directionData.CodigoPostal,
-    });
+    try {
+      // 1. Primero hacemos el fetch para guardar en la base de datos
+      const response = await fetch(
+        "http://localhost:5000/api/clients/creardireccion",
+        {
+          method: "POST",
+          credentials: "include", // Para incluir cookies si usas sesiones
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name_surname: directionData.Nombre.trim(),
+            phone: directionData.Telefono,
+            physical_address: directionData.Direccion,
+            apartment: directionData.Apartamento || null,
+            province: directionData.Provincia,
+            district: directionData.Distrito,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al guardar la dirección");
+      }
+
+      // 2. Si el fetch fue exitoso, llamamos a onSave con los datos formateados
+      onSave({
+        receptorName: directionData.Nombre.trim(),
+        telefono: directionData.Telefono,
+        direccionCompleta: `${directionData.Direccion}${
+          directionData.Apartamento ? `, ${directionData.Apartamento}` : ""
+        }`,
+        provincia: directionData.Provincia,
+        distrito: directionData.Distrito,
+        codigoPostal: directionData.CodigoPostal,
+      });
+
+      // Opcional: Cerrar el modal después de guardar
+      onClose();
+    } catch (error) {
+      console.error("Error al guardar la dirección:", error);
+      // Mostrar error al usuario
+      setErrors({
+        ...errors,
+        submitError: error.message || "Error al guardar la dirección",
+      });
+    }
   };
 
   return (
@@ -119,7 +191,7 @@ const ModalDireccion = ({
           </button>
         </div>
 
-        {/* Pestañas - siempre visibles */}
+        {/* Pestañas */}
         <div className="flex border-b mb-4">
           <button
             className={`px-4 py-2 font-medium ${
@@ -145,26 +217,44 @@ const ModalDireccion = ({
 
         {activeTab === "list" ? (
           <div className="space-y-3 mb-4">
-            {direcciones.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-4">
+                <p>Cargando direcciones...</p>
+              </div>
+            ) : error ? (
+              <div className="text-red-500 text-center py-4">{error}</div>
+            ) : direcciones.length > 0 ? (
               direcciones.map((direccion, index) => (
                 <div
                   key={index}
                   className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => onSelect(direccion)}
+                  onClick={() =>
+                    onSelect({
+                      idAdress: direccion.id_address,
+                      receptorName: direccion.name_surname,
+                      telefono: direccion.phone,
+                      direccionCompleta: `${direccion.physical_address}${
+                        direccion.apartment ? `, ${direccion.apartment}` : ""
+                      }`,
+                      provincia: direccion.province,
+                      distrito: direccion.district,
+                      codigoPostal: direccion.postal_code || "",
+                    })
+                  }
                 >
                   <p className="font-medium">
-                    {direccion.Nombre} - {direccion.Telefono}
+                    {direccion.name_surname} - {direccion.phone}
                   </p>
                   <p className="text-gray-700">
-                    {direccion.Direccion}
-                    {direccion.Apartamento && `, ${direccion.Apartamento}`}
+                    {direccion.physical_address}
+                    {direccion.apartment && `, ${direccion.apartment}`}
                   </p>
                   <p className="text-gray-600">
-                    {direccion.Distrito}, {direccion.Provincia}
+                    {direccion.district}, {direccion.province}
                   </p>
-                  {direccion.CodigoPostal && (
+                  {direccion.postal_code && (
                     <p className="text-gray-500 text-sm">
-                      Código Postal: {direccion.CodigoPostal}
+                      Código Postal: {direccion.postal_code}
                     </p>
                   )}
                 </div>
