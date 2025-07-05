@@ -220,7 +220,12 @@ export default function Cart() {
           </div>
           <button
             onClick={() => navigate("/sales")}
-            className="w-full bg-orange-500 text-white py-3 rounded"
+            className={`w-full py-3 rounded ${
+              cartItems.length === 0
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-orange-500 text-white"
+            }`}
+            disabled={cartItems.length === 0}
           >
             Tramitar Pedido
           </button>
