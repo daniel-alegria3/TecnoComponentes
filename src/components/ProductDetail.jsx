@@ -17,9 +17,13 @@ export default function ProductDetail() {
   const images = useMemo(() => producto?.images_path ?? [], [producto]);
   const { imageUrls, isImagesLoading } = useProductImages(images);
 
-  const handleAddToCart = e => {
+  const handleAddToCart = async(e) => {
     e.stopPropagation();
     addProdToCart(producto);
+    const available_stock = await addProdToCart(producto);
+    if (available_stock != null) {
+      setProducto({...producto, available_stock: available_stock});
+    }
   };
 
   useEffect(() => {
