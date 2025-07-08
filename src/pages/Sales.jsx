@@ -144,6 +144,12 @@ export default function Checkout() {
     setTimeout(() => setShowFeedback(false), 2000);
     closeModalDireccion();
   };
+
+  const onPressOK = () => {
+    setPaymentSuccess(false);
+    navigate("/");
+  };
+
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
@@ -186,11 +192,11 @@ export default function Checkout() {
       }
     };
 
-    fetchRealizarPago()
+    await fetchRealizarPago()
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 2000);
+    }, 1000);
     setPaymentSuccess(true);
   };
 
@@ -398,7 +404,7 @@ export default function Checkout() {
                     />
                     <BuildingStorefrontIcon className="h-5 w-5 text-gray-500" />
                     <span>Recojo en tienda</span>
-                  </div>
+                  </div>`
                 </label>
               </div>
             </div>
@@ -470,11 +476,11 @@ export default function Checkout() {
                         Pago Exitoso!
                       </h2>
                       <p className="text-gray-600 mt-2">
-                        Gracias por su preferencia. Revise su orden su la pagina
+                        Gracias por su preferencia. Revise su orden en la pagina
                         de Ordenes.
                       </p>
                       <button
-                        onClick={() => setPaymentSuccess(false)}
+                        onClick={() => onPressOK()}
                         className="mt-4 px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
                       >
                         OK
