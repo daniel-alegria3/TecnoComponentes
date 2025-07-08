@@ -192,6 +192,64 @@ const clientController = {
     }
   },
 
+  verCompras: async (req, res) => {
+    const id_client = req.session.id_client; // from using 'clientAuth' on the router
+
+    if (!id_client) {
+      return res.status(400).json({ error: '* technicamente imposible *' });
+    }
+
+    const connection = await pool.getConnection();
+
+    try {
+      const [result] = await pool.query('CALL obtener_historial_compras_cliente(?)', [id_client]);
+
+      // CALL devuelve un array de arrays, el primero contiene los resultados
+      console.log("WILDDDDDDDDDDDDDD: ", result)
+      const products = result[0];
+
+      const productsWithParsed = products.map(product => {
+        let specsParsed = null;
+        if (product.specs !== null) {
+          try {
+            const specsString = product.specs.toString('utf-8');
+            specsParsed = JSON.parse(specsString);
+          } catch (error) {
+            console.warn(`Specs inválido para el producto ID ${product.id_product}:`, error.message);
+            specsParsed = null;
+          }
+        }
+
+        let images_path_parsed = [];
+        if (product.images_path !== null) {
+          try {
+            images_path_parsed = product.images_path.split(',');
+          } catch (error) {
+            console.warn(`Images path inválido para el producto ID ${product.id_product}:`, error.message);
+            images_path_parsed = null;
+          }
+        }
+
+        return {
+          ...product,
+          images_path: images_path_parsed,
+          specs: specsParsed
+        };
+      });
+
+      console.log("\nWOOOOOOOOOOOOOOOOOOO\n")
+      console.log(productsWithParsed)
+      console.log("\nFFFFFFFFFFFFFFFFFFFF\n")
+      res.json(Array.isArray(productsWithParsed) ? productsWithParsed : []);
+    } catch (error) {
+      await connection.rollback();
+      console.error('Error en verCompras:', error);
+      res.status(500).json({ error: error.message });
+    } finally {
+      connection.release();
+    }
+  },
+
   obtenerHistorialCompras: async (req, res) => {
     const { id_client } = req.params;
 
