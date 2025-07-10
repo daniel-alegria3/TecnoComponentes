@@ -4,6 +4,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import DeleteProductModal from "../components/DeleteProductModal";
+import { useSession } from "../context/SessionContext";
 
 export default function Productos() {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,7 @@ export default function Productos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const { isLoggedIn } = useSession();
 
   // Obtener productos y establecer categorías al cargar el componente
   useEffect(() => {
@@ -21,15 +23,21 @@ export default function Productos() {
         setLoading(true);
         setError(null);
 
-        const productsResponse = await fetch(
+        const res = await fetch(
           "http://localhost:5000/api/clients/vercompras", {
            method: "GET",
            credentials: 'include',
         });
-        if (!productsResponse.ok) throw new Error("Error al obtener productos");
-        const productsData = await productsResponse.json();
+        const rpta = await res.json();
 
-        setProducts(productsData || []);
+        if (!res.ok) throw new Error("Error al obtener las ordenes");
+
+        if (!rpta?.error) {
+          setProducts(rpta || []);
+        } else {
+          setProducts([]);
+        }
+
       } catch (err) {
         console.error("Error:", err);
         setError(err.message);
@@ -43,8 +51,8 @@ export default function Productos() {
 
   // Filtrar productos
   useEffect(() => {
-    setFilteredProducts(products.filter((p) =>
-      p.name.toLowerCase().includes(search.toLowerCase())
+    setFilteredProducts(products?.filter((p) =>
+      p.nombre_producto.toLowerCase().includes(search.toLowerCase())
     ));
   }, [products]);
 
@@ -76,6 +84,14 @@ export default function Productos() {
     setDeleteModalOpen(false);
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <p>Iniciar session para ver la pag. de ordenes</p>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 bg-white rounded-xl shadow-lg">
       {/* Encabezado */}
@@ -105,13 +121,13 @@ export default function Productos() {
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                ID
+                Fecha
               </th>
               <th className="px-4 py-2">Nombre</th>
               <th className="px-4 py-2">Precio</th>
               <th className="px-4 py-2">Cantidad</th>
               <th className="px-4 py-2">Subtotal</th>
-              <th className="px-4 py-2">Acciones</th>
+              {/* <th className="px-4 py-2">Acciones</th> */}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -156,11 +172,12 @@ export default function Productos() {
             ) : (
               filteredProducts.map((product) => (
                 <tr key={product.id_product}>
-                  <td className="px-4 py-3 text-sm">{product.id_product}</td>
+                  <td className="px-4 py-3 text-sm">{product.fecha_compra}</td>
                   <td className="px-4 py-3">{product.nombre_producto}</td>
-                  <td className="px-4 py-3">{product.precio_compra}</td>
-                  <td className="px-4 py-3">S/ {product.cantidad}</td>
+                  <td className="px-4 py-3">S/ {product.precio_compra}</td>
+                  <td className="px-4 py-3">{product.cantidad}</td>
                   <td className="px-4 py-3">{product.subtotal}</td>
+                  {/*
                   <td className="px-4 py-3">
                     <button
                       onClick={() => {
@@ -172,6 +189,7 @@ export default function Productos() {
                       <TrashIcon className="h-5 w-5" />
                     </button>
                   </td>
+                  */}
                 </tr>
               ))
             )}
