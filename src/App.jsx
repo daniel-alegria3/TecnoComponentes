@@ -12,6 +12,7 @@ import ProductDetail from "./components/ProductDetail";
 import Cart from "./pages/Cart"; // <— importar
 import Sales from "./pages/Sales";
 import Perfil from "./pages/Perfil"; 
+import Ordenes from "./pages/Ordenes";
 
 // ADMIN
 import "./App.css";
@@ -31,6 +32,7 @@ function App() {
         <Route path="/cart" element={<Cart />} /> {/* nueva ruta */}
         <Route path="/sales" element={<Sales />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/ordenes" element={<Ordenes />} />
       </Route>
 
       {/* Rutas admin con su layout */}

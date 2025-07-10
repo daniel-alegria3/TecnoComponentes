@@ -4,11 +4,19 @@ import ProductCard from "../components/ProductCard";
 import { useCart } from "../context/CartContext";
 import CartItem from "../components/CartItem";
 import { useSession } from "../context/SessionContext";
+import { useProducts } from "../context/ProductsContext";
 
 export default function Cart() {
+
+
   const navigate = useNavigate();
   const { cartItems } = useCart();
   const { isLoggedIn } = useSession();
+  const { initProducts } = useProducts();
+
+  useEffect(() => {
+    initProducts();
+  }, [])
 
   // 1) Sustituye useState por useContext
 

@@ -31,6 +31,14 @@ export default function Navbar() {
   const { cartItems } = useCart();
   const session = useSession();
 
+  useEffect(() => {
+    if (session.isLoggedIn) {
+      const exists = navigation.find(it => it.name === "Ordenes");
+      if (!exists)
+        navigation.push({name: "Ordenes", href: "/ordenes"});
+    }
+  }, [session.isLoggedIn]);
+
   const handleLogout = async () => {
     try {
       await session.doLogout();
