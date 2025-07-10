@@ -193,6 +193,30 @@ export default function Productos() {
     }
   };
 
+  const downloadReport = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/reports/productstock", {
+        method: 'GET',
+      });
+
+      if (!res.ok) {
+        throw new Error("Backend no respondio bien");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "product-stock-report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error descargando reporte:", error);
+    }
+  }
+
   return (
     <div>
       <div className="p-4 bg-white rounded-xl shadow-lg">
@@ -341,7 +365,9 @@ export default function Productos() {
           onDelete={() => handleDeleteProduct(selectedProduct?.id_product)}
         />
       </div>
-      <button className="mt-4 ml-4 bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 relative">
+      <button className="mt-4 ml-4 bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-700 relative"
+        onClick={downloadReport}
+      >
         Descargar Reporte
       </button>
     </div>
