@@ -331,7 +331,6 @@ const clientController = {
 
   crearDireccionCliente: async (req, res) => {
     const { 
-      id_client, 
       name_surname, 
       phone, 
       physical_address, 
@@ -339,6 +338,8 @@ const clientController = {
       province, 
       district 
     } = req.body;
+
+    const id_client = req.session.id_client;
 
     try {
       // Validar parámetros obligatorios
@@ -431,7 +432,6 @@ const clientController = {
 
   editarDireccionCliente: async (req, res) => {
       const { 
-          id_client, 
           id_address, 
           name_surname, 
           phone, 
@@ -441,6 +441,8 @@ const clientController = {
           district 
       } = req.body;
   
+      const id_client = req.session.id_client;
+
       try {
           // Validar parámetros obligatorios
           if (!id_client || isNaN(id_client) || !id_address || isNaN(id_address)) {
@@ -543,7 +545,9 @@ const clientController = {
     },
 
     eliminarDireccionCliente: async (req, res) => {
-      const { id_client, id_address } = req.body;
+      const { id_address } = req.body;
+
+      const id_client = req.session.id_client;
 
       try {
           // Validar parámetros obligatorios
