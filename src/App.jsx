@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { ProductSelectionProvider } from "./context/ProductSelectionContext";
 import { useAppLoading } from "./hooks/useAppLoading";
 import LoadingScreen from "./components/LoadingScreen";
 
@@ -14,6 +15,7 @@ import ProductDetail from "./components/ProductDetail";
 import Cart from "./pages/Cart";
 import Sales from "./pages/Sales";
 import ArmaTuPC from "./pages/ArmaTuPC";
+import ResumenFinal from "./pages/ResumenFinal";
 
 // ADMIN
 import "./App.css";
@@ -30,25 +32,28 @@ function App() {
 
   // Si no está cargando, mostrar la aplicación normal
   return (
-    <Routes>
-      {/* Rutas públicas con su layout */}
-      <Route element={<ClienteLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/ofertas" element={<Ofertas />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/sales" element={<Sales />} />
-        <Route path="/arma-tu-pc" element={<ArmaTuPC />} />
-      </Route>
+    <ProductSelectionProvider>
+      <Routes>
+        {/* Rutas públicas con su layout */}
+        <Route element={<ClienteLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/ofertas" element={<Ofertas />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/sales" element={<Sales />} />
+          <Route path="/arma-tu-pc" element={<ArmaTuPC />} />
+          <Route path="/resumen-final" element={<ResumenFinal />} />
+        </Route>
 
-      {/* Rutas admin con su layout */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route path="/admin/" element={<Dashboard />} />
-        <Route path="/admin/productos" element={<Productos />} />
-      </Route>
-    </Routes>
+        {/* Rutas admin con su layout */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="/admin/" element={<Dashboard />} />
+          <Route path="/admin/productos" element={<Productos />} />
+        </Route>
+      </Routes>
+    </ProductSelectionProvider>
   );
 }
 

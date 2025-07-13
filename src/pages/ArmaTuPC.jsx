@@ -4,11 +4,14 @@ import BuildStepNavigator from "../components/BuildStepNavigator";
 import BuildSummary from "../components/BuildSummary";
 import StepContent from "../components/build-pc/StepContent";
 import { useProducts } from "../hooks/useProducts";
-import { useProductSelection } from "../hooks/useProductSelection";
+import { useProductSelection } from "../context/ProductSelectionContext";
 import { useStepNavigation } from "../hooks/useStepNavigation";
 import { useProductFilters } from "../hooks/useProductFilters";
 
+import { useState } from "react";
+
 export default function ArmaTuPC() {
+  const [showSummary, setShowSummary] = useState(false);
   // Hooks personalizados
   const { filteredProducts, loading, error } = useProducts();
   const selectedProducts = useProductSelection();
@@ -22,6 +25,24 @@ export default function ArmaTuPC() {
   };
 
   const estimatedTDP = 0; // Se elimina la dependencia de specs.TDP
+
+  // Paso final definido en los pasos
+  const LAST_STEP = 6;
+
+  // Función para manejar el siguiente paso o redirigir al resumen final
+  const handleNextStepOrRedirect = () => {
+    if (navigation.currentStep === LAST_STEP - 1) {
+      setShowSummary(true);
+    } else {
+      navigation.handleNextStep();
+    }
+  };
+
+  const handleBackFromSummary = () => {
+    navigation.setCurrentStep(5);
+    navigation.setCurrentSubStep && navigation.setCurrentSubStep(prev => ({ ...prev, 5: 2 }));
+    setShowSummary(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-monofur">
@@ -51,42 +72,68 @@ export default function ArmaTuPC() {
       {/* Steps Navigation */}
       <BuildStepNavigator
         steps={navigation.steps}
-        currentStep={navigation.currentStep}
+        currentStep={showSummary ? LAST_STEP : navigation.currentStep}
         setCurrentStep={navigation.setCurrentStep}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex">
-        <main className="flex-1 pr-8">
-          {[2, 3, 4, 5].includes(navigation.currentStep) && (
-            <StepContent
-              currentStep={navigation.currentStep}
-              currentSubStep={navigation.currentSubStep}
-              filteredProducts={filteredProducts}
-              selectedProducts={selectedProducts}
-              onSelectProduct={selectedProducts.handleSelectProduct}
-              filters={filters}
-              navigation={enhancedNavigation}
-              loading={loading}
-              error={error}
-            />
-          )}
-        </main>
+      {showSummary ? (
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <button
+            className="mb-8 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-semibold shadow"
+            onClick={handleBackFromSummary}
+          >
+            ← Volver al paso anterior
+          </button>
+          <BuildSummary
+            selectedCPU={selectedProducts.selectedCPU}
+            selectedMotherboard={selectedProducts.selectedMotherboard}
+            selectedRAM={selectedProducts.selectedRAM}
+            selectedGPU={selectedProducts.selectedGPU}
+            selectedStorage={selectedProducts.selectedStorage}
+            selectedPSU={selectedProducts.selectedPSU}
+            selectedCase={selectedProducts.selectedCase}
+            selectedCooler={selectedProducts.selectedCooler}
+            totalPrice={selectedProducts.totalPrice}
+            estimatedTDP={estimatedTDP}
+            onNextStep={() => {}}
+            canContinue={false}
+            expanded={true}
+          />
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-8 flex">
+          <main className="flex-1 pr-8">
+            {[2, 3, 4, 5].includes(navigation.currentStep) && (
+              <StepContent
+                currentStep={navigation.currentStep}
+                currentSubStep={navigation.currentSubStep}
+                filteredProducts={filteredProducts}
+                selectedProducts={selectedProducts}
+                onSelectProduct={selectedProducts.handleSelectProduct}
+                filters={filters}
+                navigation={enhancedNavigation}
+                loading={loading}
+                error={error}
+              />
+            )}
+          </main>
 
-        <BuildSummary
-          selectedCPU={selectedProducts.selectedCPU}
-          selectedMotherboard={selectedProducts.selectedMotherboard}
-          selectedRAM={selectedProducts.selectedRAM}
-          selectedGPU={selectedProducts.selectedGPU}
-          selectedStorage={selectedProducts.selectedStorage}
-          selectedPSU={selectedProducts.selectedPSU}
-          selectedCase={selectedProducts.selectedCase}
-          selectedCooler={selectedProducts.selectedCooler}
-          totalPrice={selectedProducts.totalPrice}
-          estimatedTDP={estimatedTDP}
-          onNextStep={navigation.handleNextStep}
-          canContinue={selectedProducts.canContinue(navigation.currentStep)}
-        />
-      </div>
+          <BuildSummary
+            selectedCPU={selectedProducts.selectedCPU}
+            selectedMotherboard={selectedProducts.selectedMotherboard}
+            selectedRAM={selectedProducts.selectedRAM}
+            selectedGPU={selectedProducts.selectedGPU}
+            selectedStorage={selectedProducts.selectedStorage}
+            selectedPSU={selectedProducts.selectedPSU}
+            selectedCase={selectedProducts.selectedCase}
+            selectedCooler={selectedProducts.selectedCooler}
+            totalPrice={selectedProducts.totalPrice}
+            estimatedTDP={estimatedTDP}
+            onNextStep={handleNextStepOrRedirect}
+            canContinue={selectedProducts.canContinue(navigation.currentStep)}
+          />
+        </div>
+      )}
     </div>
   );
 }
