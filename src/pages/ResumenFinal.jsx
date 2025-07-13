@@ -56,6 +56,14 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
           onNextStep={() => {}}
           canContinue={false}
           expanded={true}
+          colorOverride={{
+            border: "border-transparent",
+            bg: "bg-transparent",
+            iconBg: "bg-transparent",
+            icon: "text-red-500",
+            label: "text-red-500",
+            plus: "text-red-500"
+          }}
         />
       </div>
     </div>
