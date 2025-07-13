@@ -7,19 +7,17 @@ import BuildSummary from "../components/BuildSummary";
 import { useProductSelection } from "../context/ProductSelectionContext";
 import { useStepNavigation } from "../hooks/useStepNavigation";
 
-export default function ResumenFinal() {
+export default function ResumenFinal({ setShowSummary, goToStep }) {
   const selectedProducts = useProductSelection();
   const navigation = useStepNavigation();
   const estimatedTDP = 0;
   const navigate = useNavigate();
 
   const handleBack = () => {
-    // Forzar volver al paso 5 y mostrar la configuración elegida
-    navigation.setCurrentStep(5);
-    if (navigation.setCurrentSubStep) {
-      navigation.setCurrentSubStep(prev => ({ ...prev, 5: 2 }));
+    // Ejecutar exactamente la misma lógica que al hacer click en el paso 5 de la barra de navegación
+    if (typeof goToStep === 'function') {
+      goToStep(5);
     }
-    navigate("/arma-tu-pc");
   };
 
   return (
@@ -35,7 +33,7 @@ export default function ResumenFinal() {
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
             onClick={handleBack}
           >
-            ← Volver al paso anterior
+            ← Volver atrás
           </button>
           <button
             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold shadow"

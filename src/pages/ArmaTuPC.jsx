@@ -98,11 +98,19 @@ export default function ArmaTuPC() {
       <BuildStepNavigator
         steps={navigation.steps}
         currentStep={showSummary ? LAST_STEP : navigation.currentStep}
-        setCurrentStep={navigation.setCurrentStep}
+        setCurrentStep={(step) => {
+          if (showSummary) {
+            setShowSummary(false);
+          }
+          navigation.setCurrentStep(step);
+        }}
       />
 
       {showSummary ? (
-        <ResumenFinal />
+        <ResumenFinal setShowSummary={setShowSummary} goToStep={(step) => {
+          if (showSummary) setShowSummary(false);
+          navigation.setCurrentStep(step);
+        }} />
       ) : (
         <div className="max-w-7xl mx-auto px-4 py-8 flex">
           <main className="flex-1 pr-8">

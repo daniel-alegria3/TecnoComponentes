@@ -67,6 +67,18 @@ export function ProductSelectionProvider({ children }) {
     }
   };
 
+  // Función para limpiar toda la selección
+  const resetSelection = () => {
+    setSelectedCPU(null);
+    setSelectedMotherboard(null);
+    setSelectedRAM(null);
+    setSelectedGPU(null);
+    setSelectedStorage(null);
+    setSelectedPSU(null);
+    setSelectedCase(null);
+    setSelectedCooler(null);
+  };
+
   return (
     <ProductSelectionContext.Provider
       value={{
@@ -89,6 +101,7 @@ export function ProductSelectionProvider({ children }) {
         handleSelectProduct,
         totalPrice,
         canContinue,
+        resetSelection,
       }}
     >
       {children}
