@@ -17,7 +17,31 @@ export default function BuildSummary({
   estimatedTDP,
   onNextStep,
   canContinue,
+  expanded = false,
 }) {
+  // Color classes for summary (expanded) vs sidebar
+  const color = expanded ? {
+    border: "border-orange-100",
+    bg: "bg-orange-50",
+    iconBg: "bg-orange-100",
+    icon: "text-orange-500",
+    label: "text-orange-500",
+    plus: "text-orange-500",
+  } : {
+    border: "border-blue-100",
+    bg: "bg-blue-50",
+    iconBg: "bg-blue-100",
+    icon: "text-blue-600",
+    label: "text-blue-600",
+    plus: "text-blue-600",
+    greenBorder: "border-green-100",
+    greenBg: "bg-green-50",
+    greenIconBg: "bg-green-100",
+    greenIcon: "text-green-600",
+    greenLabel: "text-green-600",
+    greenPlus: "text-green-600",
+  };
+
   return (
     <div className="w-1/4">
       <div className="bg-white rounded-lg shadow p-4 sticky top-4">
@@ -37,11 +61,11 @@ export default function BuildSummary({
 
         <div className="space-y-4">
           {/* CPU - To be selected */}
-          <div className="flex items-center p-2 border border-blue-100 bg-blue-50 rounded-lg">
-            <div className="bg-blue-100 rounded-full p-2 mr-3">
+          <div className={`flex items-center p-2 border rounded-lg ${expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"}`}>
+            <div className={`rounded-full p-2 mr-3 ${color.iconBg}`}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-blue-600"
+                className={`h-5 w-5 ${color.icon}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -55,7 +79,7 @@ export default function BuildSummary({
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-blue-600 font-medium">CPU</p>
+              <p className={`text-sm font-medium ${color.label}`}>CPU</p>
               {selectedCPU ? (
                 <p className="text-sm text-gray-500">{selectedCPU.name}</p>
               ) : (
@@ -64,7 +88,7 @@ export default function BuildSummary({
                 </p>
               )}
             </div>
-            <PlusIcon className="h-5 w-5 text-blue-600" />
+            <PlusIcon className={`h-5 w-5 ${color.plus}`} />
           </div>
 
           {/* Placa Base - Locked until CPU selection */}
@@ -72,18 +96,18 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedCPU
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-blue-100 bg-blue-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedCPU ? "bg-gray-200" : "bg-blue-100"
+                !selectedCPU ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
               }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ${
-                  !selectedCPU ? "text-gray-500" : "text-blue-600"
+                  !selectedCPU ? "text-gray-500" : expanded ? color.icon : "text-blue-600"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -100,7 +124,7 @@ export default function BuildSummary({
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedCPU ? "text-gray-600" : "text-blue-600"
+                  !selectedCPU ? "text-gray-600" : expanded ? color.label : "text-blue-600"
                 }`}
               >
                 Placa Base
@@ -118,7 +142,7 @@ export default function BuildSummary({
               )}
             </div>
             {!selectedCPU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
-            {selectedCPU && <PlusIcon className="h-5 w-5 text-blue-600" />}
+            {selectedCPU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
           </div>
 
           {/* RAM - Locked until Motherboard selection */}
@@ -126,18 +150,18 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedMotherboard
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-green-100 bg-green-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedMotherboard ? "bg-gray-200" : "bg-green-100"
+                !selectedMotherboard ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
               }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ${
-                  !selectedMotherboard ? "text-gray-500" : "text-green-600"
+                  !selectedMotherboard ? "text-gray-500" : expanded ? color.icon : "text-green-600"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -154,7 +178,7 @@ export default function BuildSummary({
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedMotherboard ? "text-gray-600" : "text-green-600"
+                  !selectedMotherboard ? "text-gray-600" : expanded ? color.label : "text-green-600"
                 }`}
               >
                 RAM
@@ -170,7 +194,7 @@ export default function BuildSummary({
             {!selectedMotherboard && (
               <LockClosedIcon className="h-5 w-5 text-gray-400" />
             )}
-            {selectedMotherboard && <PlusIcon className="h-5 w-5 text-blue-600" />}
+            {selectedMotherboard && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
           </div>
 
           {/* GPU - Locked until RAM selection */}
@@ -178,18 +202,18 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedRAM
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-green-100 bg-green-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedRAM ? "bg-gray-200" : "bg-green-100"
+                !selectedRAM ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
               }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ${
-                  !selectedRAM ? "text-gray-500" : "text-green-600"
+                  !selectedRAM ? "text-gray-500" : expanded ? color.icon : "text-green-600"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -206,7 +230,7 @@ export default function BuildSummary({
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedRAM ? "text-gray-600" : "text-green-600"
+                  !selectedRAM ? "text-gray-600" : expanded ? color.label : "text-green-600"
                 }`}
               >
                 GPU
@@ -220,7 +244,7 @@ export default function BuildSummary({
               )}
             </div>
             {!selectedRAM && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
-            {selectedRAM && <PlusIcon className="h-5 w-5 text-blue-600" />}
+            {selectedRAM && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
           </div>
 
           {/* Storage - Locked until GPU selection */}
@@ -228,18 +252,18 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedGPU
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-green-100 bg-green-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedGPU ? "bg-gray-200" : "bg-green-100"
+                !selectedGPU ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
               }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ${
-                  !selectedGPU ? "text-gray-500" : "text-green-600"
+                  !selectedGPU ? "text-gray-500" : expanded ? color.icon : "text-green-600"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -256,7 +280,7 @@ export default function BuildSummary({
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedGPU ? "text-gray-600" : "text-green-600"
+                  !selectedGPU ? "text-gray-600" : expanded ? color.label : "text-green-600"
                 }`}
               >
                 Almacenamiento
@@ -270,7 +294,7 @@ export default function BuildSummary({
               )}
             </div>
             {!selectedGPU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
-            {selectedGPU && <PlusIcon className="h-5 w-5 text-green-600" />}
+            {selectedGPU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-green-600"}`} />}
           </div>
 
           {/* PSU - Locked until Storage selection */}
@@ -278,18 +302,18 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedStorage
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-green-100 bg-green-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedStorage ? "bg-gray-200" : "bg-green-100"
+                !selectedStorage ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
               }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-5 w-5 ${
-                  !selectedStorage ? "text-gray-500" : "text-green-600"
+                  !selectedStorage ? "text-gray-500" : expanded ? color.icon : "text-green-600"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
@@ -306,7 +330,7 @@ export default function BuildSummary({
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedStorage ? "text-gray-600" : "text-green-600"
+                  !selectedStorage ? "text-gray-600" : expanded ? color.label : "text-green-600"
                 }`}
               >
                 PSU
@@ -322,7 +346,7 @@ export default function BuildSummary({
             {!selectedStorage && (
               <LockClosedIcon className="h-5 w-5 text-gray-400" />
             )}
-            {selectedStorage && <PlusIcon className="h-5 w-5 text-green-600" />}
+            {selectedStorage && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-green-600"}`} />}
           </div>
 
           {/* Case - Locked until PSU selection */}
@@ -330,24 +354,24 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedPSU
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-blue-100 bg-blue-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedPSU ? "bg-gray-200" : "bg-blue-100"
+                !selectedPSU ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
               }`}
             >
               <BookmarkIcon
                 className={`h-5 w-5 ${
-                  !selectedPSU ? "text-gray-500" : "text-blue-600"
+                  !selectedPSU ? "text-gray-500" : expanded ? color.icon : "text-blue-600"
                 }`}
               />
             </div>
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedPSU ? "text-gray-600" : "text-blue-600"
+                  !selectedPSU ? "text-gray-600" : expanded ? color.label : "text-blue-600"
                 }`}
               >
                 Gabinete
@@ -361,7 +385,7 @@ export default function BuildSummary({
               )}
             </div>
             {!selectedPSU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
-            {selectedPSU && <PlusIcon className="h-5 w-5 text-blue-600" />}
+            {selectedPSU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
           </div>
 
           {/* Cooler - Locked until Case selection */}
@@ -369,24 +393,24 @@ export default function BuildSummary({
             className={`flex items-center p-2 border rounded-lg transition-all ${
               !selectedCase
                 ? "border-gray-100 bg-gray-50 opacity-75"
-                : "border-blue-100 bg-blue-50"
+                : expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"
             }`}
           >
             <div
               className={`rounded-full p-2 mr-3 ${
-                !selectedCase ? "bg-gray-200" : "bg-blue-100"
+                !selectedCase ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
               }`}
             >
               <BookmarkIcon
                 className={`h-5 w-5 ${
-                  !selectedCase ? "text-gray-500" : "text-blue-600"
+                  !selectedCase ? "text-gray-500" : expanded ? color.icon : "text-blue-600"
                 }`}
               />
             </div>
             <div className="flex-1">
               <p
                 className={`text-sm font-medium ${
-                  !selectedCase ? "text-gray-600" : "text-blue-600"
+                  !selectedCase ? "text-gray-600" : expanded ? color.label : "text-blue-600"
                 }`}
               >
                 Refrigeración
@@ -400,7 +424,7 @@ export default function BuildSummary({
               )}
             </div>
             {!selectedCase && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
-            {selectedCase && <PlusIcon className="h-5 w-5 text-blue-600" />}
+            {selectedCase && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
           </div>
         </div>
 

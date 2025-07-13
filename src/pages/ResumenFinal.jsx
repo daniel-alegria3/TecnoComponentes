@@ -48,10 +48,13 @@ export default function ResumenFinal() {
 
       <div className="flex flex-col items-center justify-center min-h-[70vh]">
         <button
-          className="mb-8 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-semibold shadow"
+          className="flex items-center mb-8 px-4 py-2 rounded-lg transition-all duration-200 bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg"
           onClick={handleBack}
         >
-          ← Volver al paso anterior
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 mr-2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          Paso Anterior
         </button>
         <BuildSummary
           selectedCPU={selectedProducts.selectedCPU}
