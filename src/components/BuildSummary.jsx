@@ -75,11 +75,354 @@ export default function BuildSummary({
           </button>
         </div>
 
-        <div className="space-y-4">
-          {/* CPU */}
-          <div className="relative">
-            {maybeBackground(selectedCPU)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"}`}>
+        {expanded ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* CPU */}
+            <div className="relative">
+              {maybeBackground(selectedCPU)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${color.border} ${color.bg}`}>
+                <div className={`rounded-full p-2 mr-3 ${color.iconBg}`}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 ${color.icon}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className={`text-sm font-medium ${color.label}`}>CPU</p>
+                  {selectedCPU ? (
+                    <p className="text-sm text-gray-500">{selectedCPU.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Selecciona un procesador
+                    </p>
+                  )}
+                </div>
+                <PlusIcon className={`h-5 w-5 ${color.plus}`} />
+              </div>
+            </div>
+            {/* Placa Base */}
+            <div className="relative">
+              {maybeBackground(selectedMotherboard)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedCPU ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedCPU ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 ${
+                      !selectedCPU ? "text-gray-500" : expanded ? color.icon : "text-blue-600"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedCPU ? "text-gray-600" : expanded ? color.label : "text-blue-600"
+                    }`}
+                  >
+                    Placa Base
+                  </p>
+                  {!selectedCPU ? (
+                    <p className="text-sm text-gray-400">Pendiente de CPU</p>
+                  ) : selectedMotherboard ? (
+                    <p className="text-sm text-gray-500">
+                      {selectedMotherboard.name}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Selecciona una placa base
+                    </p>
+                  )}
+                </div>
+                {!selectedCPU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
+                {selectedCPU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
+              </div>
+            </div>
+            {/* RAM */}
+            <div className="relative">
+              {maybeBackground(selectedRAM)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedMotherboard ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedMotherboard ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 ${
+                      !selectedMotherboard ? "text-gray-500" : expanded ? color.icon : "text-green-600"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedMotherboard ? "text-gray-600" : expanded ? color.label : "text-green-600"
+                    }`}
+                  >
+                    RAM
+                  </p>
+                  {!selectedMotherboard ? (
+                    <p className="text-sm text-gray-400">Pendiente de Placa Base</p>
+                  ) : selectedRAM ? (
+                    <p className="text-sm text-gray-500">{selectedRAM.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Selecciona RAM</p>
+                  )}
+                </div>
+                {!selectedMotherboard && (
+                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                )}
+                {selectedMotherboard && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
+              </div>
+            </div>
+            {/* GPU */}
+            <div className="relative">
+              {maybeBackground(selectedGPU)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedRAM ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedRAM ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 ${
+                      !selectedRAM ? "text-gray-500" : expanded ? color.icon : "text-green-600"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedRAM ? "text-gray-600" : expanded ? color.label : "text-green-600"
+                    }`}
+                  >
+                    GPU
+                  </p>
+                  {!selectedRAM ? (
+                    <p className="text-sm text-gray-400">Pendiente de RAM</p>
+                  ) : selectedGPU ? (
+                    <p className="text-sm text-gray-500">{selectedGPU.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Selecciona una GPU</p>
+                  )}
+                </div>
+                {!selectedRAM && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
+                {selectedRAM && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
+              </div>
+            </div>
+            {/* Storage */}
+            <div className="relative">
+              {maybeBackground(selectedStorage)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedGPU ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedGPU ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 ${
+                      !selectedGPU ? "text-gray-500" : expanded ? color.icon : "text-green-600"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedGPU ? "text-gray-600" : expanded ? color.label : "text-green-600"
+                    }`}
+                  >
+                    Almacenamiento
+                  </p>
+                  {!selectedGPU ? (
+                    <p className="text-sm text-gray-400">Pendiente de GPU</p>
+                  ) : selectedStorage ? (
+                    <p className="text-sm text-gray-500">{selectedStorage.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Selecciona almacenamiento</p>
+                  )}
+                </div>
+                {!selectedGPU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
+                {selectedGPU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-green-600"}`} />}
+              </div>
+            </div>
+            {/* PSU */}
+            <div className="relative">
+              {maybeBackground(selectedPSU)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedStorage ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedStorage ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-5 w-5 ${
+                      !selectedStorage ? "text-gray-500" : expanded ? color.icon : "text-green-600"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedStorage ? "text-gray-600" : expanded ? color.label : "text-green-600"
+                    }`}
+                  >
+                    PSU
+                  </p>
+                  {!selectedStorage ? (
+                    <p className="text-sm text-gray-400">Pendiente de Almacenamiento</p>
+                  ) : selectedPSU ? (
+                    <p className="text-sm text-gray-500">{selectedPSU.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Selecciona una fuente</p>
+                  )}
+                </div>
+                {!selectedStorage && (
+                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                )}
+                {selectedStorage && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-green-600"}`} />}
+              </div>
+            </div>
+            {/* Case */}
+            <div className="relative">
+              {maybeBackground(selectedCase)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedPSU ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedPSU ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
+                  }`}
+                >
+                  <BookmarkIcon
+                    className={`h-5 w-5 ${
+                      !selectedPSU ? "text-gray-500" : expanded ? color.icon : "text-blue-600"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedPSU ? "text-gray-600" : expanded ? color.label : "text-blue-600"
+                    }`}
+                  >
+                    Gabinete
+                  </p>
+                  {selectedCase ? (
+                    <p className="text-sm text-gray-500">{selectedCase.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Selecciona un gabinete
+                    </p>
+                  )}
+                </div>
+                {!selectedPSU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
+                {selectedPSU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
+              </div>
+            </div>
+            {/* Cooler */}
+            <div className="relative">
+              {maybeBackground(selectedCooler)}
+              <div className={`flex flex-col justify-center items-start h-40 p-4 border rounded-lg relative z-10 ${!selectedCase ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
+                <div
+                  className={`rounded-full p-2 mr-3 ${
+                    !selectedCase ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
+                  }`}
+                >
+                  <BookmarkIcon
+                    className={`h-5 w-5 ${
+                      !selectedCase ? "text-gray-500" : expanded ? color.icon : "text-blue-600"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      !selectedCase ? "text-gray-600" : expanded ? color.label : "text-blue-600"
+                    }`}
+                  >
+                    Refrigeración
+                  </p>
+                  {selectedCooler ? (
+                    <p className="text-sm text-gray-500">{selectedCooler.name}</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Selecciona un sistema de refrigeración
+                    </p>
+                  )}
+                </div>
+                {!selectedCase && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
+                {selectedCase && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* CPU */}
+            <div className={`flex items-center p-2 border rounded-lg ${color.border} ${color.bg}`}>
               <div className={`rounded-full p-2 mr-3 ${color.iconBg}`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -108,12 +451,8 @@ export default function BuildSummary({
               </div>
               <PlusIcon className={`h-5 w-5 ${color.plus}`} />
             </div>
-          </div>
-
-          {/* Placa Base */}
-          <div className="relative">
-            {maybeBackground(selectedMotherboard)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedCPU ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"}`}>
+            {/* Placa Base */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedCPU ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedCPU ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
@@ -159,12 +498,8 @@ export default function BuildSummary({
               {!selectedCPU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
               {selectedCPU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
             </div>
-          </div>
-
-          {/* RAM */}
-          <div className="relative">
-            {maybeBackground(selectedRAM)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedMotherboard ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"}`}>
+            {/* RAM */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedMotherboard ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedMotherboard ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
@@ -208,12 +543,8 @@ export default function BuildSummary({
               )}
               {selectedMotherboard && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
             </div>
-          </div>
-
-          {/* GPU */}
-          <div className="relative">
-            {maybeBackground(selectedGPU)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedRAM ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"}`}>
+            {/* GPU */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedRAM ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedRAM ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
@@ -255,12 +586,8 @@ export default function BuildSummary({
               {!selectedRAM && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
               {selectedRAM && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
             </div>
-          </div>
-
-          {/* Storage */}
-          <div className="relative">
-            {maybeBackground(selectedStorage)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedGPU ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"}`}>
+            {/* Storage */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedGPU ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedGPU ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
@@ -302,12 +629,8 @@ export default function BuildSummary({
               {!selectedGPU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
               {selectedGPU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-green-600"}`} />}
             </div>
-          </div>
-
-          {/* PSU */}
-          <div className="relative">
-            {maybeBackground(selectedPSU)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedStorage ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-green-100 bg-green-50"}`}>
+            {/* PSU */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedStorage ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedStorage ? "bg-gray-200" : expanded ? color.iconBg : "bg-green-100"
@@ -351,12 +674,8 @@ export default function BuildSummary({
               )}
               {selectedStorage && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-green-600"}`} />}
             </div>
-          </div>
-
-          {/* Case */}
-          <div className="relative">
-            {maybeBackground(selectedCase)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedPSU ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"}`}>
+            {/* Case */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedPSU ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedPSU ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
@@ -387,12 +706,8 @@ export default function BuildSummary({
               {!selectedPSU && <LockClosedIcon className="h-5 w-5 text-gray-400" />}
               {selectedPSU && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
             </div>
-          </div>
-
-          {/* Cooler */}
-          <div className="relative">
-            {maybeBackground(selectedCooler)}
-            <div className={`flex items-center p-2 border rounded-lg relative z-10 ${!selectedCase ? "border-gray-100 bg-gray-50 opacity-75" : expanded ? `${color.border} ${color.bg}` : "border-blue-100 bg-blue-50"}`}>
+            {/* Cooler */}
+            <div className={`flex items-center p-2 border rounded-lg ${!selectedCase ? "border-gray-100 bg-gray-50 opacity-75" : `${color.border} ${color.bg}`}`}>
               <div
                 className={`rounded-full p-2 mr-3 ${
                   !selectedCase ? "bg-gray-200" : expanded ? color.iconBg : "bg-blue-100"
@@ -424,7 +739,7 @@ export default function BuildSummary({
               {selectedCase && <PlusIcon className={`h-5 w-5 ${expanded ? color.plus : "text-blue-600"}`} />}
             </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-6 pt-4 border-t">
           <div className="flex justify-between mb-2">
