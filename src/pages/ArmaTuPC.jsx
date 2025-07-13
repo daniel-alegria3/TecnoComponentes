@@ -32,6 +32,19 @@ export default function ArmaTuPC() {
   // Función para manejar el siguiente paso o redirigir al resumen final
   const handleNextStepOrRedirect = () => {
     if (navigation.currentStep === LAST_STEP - 1) {
+      // Marcar el paso 5 (Gabinete & Refrigeración) como completo y el 6 como current
+      navigation.setCurrentStep(LAST_STEP);
+      if (navigation.steps && navigation.setCurrentStep) {
+        // Actualizar el estado visual de los pasos
+        navigation.steps.forEach((step, idx) => {
+          if (step.id === 5 && step.status !== "complete") {
+            step.status = "complete";
+          }
+          if (step.id === 6) {
+            step.status = "current";
+          }
+        });
+      }
       setShowSummary(true);
     } else {
       navigation.handleNextStep();
@@ -39,8 +52,19 @@ export default function ArmaTuPC() {
   };
 
   const handleBackFromSummary = () => {
+    // Volver al paso 5 y marcar el 6 como upcoming
     navigation.setCurrentStep(5);
     navigation.setCurrentSubStep && navigation.setCurrentSubStep(prev => ({ ...prev, 5: 2 }));
+    if (navigation.steps && navigation.setCurrentStep) {
+      navigation.steps.forEach((step, idx) => {
+        if (step.id === 6) {
+          step.status = "upcoming";
+        }
+        if (step.id === 5) {
+          step.status = "current";
+        }
+      });
+    }
     setShowSummary(false);
   };
 
