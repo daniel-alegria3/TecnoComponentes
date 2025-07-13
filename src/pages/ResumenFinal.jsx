@@ -14,40 +14,23 @@ export default function ResumenFinal() {
   const navigate = useNavigate();
 
   const handleBack = () => {
+    // Forzar volver al paso 5 y mostrar la configuración elegida
     navigation.setCurrentStep(5);
-    navigation.setCurrentSubStep && navigation.setCurrentSubStep(prev => ({ ...prev, 5: 2 }));
+    if (navigation.setCurrentSubStep) {
+      navigation.setCurrentSubStep(prev => ({ ...prev, 5: 2 }));
+    }
     navigate("/arma-tu-pc");
   };
 
   return (
     <div className="min-h-screen bg-gray-50 font-monofur">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              Tecno<span className="text-violet-500">Componentes</span>
-            </Link>
-            <span className="mx-2 text-gray-400 font-light">/</span>
-            <h1 className="text-gray-600">Arma tu PC</h1>
-          </div>
-          <div className="flex space-x-4">
-            <button type="button" className="text-gray-600 hover:text-gray-800">
-              <QuestionMarkCircleIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* Header eliminado para evitar duplicidad con el de ArmaTuPC */}
 
-      {/* Steps Navigation */}
-      <BuildStepNavigator
-        steps={navigation.steps}
-        currentStep={navigation.currentStep}
-        setCurrentStep={navigation.setCurrentStep}
-      />
+      {/* Steps Navigation - solo mostrar una barra de estado */}
+      {/* La barra de estado ya se muestra desde ArmaTuPC.jsx, así que aquí la eliminamos para evitar duplicados */}
 
       <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <div className="flex space-x-4 mb-8">
+        <div className="flex space-x-4 mb-8 mt-8">
           <button
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
             onClick={handleBack}
