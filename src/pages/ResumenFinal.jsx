@@ -29,20 +29,8 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
 
       <div className="flex flex-col items-center justify-center min-h-[70vh] sm:flex-row sm:items-start sm:justify-center">
         <div className="sm:w-2/3 w-full">
-          <div className="flex space-x-4 mb-8 mt-8">
-            <button
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
-              onClick={handleBack}
-            >
-              ← Volver atrás
-            </button>
-            <button
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold shadow"
-              type="button"
-            >
-              boton que no hace nada
-            </button>
-          </div>
+          {/* Separación extra arriba del bloque de compatibilidad */}
+          <div className="mb-8 mt-8" />
           <BuildSummary
             selectedCPU={selectedProducts.selectedCPU}
             selectedMotherboard={selectedProducts.selectedMotherboard}
@@ -68,7 +56,7 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
           />
         </div>
         <div className="sm:w-1/3 w-full mt-8 sm:mt-0 sm:ml-8 flex flex-col items-center">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs border border-gray-300">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs border border-gray-300 mt-8">
             <h2 className="text-lg font-bold mb-4">Compatibilidad</h2>
             <div className="w-full mb-4">
               <div className="w-full h-6 bg-gray-100 rounded-lg border border-gray-400 flex items-center">
@@ -84,8 +72,14 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
             <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg mb-3 shadow hover:bg-blue-700 transition-colors">
               Añadir al carrito
             </button>
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg shadow hover:bg-blue-700 transition-colors">
+            <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-lg mb-3 shadow hover:bg-blue-700 transition-colors">
               Comprar
+            </button>
+            <button
+              className="w-full bg-orange-500 text-white py-3 rounded-lg font-bold text-lg shadow hover:bg-orange-600 transition-colors mt-2"
+              onClick={handleBack}
+            >
+              ← Volver atrás
             </button>
           </div>
         </div>
