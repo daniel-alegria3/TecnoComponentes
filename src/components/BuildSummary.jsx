@@ -741,24 +741,27 @@ export default function BuildSummary({
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t">
-          <div className="flex justify-between mb-2">
-            <span className="text-lg font-bold">Total:</span>
-            <span className="text-lg font-bold">${totalPrice.toFixed(2)}</span>
-          </div>
-          <p className="text-sm text-gray-600 mb-6">
-            TDP estimado: {estimatedTDP}W
-          </p>
+        {/* Solo mostrar total, TDP y botón si NO es expanded (no es resumen final) */}
+        {!expanded && (
+          <div className="mt-6 pt-4 border-t">
+            <div className="flex justify-between mb-2">
+              <span className="text-lg font-bold">Total:</span>
+              <span className="text-lg font-bold">${totalPrice.toFixed(2)}</span>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              TDP estimado: {estimatedTDP}W
+            </p>
 
-          <button
-            type="button"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-            onClick={onNextStep}
-            disabled={!canContinue}
-          >
-            Siguiente Paso
-          </button>
-        </div>
+            <button
+              type="button"
+              className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              onClick={onNextStep}
+              disabled={!canContinue}
+            >
+              Siguiente Paso
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
