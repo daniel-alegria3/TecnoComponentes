@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import ResumenFinal from "./ResumenFinal";
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import BuildStepNavigator from "../components/BuildStepNavigator";
 import BuildSummary from "../components/BuildSummary";
@@ -101,29 +102,7 @@ export default function ArmaTuPC() {
       />
 
       {showSummary ? (
-        <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <button
-            className="mb-8 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-semibold shadow"
-            onClick={handleBackFromSummary}
-          >
-            ← Volver al paso anterior
-          </button>
-          <BuildSummary
-            selectedCPU={selectedProducts.selectedCPU}
-            selectedMotherboard={selectedProducts.selectedMotherboard}
-            selectedRAM={selectedProducts.selectedRAM}
-            selectedGPU={selectedProducts.selectedGPU}
-            selectedStorage={selectedProducts.selectedStorage}
-            selectedPSU={selectedProducts.selectedPSU}
-            selectedCase={selectedProducts.selectedCase}
-            selectedCooler={selectedProducts.selectedCooler}
-            totalPrice={selectedProducts.totalPrice}
-            estimatedTDP={estimatedTDP}
-            onNextStep={() => {}}
-            canContinue={false}
-            expanded={true}
-          />
-        </div>
+        <ResumenFinal />
       ) : (
         <div className="max-w-7xl mx-auto px-4 py-8 flex">
           <main className="flex-1 pr-8">

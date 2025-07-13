@@ -47,15 +47,20 @@ export default function ResumenFinal() {
       />
 
       <div className="flex flex-col items-center justify-center min-h-[70vh]">
-        <button
-          className="flex items-center mb-8 px-4 py-2 rounded-lg transition-all duration-200 bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg"
-          onClick={handleBack}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5 mr-2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-          Paso Anterior
-        </button>
+        <div className="flex space-x-4 mb-8">
+          <button
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow"
+            onClick={handleBack}
+          >
+            ← Volver al paso anterior
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-semibold shadow"
+            type="button"
+          >
+            boton que no hace nada
+          </button>
+        </div>
         <BuildSummary
           selectedCPU={selectedProducts.selectedCPU}
           selectedMotherboard={selectedProducts.selectedMotherboard}
