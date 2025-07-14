@@ -96,13 +96,10 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
               <span className="text-lg font-bold">${selectedProducts.totalPrice.toFixed(2)}</span>
             </div>
             <button
-              className="w-full bg-blue-600 text-white py-2 rounded-lg text-lg mb-3 shadow hover:bg-blue-700 transition-colors font-bold"
+              className="w-full bg-blue-600 text-white py-2 rounded-lg text-lg mb-3 shadow hover:bg-blue-700 transition-colors font-normal"
               onClick={handleAddAllToCart}
             >
               Añadir al carrito
-            </button>
-            <button className="w-full bg-blue-600 text-white py-2 rounded-lg text-lg mb-3 shadow hover:bg-blue-700 transition-colors font-normal">
-              Comprar
             </button>
             <button
               className="w-full bg-orange-500 text-white py-2 rounded-lg text-lg shadow hover:bg-orange-600 transition-colors mt-2 font-normal"
