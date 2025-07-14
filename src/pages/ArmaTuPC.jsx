@@ -3,6 +3,7 @@ import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import BuildStepNavigator from "../components/BuildStepNavigator";
 import BuildSummary from "../components/BuildSummary";
 import StepContent from "../components/build-pc/StepContent";
+import PeripheralsDecision from "../components/build-pc/PeripheralsDecision";
 import { useProducts } from "../hooks/useProducts";
 import { useProductSelection } from "../hooks/useProductSelection";
 import { useStepNavigation } from "../hooks/useStepNavigation";
@@ -57,18 +58,28 @@ export default function ArmaTuPC() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 flex">
         <main className="flex-1 pr-8">
-          {[2, 3, 4, 5].includes(navigation.currentStep) && (
-            <StepContent
-              currentStep={navigation.currentStep}
-              currentSubStep={navigation.currentSubStep}
-              filteredProducts={filteredProducts}
-              selectedProducts={selectedProducts}
-              onSelectProduct={selectedProducts.handleSelectProduct}
-              filters={filters}
-              navigation={enhancedNavigation}
-              loading={loading}
-              error={error}
+          {/* Mostrar pantalla de decisión de periféricos */}
+          {navigation.showPeripheralsDecision() ? (
+            <PeripheralsDecision
+              onAddPeripherals={navigation.goToPeripherals}
+              onSkipToSummary={navigation.skipToSummary}
+              totalPrice={selectedProducts.totalPrice}
             />
+          ) : (
+            /* Mostrar contenido normal de pasos (oculto en el resumen final) */
+            navigation.currentStep !== 6 && (
+              <StepContent
+                currentStep={navigation.currentStep}
+                currentSubStep={navigation.currentSubStep}
+                filteredProducts={filteredProducts}
+                selectedProducts={selectedProducts}
+                onSelectProduct={selectedProducts.handleSelectProduct}
+                filters={filters}
+                navigation={enhancedNavigation}
+                loading={loading}
+                error={error}
+              />
+            )
           )}
         </main>
 
@@ -81,10 +92,18 @@ export default function ArmaTuPC() {
           selectedPSU={selectedProducts.selectedPSU}
           selectedCase={selectedProducts.selectedCase}
           selectedCooler={selectedProducts.selectedCooler}
+          selectedMonitor={selectedProducts.selectedMonitor}
+          selectedKeyboard={selectedProducts.selectedKeyboard}
+          selectedMouse={selectedProducts.selectedMouse}
+          selectedHeadphones={selectedProducts.selectedHeadphones}
+          selectedSpeakers={selectedProducts.selectedSpeakers}
+          selectedWebcam={selectedProducts.selectedWebcam}
           totalPrice={selectedProducts.totalPrice}
+          totalPriceWithPeripherals={selectedProducts.totalPriceWithPeripherals}
           estimatedTDP={estimatedTDP}
           onNextStep={navigation.handleNextStep}
           canContinue={selectedProducts.canContinue(navigation.currentStep)}
+          showPeripheralsDecision={navigation.showPeripheralsDecision()}
         />
       </div>
     </div>

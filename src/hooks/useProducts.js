@@ -14,6 +14,12 @@ export const useProducts = () => {
     psus: [],
     cases: [],
     coolers: [],
+    monitors: [],
+    keyboards: [],
+    mice: [],
+    headphones: [],
+    speakers: [],
+    webcams: [],
   });
 
   // Fetch productos de la API
@@ -55,6 +61,14 @@ export const useProducts = () => {
     const psus = filterByCategory(PRODUCT_CATEGORIES.psus);
     const cases = filterByCategory(PRODUCT_CATEGORIES.cases);
     const coolers = filterByCategory(PRODUCT_CATEGORIES.coolers);
+    
+    // Periféricos
+    const monitors = filterByCategory(PRODUCT_CATEGORIES.monitors);
+    const keyboards = filterByCategory(PRODUCT_CATEGORIES.keyboards);
+    const mice = filterByCategory(PRODUCT_CATEGORIES.mice);
+    const headphones = filterByCategory(PRODUCT_CATEGORIES.headphones);
+    const speakers = filterByCategory(PRODUCT_CATEGORIES.speakers);
+    const webcams = filterByCategory(PRODUCT_CATEGORIES.webcams);
 
     setFilteredProducts({
       cpus,
@@ -64,7 +78,13 @@ export const useProducts = () => {
       storageDevices,
       psus,
       cases,
-      coolers
+      coolers,
+      monitors,
+      keyboards,
+      mice,
+      headphones,
+      speakers,
+      webcams
     });
   }, [productos]);
 

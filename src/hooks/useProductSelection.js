@@ -9,6 +9,14 @@ export const useProductSelection = () => {
   const [selectedPSU, setSelectedPSU] = useState(null);
   const [selectedCase, setSelectedCase] = useState(null);
   const [selectedCooler, setSelectedCooler] = useState(null);
+  
+  // Periféricos opcionales
+  const [selectedMonitor, setSelectedMonitor] = useState(null);
+  const [selectedKeyboard, setSelectedKeyboard] = useState(null);
+  const [selectedMouse, setSelectedMouse] = useState(null);
+  const [selectedHeadphones, setSelectedHeadphones] = useState(null);
+  const [selectedSpeakers, setSelectedSpeakers] = useState(null);
+  const [selectedWebcam, setSelectedWebcam] = useState(null);
 
   // Handlers para selección de productos
   const handleSelectCPU = (cpu) => setSelectedCPU(cpu);
@@ -19,6 +27,14 @@ export const useProductSelection = () => {
   const handleSelectPSU = (psu) => setSelectedPSU(psu);
   const handleSelectCase = (caseItem) => setSelectedCase(caseItem);
   const handleSelectCooler = (cooler) => setSelectedCooler(cooler);
+  
+  // Handlers para periféricos
+  const handleSelectMonitor = (monitor) => setSelectedMonitor(monitor);
+  const handleSelectKeyboard = (keyboard) => setSelectedKeyboard(keyboard);
+  const handleSelectMouse = (mouse) => setSelectedMouse(mouse);
+  const handleSelectHeadphones = (headphones) => setSelectedHeadphones(headphones);
+  const handleSelectSpeakers = (speakers) => setSelectedSpeakers(speakers);
+  const handleSelectWebcam = (webcam) => setSelectedWebcam(webcam);
 
   // Función genérica para seleccionar productos
   const handleSelectProduct = (productType, product) => {
@@ -31,6 +47,12 @@ export const useProductSelection = () => {
       psu: handleSelectPSU,
       case: handleSelectCase,
       cooler: handleSelectCooler,
+      monitor: handleSelectMonitor,
+      keyboard: handleSelectKeyboard,
+      mouse: handleSelectMouse,
+      headphones: handleSelectHeadphones,
+      speakers: handleSelectSpeakers,
+      webcam: handleSelectWebcam,
     };
     
     const handler = handlers[productType];
@@ -50,6 +72,12 @@ export const useProductSelection = () => {
       psu: selectedPSU,
       case: selectedCase,
       cooler: selectedCooler,
+      monitor: selectedMonitor,
+      keyboard: selectedKeyboard,
+      mouse: selectedMouse,
+      headphones: selectedHeadphones,
+      speakers: selectedSpeakers,
+      webcam: selectedWebcam,
     };
     
     return products[productType];
@@ -67,6 +95,17 @@ export const useProductSelection = () => {
     parseFloat(selectedCooler?.price || 0)
   );
 
+  // Calcular precio total con periféricos
+  const totalPriceWithPeripherals = (
+    totalPrice +
+    parseFloat(selectedMonitor?.price || 0) +
+    parseFloat(selectedKeyboard?.price || 0) +
+    parseFloat(selectedMouse?.price || 0) +
+    parseFloat(selectedHeadphones?.price || 0) +
+    parseFloat(selectedSpeakers?.price || 0) +
+    parseFloat(selectedWebcam?.price || 0)
+  );
+
   // Verificar si se puede continuar con el paso actual
   const canContinue = (currentStep) => {
     switch (currentStep) {
@@ -78,6 +117,9 @@ export const useProductSelection = () => {
         return selectedStorage && selectedPSU;
       case 5:
         return selectedCase && selectedCooler;
+      case 5.5:
+        // Los periféricos son opcionales, siempre se puede continuar
+        return true;
       default:
         return false;
     }
@@ -94,6 +136,14 @@ export const useProductSelection = () => {
     selectedCase,
     selectedCooler,
     
+    // Periféricos seleccionados
+    selectedMonitor,
+    selectedKeyboard,
+    selectedMouse,
+    selectedHeadphones,
+    selectedSpeakers,
+    selectedWebcam,
+    
     // Handlers individuales
     handleSelectCPU,
     handleSelectMotherboard,
@@ -104,10 +154,19 @@ export const useProductSelection = () => {
     handleSelectCase,
     handleSelectCooler,
     
+    // Handlers de periféricos
+    handleSelectMonitor,
+    handleSelectKeyboard,
+    handleSelectMouse,
+    handleSelectHeadphones,
+    handleSelectSpeakers,
+    handleSelectWebcam,
+    
     // Funciones utilitarias
     handleSelectProduct,
     getSelectedProduct,
     totalPrice,
+    totalPriceWithPeripherals,
     canContinue,
   };
 };

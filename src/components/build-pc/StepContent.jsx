@@ -27,7 +27,15 @@ export default function StepContent({
       2: { 1: filteredProducts.cpus, 2: filteredProducts.motherboards },
       3: { 1: filteredProducts.ramModules, 2: filteredProducts.gpus },
       4: { 1: filteredProducts.storageDevices, 2: filteredProducts.psus },
-      5: { 1: filteredProducts.cases, 2: filteredProducts.coolers }
+      5: { 1: filteredProducts.cases, 2: filteredProducts.coolers },
+      5.5: { 
+        1: filteredProducts.monitors, 
+        2: filteredProducts.keyboards,
+        3: filteredProducts.mice,
+        4: filteredProducts.headphones,
+        5: filteredProducts.speakers,
+        6: filteredProducts.webcams
+      }
     };
     return productMap[step]?.[subStep] || [];
   };
@@ -37,7 +45,8 @@ export default function StepContent({
       2: { 1: 'cpu', 2: 'motherboard' },
       3: { 1: 'ram', 2: 'gpu' },
       4: { 1: 'storage', 2: 'psu' },
-      5: { 1: 'case', 2: 'cooler' }
+      5: { 1: 'case', 2: 'cooler' },
+      5.5: { 1: 'monitor', 2: 'keyboard', 3: 'mouse', 4: 'headphones', 5: 'speakers', 6: 'webcam' }
     };
     return typeMap[step]?.[subStep] || '';
   };
@@ -47,7 +56,15 @@ export default function StepContent({
       2: { 1: selectedProducts.selectedCPU, 2: selectedProducts.selectedMotherboard },
       3: { 1: selectedProducts.selectedRAM, 2: selectedProducts.selectedGPU },
       4: { 1: selectedProducts.selectedStorage, 2: selectedProducts.selectedPSU },
-      5: { 1: selectedProducts.selectedCase, 2: selectedProducts.selectedCooler }
+      5: { 1: selectedProducts.selectedCase, 2: selectedProducts.selectedCooler },
+      5.5: { 
+        1: selectedProducts.selectedMonitor, 
+        2: selectedProducts.selectedKeyboard, 
+        3: selectedProducts.selectedMouse, 
+        4: selectedProducts.selectedHeadphones, 
+        5: selectedProducts.selectedSpeakers,
+        6: selectedProducts.selectedWebcam
+      }
     };
     return selectedMap[step]?.[subStep] || null;
   };
@@ -69,6 +86,7 @@ export default function StepContent({
         onNextStep={navigation.handleNextStep}
         canGoBack={navigation.canGoBack}
         canGoToNextMainStep={navigation.canGoToNextMainStep}
+        maxSubSteps={currentStep === 5.5 ? 6 : 2}
       />
       
       <ProductFilters
