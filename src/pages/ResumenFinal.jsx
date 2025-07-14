@@ -6,12 +6,31 @@ import BuildSummary from "../components/BuildSummary";
 
 import { useProductSelection } from "../context/ProductSelectionContext";
 import { useStepNavigation } from "../hooks/useStepNavigation";
+import { useCart } from "../context/CartContext";
 
 export default function ResumenFinal({ setShowSummary, goToStep }) {
   const selectedProducts = useProductSelection();
   const navigation = useStepNavigation();
   const estimatedTDP = 0;
   const navigate = useNavigate();
+  const { addProdToCart } = useCart();
+  // Añadir todos los productos seleccionados al carrito y redirigir
+  const handleAddAllToCart = async () => {
+    const productos = [
+      selectedProducts.selectedCPU,
+      selectedProducts.selectedMotherboard,
+      selectedProducts.selectedRAM,
+      selectedProducts.selectedGPU,
+      selectedProducts.selectedStorage,
+      selectedProducts.selectedPSU,
+      selectedProducts.selectedCase,
+      selectedProducts.selectedCooler
+    ].filter(Boolean);
+    for (const prod of productos) {
+      await addProdToCart(prod);
+    }
+    navigate('/cart');
+  };
 
   const handleBack = () => {
     // Ejecutar exactamente la misma lógica que al hacer click en el paso 5 de la barra de navegación
@@ -76,7 +95,10 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
               <span className="text-lg font-bold">Total</span>
               <span className="text-lg font-bold">${selectedProducts.totalPrice.toFixed(2)}</span>
             </div>
-            <button className="w-full bg-blue-600 text-white py-2 rounded-lg text-lg mb-3 shadow hover:bg-blue-700 transition-colors font-normal">
+            <button
+              className="w-full bg-blue-600 text-white py-2 rounded-lg text-lg mb-3 shadow hover:bg-blue-700 transition-colors font-bold"
+              onClick={handleAddAllToCart}
+            >
               Añadir al carrito
             </button>
             <button className="w-full bg-blue-600 text-white py-2 rounded-lg text-lg mb-3 shadow hover:bg-blue-700 transition-colors font-normal">
