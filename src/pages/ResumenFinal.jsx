@@ -29,10 +29,10 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
 
       <div className="flex flex-col items-center justify-center min-h-[70vh] sm:flex-row sm:items-start sm:justify-center">
         {/* TuBuild grande a la izquierda, alineado arriba */}
-        <div className="flex-1 flex flex-col items-start">
+        <div className="flex-1 flex flex-col items-start" style={{ marginLeft: 150, maxWidth: 'calc(100% + 100px)' }}>
           <div className="mb-8" />
-          <div className="w-full">
-            <div className="max-w-screen-xl mx-auto">
+          <div className="w-full" style={{ maxWidth: 'calc(100% + 100px)' }}>
+            <div className="max-w-screen-xl mx-auto" style={{ maxWidth: 'calc(100% + 100px)' }}>
               <BuildSummary
                 selectedCPU={selectedProducts.selectedCPU}
                 selectedMotherboard={selectedProducts.selectedMotherboard}
@@ -51,16 +51,18 @@ export default function ResumenFinal({ setShowSummary, goToStep }) {
                   border: "border-transparent",
                   bg: "bg-transparent",
                   iconBg: "bg-transparent",
-                  icon: "text-red-500",
-                  label: "text-red-500",
-                  plus: "text-red-500"
+                  icon: "text-blue-600 font-bold",
+                  label: "text-violet-700 font-bold",
+                  plus: "text-blue-500 font-bold"
                 }}
               />
             </div>
           </div>
+          {/* Espacio prudente después de TuBuild antes del footer */}
+          <div style={{ height: 64 }} />
         </div>
         {/* Panel de compatibilidad fijo a la derecha */}
-        <div className="sm:w-1/4 w-full mt-8 sm:mt-0 sm:ml-8 flex flex-col items-center">
+        <div className="sm:w-1/4 w-full mt-8 sm:mt-0 sm:ml-8 flex flex-col items-center" style={{ marginRight: 150 }}>
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xs border border-gray-300 mt-8">
             <h2 className="text-lg font-bold mb-4">Compatibilidad</h2>
             <div className="w-full mb-4">

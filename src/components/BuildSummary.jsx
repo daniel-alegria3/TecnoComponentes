@@ -777,7 +777,7 @@ function BackgroundImageOverlay({ imageUrl }) {
         backgroundImage: `url(${imageUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        opacity: 0.18,
+        opacity: 0.7,
         filter: 'blur(0.5px) grayscale(0.2)',
         pointerEvents: 'none',
       }}
