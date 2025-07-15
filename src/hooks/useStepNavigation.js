@@ -11,33 +11,42 @@ export const useStepNavigation = () => {
     const isLastComponentStep = currentStep === 5;
     const isLastPeripheralStep = currentStep === 5.5 && currentSubStep[5.5] === 6;
 
-    let nextStepId = currentStep + 1;
+    let nextStepId;
+
     if (isLastComponentStep) {
-      // Después del paso 5, no pasamos directamente a periféricos,
-      // mostramos la pantalla de decisión. La navegación se detiene en 5.
-      nextStepId = 5; 
+      // Al completar el paso 5, no cambiamos de número de paso todavía.
+      // Simplemente lo marcamos como completo para que se muestre la pantalla de decisión de periféricos.
+      const newSteps = steps.map(s => s.id === 5 ? { ...s, status: 'complete' } : s);
+      setSteps(newSteps);
+      return; // Salimos para no cambiar el número de paso actual.
     } else if (isLastPeripheralStep) {
-      nextStepId = 6; // Después del último periférico, vamos al resumen.
+      nextStepId = 6; // Si es el último periférico, vamos al resumen (paso 6).
+    } else if (currentStep < 5) {
+      nextStepId = currentStep + 1; // Progresión normal para los pasos 2, 3, 4.
+    } else {
+      // Si estamos en medio de los periféricos (5.5), el botón principal "Siguiente" no debería hacer nada.
+      // La navegación se controla con los botones de sub-paso.
+      return;
     }
+
+    if (!nextStepId) return;
 
     const newSteps = steps.map((step) => {
       if (step.id === currentStep) {
         return { ...step, status: "complete" };
       }
-      // Solo marcamos como 'current' si realmente avanzamos de paso
-      if (step.id === nextStepId && nextStepId !== currentStep) {
+      if (step.id === nextStepId) {
         return { ...step, status: "current" };
       }
       return step;
     });
 
     setSteps(newSteps);
-    
-    if (nextStepId !== currentStep) {
-      setCurrentStep(nextStepId);
-      if (INITIAL_SUB_STEPS[nextStepId]) {
-        setCurrentSubStep(prev => ({ ...prev, [nextStepId]: 1 }));
-      }
+    setCurrentStep(nextStepId);
+
+    // Si el nuevo paso tiene sub-pasos, inicializamos en el primero.
+    if (INITIAL_SUB_STEPS[nextStepId]) {
+      setCurrentSubStep(prev => ({ ...prev, [nextStepId]: 1 }));
     }
   };
 
@@ -123,44 +132,38 @@ export const useStepNavigation = () => {
   // Ir al paso de periféricos (opcional)
   const goToPeripherals = () => {
     const newSteps = steps.map((step) => {
-      if (step.id === 5) {
-        return { ...step, status: "complete" };
-      }
+      // El paso 5 ya debería estar 'complete' por handleNextStep.
+      // Marcamos el 5.5 como 'current'.
       if (step.id === 5.5) {
         return { ...step, status: "current" };
       }
       return step;
     });
-    
     setSteps(newSteps);
     setCurrentStep(5.5);
     setCurrentSubStep(prev => ({ ...prev, 5.5: 1 }));
   };
 
-  // Saltar periféricos e ir al resumen
+  // Saltar directamente al resumen final
   const skipToSummary = () => {
     const newSteps = steps.map((step) => {
       if (step.id === 5) {
         return { ...step, status: "complete" };
-      }
-      if (step.id === 5.5) {
-        return { ...step, status: "skipped" };
       }
       if (step.id === 6) {
         return { ...step, status: "current" };
       }
       return step;
     });
-    
     setSteps(newSteps);
-    setCurrentStep(6);
+    setCurrentStep(6); // Ir directamente al paso 6
   };
 
-  // Mostrar pantalla de decisión de periféricos
+  // Determina si se debe mostrar la pantalla de decisión de periféricos.
   const showPeripheralsDecision = () => {
     const step5 = steps.find(s => s.id === 5);
-    // Se muestra si el paso 5 está completo y estamos en el último sub-paso de refrigeración.
-    return currentStep === 5 && currentSubStep[5] === 2 && step5?.status === 'complete';
+    // Se muestra si el paso 5 está 'complete' pero seguimos lógicamente en el paso 5 (aún no hemos elegido periféricos o resumen).
+    return currentStep === 5 && step5 && step5.status === 'complete';
   };
 
   return {
@@ -175,6 +178,6 @@ export const useStepNavigation = () => {
     canGoBack,
     goToPeripherals,
     skipToSummary,
-    showPeripheralsDecision,
+    showPeripheralsDecision
   };
 };

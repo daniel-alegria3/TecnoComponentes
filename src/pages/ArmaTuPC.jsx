@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import ResumenFinal from "./ResumenFinal";
+import { useState, useEffect } from "react";
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import BuildStepNavigator from "../components/BuildStepNavigator";
 import BuildSummary from "../components/BuildSummary";
@@ -10,11 +12,21 @@ import { useStepNavigation } from "../hooks/useStepNavigation";
 import { useProductFilters } from "../hooks/useProductFilters";
 
 export default function ArmaTuPC() {
+  const [showSummary, setShowSummary] = useState(false);
   // Hooks personalizados
   const { filteredProducts, loading, error } = useProducts();
   const selectedProducts = useProductSelection();
   const navigation = useStepNavigation();
   const filters = useProductFilters();
+
+  useEffect(() => {
+    if (navigation.currentStep === 6) {
+      setShowSummary(true);
+    } else if (showSummary) {
+      // Si el paso cambia y no es 6, oculta el resumen
+      setShowSummary(false);
+    }
+  }, [navigation.currentStep, showSummary]);
 
   // Agregar función canGoToNextMainStep al objeto navigation
   const enhancedNavigation = {
@@ -23,6 +35,8 @@ export default function ArmaTuPC() {
   };
 
   const estimatedTDP = 0; // Se elimina la dependencia de specs.TDP
+
+  const LAST_STEP = 6;
 
   return (
     <div className="min-h-screen bg-gray-50 font-monofur">
@@ -52,60 +66,79 @@ export default function ArmaTuPC() {
       {/* Steps Navigation */}
       <BuildStepNavigator
         steps={navigation.steps}
-        currentStep={navigation.currentStep}
-        setCurrentStep={navigation.setCurrentStep}
+        currentStep={showSummary ? LAST_STEP : navigation.currentStep}
+        setCurrentStep={(step) => {
+          if (showSummary) {
+            setShowSummary(false);
+          }
+          navigation.setCurrentStep(step);
+        }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex">
-        <main className="flex-1 pr-8">
-          {/* Mostrar pantalla de decisión de periféricos */}
-          {navigation.showPeripheralsDecision() ? (
-            <PeripheralsDecision
-              onAddPeripherals={navigation.goToPeripherals}
-              onSkipToSummary={navigation.skipToSummary}
-              totalPrice={selectedProducts.totalPrice}
-            />
-          ) : (
-            /* Mostrar contenido normal de pasos (oculto en el resumen final) */
-            navigation.currentStep !== 6 && (
-              <StepContent
-                currentStep={navigation.currentStep}
-                currentSubStep={navigation.currentSubStep}
-                filteredProducts={filteredProducts}
-                selectedProducts={selectedProducts}
-                onSelectProduct={selectedProducts.handleSelectProduct}
-                filters={filters}
-                navigation={enhancedNavigation}
-                loading={loading}
-                error={error}
-              />
-            )
-          )}
-        </main>
-
-        <BuildSummary
-          selectedCPU={selectedProducts.selectedCPU}
-          selectedMotherboard={selectedProducts.selectedMotherboard}
-          selectedRAM={selectedProducts.selectedRAM}
-          selectedGPU={selectedProducts.selectedGPU}
-          selectedStorage={selectedProducts.selectedStorage}
-          selectedPSU={selectedProducts.selectedPSU}
-          selectedCase={selectedProducts.selectedCase}
-          selectedCooler={selectedProducts.selectedCooler}
-          selectedMonitor={selectedProducts.selectedMonitor}
-          selectedKeyboard={selectedProducts.selectedKeyboard}
-          selectedMouse={selectedProducts.selectedMouse}
-          selectedHeadphones={selectedProducts.selectedHeadphones}
-          selectedSpeakers={selectedProducts.selectedSpeakers}
-          selectedWebcam={selectedProducts.selectedWebcam}
-          totalPrice={selectedProducts.totalPrice}
-          totalPriceWithPeripherals={selectedProducts.totalPriceWithPeripherals}
-          estimatedTDP={estimatedTDP}
-          onNextStep={navigation.handleNextStep}
-          canContinue={selectedProducts.canContinue(navigation.currentStep)}
-          showPeripheralsDecision={navigation.showPeripheralsDecision()}
+      {showSummary ? (
+        <ResumenFinal
+          selectedProducts={selectedProducts}
+          setShowSummary={setShowSummary}
+          goToStep={(step) => {
+            if (showSummary) setShowSummary(false);
+            navigation.setCurrentStep(step);
+          }}
         />
-      </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-8 flex">
+          <main className="flex-1 pr-8">
+            {/* Mostrar pantalla de decisión de periféricos */}
+            {navigation.showPeripheralsDecision() ? (
+              <PeripheralsDecision
+                onAddPeripherals={navigation.goToPeripherals}
+                onSkipToSummary={() => {
+                  navigation.skipToSummary();
+                  setShowSummary(true);
+                }}
+                totalPrice={selectedProducts.totalPrice}
+              />
+            ) : (
+              /* Mostrar contenido normal de pasos (oculto en el resumen final) */
+              navigation.currentStep !== 6 && (
+                <StepContent
+                  currentStep={navigation.currentStep}
+                  currentSubStep={navigation.currentSubStep}
+                  filteredProducts={filteredProducts}
+                  selectedProducts={selectedProducts}
+                  onSelectProduct={selectedProducts.handleSelectProduct}
+                  filters={filters}
+                  navigation={enhancedNavigation}
+                  loading={loading}
+                  error={error}
+                />
+              )
+            )}
+          </main>
+
+          <BuildSummary
+            selectedCPU={selectedProducts.selectedCPU}
+            selectedMotherboard={selectedProducts.selectedMotherboard}
+            selectedRAM={selectedProducts.selectedRAM}
+            selectedGPU={selectedProducts.selectedGPU}
+            selectedStorage={selectedProducts.selectedStorage}
+            selectedPSU={selectedProducts.selectedPSU}
+            selectedCase={selectedProducts.selectedCase}
+            selectedCooler={selectedProducts.selectedCooler}
+            selectedMonitor={selectedProducts.selectedMonitor}
+            selectedKeyboard={selectedProducts.selectedKeyboard}
+            selectedMouse={selectedProducts.selectedMouse}
+            selectedHeadphones={selectedProducts.selectedHeadphones}
+            selectedSpeakers={selectedProducts.selectedSpeakers}
+            selectedWebcam={selectedProducts.selectedWebcam}
+            totalPrice={selectedProducts.totalPrice}
+            totalPriceWithPeripherals={selectedProducts.totalPriceWithPeripherals}
+            estimatedTDP={estimatedTDP}
+            onNextStep={navigation.handleNextStep}
+            canContinue={selectedProducts.canContinue(navigation.currentStep)}
+            showPeripheralsDecision={navigation.showPeripheralsDecision()}
+          />
+        </div>
+      )}
     </div>
   );
 }
