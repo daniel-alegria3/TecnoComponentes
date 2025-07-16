@@ -2,7 +2,7 @@ import { useState } from "react";
 import { INITIAL_STEPS, INITIAL_SUB_STEPS } from "../constants/buildSteps";
 
 export const useStepNavigation = () => {
-  const [currentStep, setCurrentStep] = useState(2);
+  const [currentStep, setCurrentStep] = useState(1);
   const [currentSubStep, setCurrentSubStep] = useState(INITIAL_SUB_STEPS);
   const [steps, setSteps] = useState(INITIAL_STEPS);
 
@@ -13,7 +13,9 @@ export const useStepNavigation = () => {
 
     let nextStepId;
 
-    if (isLastComponentStep) {
+    if (currentStep === 1) {
+      nextStepId = 2; // Del paso de inicio (1) al primer paso de componentes (2)
+    } else if (isLastComponentStep) {
       // Al completar el paso 5, no cambiamos de número de paso todavía.
       // Simplemente lo marcamos como completo para que se muestre la pantalla de decisión de periféricos.
       const newSteps = steps.map(s => s.id === 5 ? { ...s, status: 'complete' } : s);
@@ -80,7 +82,7 @@ export const useStepNavigation = () => {
     }
 
     // Si estamos en el primer sub-paso, ir al paso anterior (comportamiento estándar)
-    if (currentSub === 1 && step > 2) {
+    if (currentSub === 1 && step > 1) {
       const prevStep = step - 1;
       // Si el paso anterior es 5.5 (periféricos), ir a su último sub-paso
       if (prevStep === 5.5) {
@@ -91,6 +93,20 @@ export const useStepNavigation = () => {
             return { ...s, status: "upcoming" };
           }
           if (s.id === 5.5) {
+            return { ...s, status: "current" };
+          }
+          return s;
+        }));
+        return;
+      }
+      // Si vamos al paso 1 (inicio), no tiene sub-pasos
+      if (prevStep === 1) {
+        setCurrentStep(1);
+        setSteps(prevSteps => prevSteps.map((s) => {
+          if (s.id === step) {
+            return { ...s, status: "upcoming" };
+          }
+          if (s.id === 1) {
             return { ...s, status: "current" };
           }
           return s;
@@ -126,7 +142,7 @@ export const useStepNavigation = () => {
   // Determinar si se puede retroceder
   const canGoBack = (step) => {
     const current = currentSubStep[step];
-    return current > 1 || step > 2;
+    return current > 1 || step > 1;
   };
 
   // Ir al paso de periféricos (opcional)
