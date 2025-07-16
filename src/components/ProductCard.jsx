@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import useProductImages from '../composables/useProductImages';
 import { useSession } from "../context/SessionContext";
+import { useProduct } from "../context/ProductsContext";
 
-export default function ProductCard({ producto, onSelect, isSelected, view }) {
+export default function ProductCard({ producto, productoID = null, onSelect, isSelected, view }) {
+  let [prod, setProduct] = useProduct(productoID);
+  const product = productoID ? prod : producto;
+
   const { addProdToCart } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const { imageUrls, isImagesLoading } = useProductImages(producto?.images_path || []);
+  const images = useMemo(() => product?.images_path ?? [], [product]);
+  const { imageUrls, isImagesLoading } = useProductImages(images);
   const { isLoggedIn } = useSession();
 
   // Ciclar imágenes mientras se hace hover
@@ -22,12 +27,19 @@ export default function ProductCard({ producto, onSelect, isSelected, view }) {
     }
   }, [isHovered, isImagesLoading, imageUrls]);
 
-  const handleAddToCart = e => {
+  const handleAddToCart = async e => {
     e.stopPropagation();
-    addProdToCart(producto);
+    const available_stock = await addProdToCart(product);
+    if (available_stock != null) {
+      if (productoID) {
+        setProduct({available_stock: available_stock});
+      } else {
+        product.available_stock = available_stock;
+      }
+    }
   };
 
-  if (!producto) return null;
+  if (!product) return null;
 
   const isCompact = view === 'compact';
 
@@ -40,7 +52,7 @@ export default function ProductCard({ producto, onSelect, isSelected, view }) {
 
   const handleCardClick = () => {
     if (onSelect) {
-      onSelect(producto);
+      onSelect(product);
     }
   };
 
@@ -64,7 +76,7 @@ export default function ProductCard({ producto, onSelect, isSelected, view }) {
                 <img
                   key={index}
                   src={img}
-                  alt={producto.name || "Producto sin nombre"}
+                  alt={product.name || "Producto sin nombre"}
                   className="absolute w-full object-cover"
                 />
               ) : null
@@ -122,45 +134,45 @@ export default function ProductCard({ producto, onSelect, isSelected, view }) {
         )}
 
         {/* Etiqueta de categoría */}
-        {producto.category && (
+        {product.category && (
           <span className="absolute top-3 left-3 bg-white text-violet-700 text-xs font-semibold px-2 py-1 rounded shadow-lg">
-            {producto.category}
+            {product.category}
           </span>
         )}
       </div>
 
       {/* Contenido de la card (para ver detalles) */}
       <div className="relative">
-        <Link to={`/product/${producto.id_product}`} className="block">
+        <Link to={`/product/${product.id_product}`} className="block">
           <div className="p-4">
             <div className="flex justify-between items-start mb-1">
               <h4 className={`font-semibold text-gray-800 truncate ${isCompact ? 'text-base' : 'text-lg'}`}>
-                {producto.name || "Producto sin nombre"}
+                {product.name || "Producto sin nombre"}
               </h4>
-              {producto.brand && (
-                <span className="text-xs text-gray-500">{producto.brand}</span>
+              {product.brand && (
+                <span className="text-xs text-gray-500">{product.brand}</span>
               )}
             </div>
 
             <p className={`text-sm text-gray-600 mb-3 line-clamp-2 ${isCompact ? 'h-auto' : 'h-10'}`}>
-              {producto.description || "Descripción no disponible."}
+              {product.description || "Descripción no disponible."}
             </p>
 
             <div className="flex justify-between items-center">
               <div>
                 <span className={`font-bold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent ${isCompact ? 'text-lg' : 'text-xl'}`}>
-                  ${producto.price ? Number(producto.price).toFixed(2) : "0.00"}
+                  ${product.price ? Number(product.price).toFixed(2) : "0.00"}
                 </span>
               </div>
 
               <span className={`text-xs text-white px-2 py-1 rounded-full ${
-                producto.available_stock > 10
+                product.available_stock > 10
                   ? "bg-gradient-to-r from-violet-600 to-violet-400"
-                  : producto.available_stock > 0
+                  : product.available_stock > 0
                     ? "bg-gradient-to-r from-violet-500 to-violet-300"
                     : "bg-gradient-to-r from-gray-500 to-gray-400"
               }`}>
-                {producto.available_stock > 0 ? `${producto.available_stock} en stock` : "Agotado"}
+                {product.available_stock > 0 ? `${product.available_stock} en stock` : "Agotado"}
               </span>
             </div>
           </div>

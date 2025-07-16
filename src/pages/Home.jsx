@@ -7,17 +7,18 @@ import ProductCard from "../components/ProductCard";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useProducts } from "../context/ProductsContext";
 
 export default function Home() {
   ///[ ensure cartItems are loaded first thing
-  const location = useLocation();
-  const { initCartUserData } = useCart();
-  useEffect(() => {
-    initCartUserData();
-  }, [location]);
+  // const location = useLocation();
+  // const { initCartUserData } = useCart();
+  // useEffect(() => {
+  //   initCartUserData();
+  // }, [location]);
   ///]
 
-  const [productos, setProductos] = useState([]);
+  const {products: productos, initProducts} = useProducts();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,28 +26,14 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
-
-        const productsResponse = await fetch(
-          "http://localhost:5000/api/clients/getproducts"
-        );
-
-        if (!productsResponse.ok) {
-          const errorText = await productsResponse.text();
-          throw new Error(`Error ${productsResponse.status}: ${errorText}`);
-        }
-
-        const productsData = await productsResponse.json();
-
-        setProductos(productsData);
-      } catch (err) {
+        initProducts();
+      }
+      catch (err) {
         setError(err.message);
-        setProductos([]);
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     fetchData();
 
     return () => {};
@@ -128,8 +115,7 @@ export default function Home() {
             {productosFiltrados.map((producto) => {
               return (
                 <ProductCard
-                  key={producto.id_product}
-                  producto={producto}
+                  productoID={producto.id_product}
                 />
               );
             })}

@@ -151,10 +151,21 @@ BEGIN
         p.description,
         p.images_path,
         p.price,
+        p.stock,
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int) AS available_stock,
         scp.quantity as quantity,
         scp.date_added
     FROM Product p
     JOIN Shopping_Cart_Product scp ON p.id_product = scp.id_product
+    LEFT JOIN (
+        SELECT
+            scp.id_product,
+            SUM(scp.quantity) AS total_in_carts
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        -- Only count active shopping carts (you might want to add additional filters here)
+        GROUP BY scp.id_product
+    ) cart_totals ON p.id_product = cart_totals.id_product
     WHERE scp.id_cart = client_cart_id
     ORDER BY scp.date_added DESC;
 END;
@@ -406,10 +417,10 @@ END;
 //
 
 -- product.realizarCompra
-CREATE PROCEDURE crear_orden()
+CREATE PROCEDURE crear_orden(IN in_shipping_address BLOB)
 BEGIN
-    INSERT INTO Orden_Detail (date_added)
-    VALUES (NOW());
+    INSERT INTO Orden_Detail (date_added, shipping_address)
+    VALUES (NOW(), in_shipping_address);
 
     SELECT LAST_INSERT_ID() AS id;
 END;
@@ -456,7 +467,7 @@ BEGIN
     -- Obtener precio y stock disponible usando la misma lógica que ObtenerProductosActivos
     SELECT
         p.price,
-        COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock)
+        CAST(COALESCE(p.stock - IFNULL(cart_totals.total_in_carts, 0), p.stock) AS int)
     INTO product_price, available_stock
     FROM Product p
     LEFT JOIN (
@@ -493,9 +504,12 @@ END;
 --cliente.crearDireccionCliente
 CREATE PROCEDURE crear_direccion_cliente(
     IN p_id_client INT,
-    IN p_city VARCHAR(50),
-    IN p_country VARCHAR(50),
-    IN p_physical_address VARCHAR(200)
+    IN p_name_surname VARCHAR(150),
+    IN p_phone VARCHAR(25),
+    IN p_physical_address VARCHAR(200),
+    IN p_apartment VARCHAR(200),
+    IN p_province VARCHAR(20),
+    IN p_district VARCHAR(20)
 )
 BEGIN
     DECLARE client_exists INT;
@@ -506,27 +520,47 @@ BEGIN
     FROM Client
     WHERE id_client = p_id_client;
 
-    -- Validar campos no nulos
+    -- Validaciones
     IF p_id_client IS NULL THEN
         SET error_message = 'Error: El ID del cliente no puede ser nulo.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     ELSEIF client_exists = 0 THEN
         SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
-    ELSEIF p_city IS NULL OR p_city = '' THEN
-        SET error_message = 'Error: La ciudad no puede estar vacía.';
+    ELSEIF p_name_surname IS NULL OR p_name_surname = '' THEN
+        SET error_message = 'Error: El nombre y apellido no puede estar vacío.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
-    ELSEIF p_country IS NULL OR p_country = '' THEN
-        SET error_message = 'Error: El país no puede estar vacío.';
+    ELSEIF p_phone IS NULL OR p_phone = '' THEN
+        SET error_message = 'Error: El número de teléfono no puede estar vacío.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     ELSEIF p_physical_address IS NULL OR p_physical_address = '' THEN
         SET error_message = 'Error: La dirección física no puede estar vacía.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_province IS NULL OR p_province = '' THEN
+        SET error_message = 'Error: La provincia no puede estar vacía.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_district IS NULL OR p_district = '' THEN
+        SET error_message = 'Error: El distrito no puede estar vacío.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     ELSE
         -- Todos los datos son válidos, proceder con la inserción
-        INSERT INTO Address (id_client, city, country, physical_address)
-        VALUES (p_id_client, p_city, p_country, p_physical_address);
-
+        INSERT INTO Address (
+            id_client,
+            name_surname,
+            phone,
+            physical_address,
+            apartment,
+            province,
+            district
+        ) VALUES (
+            p_id_client,
+            p_name_surname,
+            p_phone,
+            p_physical_address,
+            p_apartment,
+            p_province,
+            p_district
+        );
     END IF;
 END;
 //
@@ -555,18 +589,57 @@ BEGIN
         SELECT
             id_address,
             id_client,
-            city,
-            country,
+            name_surname,
+            phone,
             physical_address,
-            created_at,
-            updated_at
+            apartment,
+            province,
+            district
         FROM Address
         WHERE id_client = p_id_client
-        ORDER BY created_at DESC;
+        ORDER BY id_address DESC;
     END IF;
 END;
 //
 
+-- para guardar la dirreción del cliente en la orden
+CREATE PROCEDURE obtener_direccion_por_id(
+    IN p_id_address INT
+)
+BEGIN
+    DECLARE address_exists INT;
+    DECLARE error_message VARCHAR(255);
+
+    -- Verificar si el ID de la dirección fue proporcionado
+    IF p_id_address IS NULL THEN
+        SET error_message = 'Error: El ID de la dirección no puede ser nulo.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    END IF;
+
+    -- Verificar si la dirección existe
+    SELECT COUNT(*) INTO address_exists
+    FROM Address
+    WHERE id_address = p_id_address;
+
+    IF address_exists = 0 THEN
+        SET error_message = CONCAT('Error: La dirección con ID ', p_id_address, ' no existe.');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSE
+        -- Devolver solo los campos requeridos
+        SELECT
+            name_surname,
+            phone,
+            physical_address,
+            apartment,
+            province,
+            district
+        FROM Address
+        WHERE id_address = p_id_address;
+    END IF;
+END;
+//
+
+-- cliente.crearDireccionCliente
 CREATE PROCEDURE ver_direcciones_cliente(
     IN p_id_client INT
 )
@@ -587,13 +660,16 @@ BEGIN
         SET error_message = CONCAT('Error: El cliente con ID ', p_id_client, ' no existe.');
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     ELSE
-        -- Obtener todas las direcciones del cliente (solo con los campos existentes)
+        -- Obtener todas las direcciones del cliente (campos actualizados)
         SELECT
             id_address,
             id_client,
-            city,
-            country,
-            physical_address
+            name_surname,
+            phone,
+            physical_address,
+            apartment,
+            province,
+            district
         FROM Address
         WHERE id_client = p_id_client;
     END IF;
@@ -604,9 +680,12 @@ END;
 CREATE PROCEDURE editar_direccion_cliente(
     IN p_id_client INT,
     IN p_id_address INT,
-    IN p_city VARCHAR(50),
-    IN p_country VARCHAR(50),
-    IN p_physical_address VARCHAR(200)
+    IN p_name_surname VARCHAR(150),
+    IN p_phone VARCHAR(25),
+    IN p_physical_address VARCHAR(200),
+    IN p_apartment VARCHAR(200),
+    IN p_province VARCHAR(20),
+    IN p_district VARCHAR(20)
 )
 BEGIN
     DECLARE client_exists INT;
@@ -641,22 +720,31 @@ BEGIN
     ELSEIF address_belongs_to_client = 0 THEN
         SET error_message = 'Error: La dirección no pertenece al cliente especificado.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
-    ELSEIF p_city IS NULL OR p_city = '' THEN
-        SET error_message = 'Error: La ciudad no puede estar vacía.';
+    ELSEIF p_name_surname IS NULL OR p_name_surname = '' THEN
+        SET error_message = 'Error: El nombre y apellido no puede estar vacío.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
-    ELSEIF p_country IS NULL OR p_country = '' THEN
-        SET error_message = 'Error: El país no puede estar vacío.';
+    ELSEIF p_phone IS NULL OR p_phone = '' THEN
+        SET error_message = 'Error: El teléfono no puede estar vacío.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     ELSEIF p_physical_address IS NULL OR p_physical_address = '' THEN
         SET error_message = 'Error: La dirección física no puede estar vacía.';
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_province IS NULL OR p_province = '' THEN
+        SET error_message = 'Error: La provincia no puede estar vacía.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+    ELSEIF p_district IS NULL OR p_district = '' THEN
+        SET error_message = 'Error: El distrito no puede estar vacío.';
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
     ELSE
-        -- Actualización sin mensaje de confirmación
+        -- Actualizar dirección del cliente
         UPDATE Address
         SET
-            city = p_city,
-            country = p_country,
-            physical_address = p_physical_address
+            name_surname = p_name_surname,
+            phone = p_phone,
+            physical_address = p_physical_address,
+            apartment = p_apartment,
+            province = p_province,
+            district = p_district
         WHERE
             id_address = p_id_address AND
             id_client = p_id_client;
@@ -731,6 +819,7 @@ BEGIN
         SELECT
             od.id_order_detail,
             od.date_added AS fecha_compra,
+            od.shipping_address,
             po.id_product,
             p.name AS nombre_producto,
             p.images_path,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "../context/SessionContext";
@@ -16,8 +16,8 @@ import useProductImages from "../composables/useProductImages";
 
 export default function Checkout() {
   // 1. Primero TODOS los Hooks - en orden consistente
-  const navigate = useNavigate();
   const { isLoggedIn } = useSession();
+  const navigate = useNavigate();
   const { cartItems } = useCart();
 
   // Todos los estados con useState
@@ -32,9 +32,66 @@ export default function Checkout() {
   // Estados para dirección
   const [isDireccionModalOpen, setIsDireccionModalOpen] = useState(false);
   const [direccionGuardada, setDireccionGuardada] = useState(null);
+  const [direcciones, setDirecciones] = useState([]);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [loadingDirecciones, setLoadingDirecciones] = useState(true);
 
-  // 2. Funciones del componente
+  // Cargar direcciones al montar el componente
+  useEffect(() => {
+    const fetchDirecciones = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/clients/verdireccion",
+          {
+            credentials: "include",
+          }
+        );
+        const result = await response.json(); // Cambié el nombre a result para mayor claridad
+        console.log("dataJohanxd", result);
+
+        if (response.ok && result.success && result.data.length > 0) {
+          const direcciones = result.data; // Accedemos a result.data
+          setDirecciones(direcciones);
+
+          // Establecer la primera dirección como la predeterminada
+          const primeraDireccion = direcciones[0];
+          setDireccionGuardada({
+            idAdress: primeraDireccion.id_address, // Cambiado de IdAdress a id_adress
+            receptorName: primeraDireccion.name_surname, // Cambiado de Nombre a name_surname
+            telefono: primeraDireccion.phone, // Cambiado de Telefono a phone
+            direccionCompleta: `${primeraDireccion.physical_address}${
+              // Cambiado de Direccion a physical_address
+              primeraDireccion.apartment
+                ? `, ${primeraDireccion.apartment}`
+                : ""
+            }`,
+            provincia: primeraDireccion.province, // Cambiado de Provincia a province
+            distrito: primeraDireccion.district, // Cambiado de Distrito a district
+            codigoPostal: primeraDireccion.postal_code || "", // Añadido por si existe
+          });
+        }
+      } catch (error) {
+        console.error("Error al cargar direcciones:", error);
+      } finally {
+        setLoadingDirecciones(false);
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchDirecciones();
+    }
+  }, [isLoggedIn]);
+
+  // 2. Validaciones después de todos los Hooks
+  if (!isLoggedIn) {
+    return (
+      <div>
+        <h2>Iniciar sesión para ver la página de Venta</h2>
+      </div>
+    );
+  }
+
+  // 3. Funciones del componente
   const openModalTarjeta = () => {
     setIsTarjetaModalOpen(true);
   };
@@ -73,8 +130,30 @@ export default function Checkout() {
 
     closeModalDireccion();
   };
+  const handleSeleccionarDireccion = (direccion) => {
+    setDireccionGuardada({
+      idAdress: direccion.idAdress,
+      receptorName: direccion.receptorName,  
+      telefono: direccion.telefono,            
+      direccionCompleta: direccion.direccionCompleta,                                   
+      provincia: direccion.provincia,        
+      distrito: direccion.distrito,         
+      codigoPostal: direccion.codigoPostal || "", 
+    });
+    setShowFeedback(true);
+    setTimeout(() => setShowFeedback(false), 2000);
+    closeModalDireccion();
+  };
 
-  const subtotal = cartItems.reduce( (sum, item) => sum + item.product.price * item.quantity, 0);
+  const onPressOK = () => {
+    setPaymentSuccess(false);
+    navigate("/");
+  };
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
   const entrega = 0.0;
   const total = subtotal + entrega;
 
@@ -83,11 +162,41 @@ export default function Checkout() {
       alert("Por favor completa todos los campos requeridos");
       return;
     }
+    const productos = cartItems.map(item => ({
+      ...item.product,
+      quantity: item.quantity
+    }));
+    console.log("Productos a enviar:", productos);
+    const fetchRealizarPago = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/clients/realizarcompra", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productos: productos,
+            id_address: direccionGuardada.idAdress,
+          }),
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Error al procesar el pago");
+        }
+        return data;
+      } catch (error) {
+        console.error("Error al realizar el pago:", error);
+        alert("Error al procesar el pago. Por favor, inténtelo de nuevo.");
+        throw error;
+      }
+    };
 
+    await fetchRealizarPago()
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 2000);
+    }, 1000);
     setPaymentSuccess(true);
   };
 
@@ -96,13 +205,6 @@ export default function Checkout() {
       product?.images_path || []
     );
 
-    if (!isLoggedIn) {
-      return (
-        <div>
-          <h2>Iniciar session para ver la pagina de Venta</h2>
-        </div>
-      )
-    }
     return (
       <div>
         <div key={product.product_id} className="text-center">
@@ -127,7 +229,6 @@ export default function Checkout() {
   }
 
   return (
-
     <div className="font-monofur min-h-screen bg-gray-50">
       <header className="bg-white border-b px-6 py-4">
         <h1 className="text-2xl font-bold text-blue-600">
@@ -146,24 +247,36 @@ export default function Checkout() {
               </h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <p
-                    className={`text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full ${
-                      direccionGuardada ? "text-violet-600 font-medium" : ""
-                    }`}
-                  >
-                    {direccionGuardada
-                      ? `${direccionGuardada.receptorName} - ${direccionGuardada.codigoPostal}`
-                      : "Ninguna"}
-                  </p>
+                  {loadingDirecciones ? (
+                    <div className="animate-pulse bg-gray-200 h-10 w-full rounded-md"></div>
+                  ) : direccionGuardada ? (
+                    <div className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full">
+                      <p className="text-violet-600 font-medium">
+                        {direccionGuardada.receptorName} -{" "}
+                        {direccionGuardada.telefono}
+                      </p>
+                      <p>{direccionGuardada.direccionCompleta}</p>
+                      <p>
+                        {direccionGuardada.distrito},{" "}
+                        {direccionGuardada.provincia}
+                      </p>
+                      {direccionGuardada.codigoPostal && (
+                        <p>Código Postal: {direccionGuardada.codigoPostal}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 bg-gray-50 px-3 py-2 rounded-md border w-full">
+                      No hay direcciones registradas
+                    </p>
+                  )}
                   <button
                     onClick={openModalDireccion}
-                    className="ml-3 text-blue-600 hover:text-blue-700 text-sm font-medium underline whitespace-nowrap"
+                    className="bg-violet-600 h-10 p-2 ml-3 text-white text-sm font-medium whitespace-nowrap border border-violet-600 rounded-md hover:bg-violet-700 transition"
                   >
                     {direccionGuardada ? "Cambiar" : "Agregar"}
                   </button>
                 </div>
 
-                {/* Feedback de dirección guardada */}
                 <AnimatePresence>
                   {showFeedback && (
                     <motion.div
@@ -180,13 +293,14 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Modal de dirección */}
+            {/* Modal de dirección modificado */}
             <ModalDireccion
               isOpen={isDireccionModalOpen}
               onClose={closeModalDireccion}
               onSave={handleGuardarDireccion}
+              direcciones={direcciones}
+              onSelect={handleSeleccionarDireccion}
             />
-
             {/* Método de pago */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Método de pago</h2>
@@ -211,7 +325,7 @@ export default function Checkout() {
                   {metodoPago === "tarjeta" && (
                     <button
                       onClick={openModalTarjeta}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+                      className="bg-violet-600 h-10 p-2 ml-3 text-white text-sm font-medium whitespace-nowrap border border-violet-600 rounded-md hover:bg-violet-700 transition"
                     >
                       {tarjetaGuardada ? "Cambiar" : "Agregar"}
                     </button>
@@ -276,11 +390,7 @@ export default function Checkout() {
                     <TruckIcon className="h-5 w-5 text-gray-500" />
                     <span>Envío a domicilio</span>
                   </div>
-                  {metodoEntrega === "domicilio" && (
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium underline">
-                      Cambiar
-                    </button>
-                  )}
+
                 </label>
                 <label className="flex items-center justify-between cursor-pointer">
                   <div className="flex items-center space-x-3">
@@ -294,12 +404,7 @@ export default function Checkout() {
                     />
                     <BuildingStorefrontIcon className="h-5 w-5 text-gray-500" />
                     <span>Recojo en tienda</span>
-                  </div>
-                  {metodoEntrega === "tienda" && (
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium underline">
-                      Cambiar
-                    </button>
-                  )}
+                  </div>`
                 </label>
               </div>
             </div>
@@ -371,11 +476,11 @@ export default function Checkout() {
                         Pago Exitoso!
                       </h2>
                       <p className="text-gray-600 mt-2">
-                        Gracias por su preferencia. Revise su orden su la pagina
+                        Gracias por su preferencia. Revise su orden en la pagina
                         de Ordenes.
                       </p>
                       <button
-                        onClick={() => setPaymentSuccess(false)}
+                        onClick={() => onPressOK()}
                         className="mt-4 px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
                       >
                         OK

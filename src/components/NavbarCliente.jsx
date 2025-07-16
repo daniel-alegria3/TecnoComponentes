@@ -18,7 +18,6 @@ const navigation = [
   { name: "Inicio", href: "/" },
   { name: "Ofertas", href: "/ofertas" },
   { name: "Arma tu PC", href: "/arma-tu-pc" }, // Añadir esta línea
-  { name: "Ayuda", href: "/ayuda" },
 ];
 
 function classNames(...classes) {
@@ -32,6 +31,14 @@ export default function Navbar() {
   const [isHovered, setIsHovered] = useState(false);
   const { cartItems } = useCart();
   const session = useSession();
+
+  useEffect(() => {
+    if (session.isLoggedIn) {
+      const exists = navigation.find(it => it.name === "Ordenes");
+      if (!exists)
+        navigation.push({name: "Ordenes", href: "/ordenes"});
+    }
+  }, [session.isLoggedIn]);
 
   const handleLogout = async () => {
     try {
@@ -137,7 +144,7 @@ export default function Navbar() {
                       <MenuItem>
                         {({ focus }) => (
                           <a
-                            href="#"
+                            href="/perfil"
                             className={classNames(
                               focus ? "bg-gray-100" : "",
                               "block px-4 py-2 text-sm text-gray-700"

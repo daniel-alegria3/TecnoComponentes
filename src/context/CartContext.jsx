@@ -2,10 +2,10 @@ import React, { useState, useEffect, createContext, useContext, useRef } from "r
 
 const CartContext = createContext({
   cartItems: [],
-  addProdToCart: () => {},
-  updateProdFromCart: () => {},
-  removeProdFromCart: () => {},
-  initCartUserData: () => {},
+  addProdToCart: async() => {},
+  updateProdFromCart: async() => {},
+  removeProdFromCart: async() => {},
+  initCartUserData: async() => {},
 });
 
 export const useCart = () => useContext(CartContext)
@@ -44,63 +44,69 @@ export function CartProvider({ children }) {
       }
     } catch (err) {
       console.log("Error: ", err.message || "Error obteniendo informacion del Carrito")
+      throw err;
     }
   };
-
 
   useEffect(() => {
     initCartUserData();
   }, []);
 
-  const addProdToCart = async(producto) => {
-    if (1 > producto.available_stock)
-      return;
+  ///[ DEBUG FUNCTION
+  // useEffect(() => {
+  //   console.log("=== RELOADED ============================\n")
+  //   console.log(cartItems)
+  //   console.log("=\n")
+  // }, [cartItems]);
+  ///[ END DEBUG FUNCTION
 
-    let exists = true;
-    // Añade solo 1 producto al carrito (si este todavia no esta ahi)
+  const addProdToCart = async(producto) => {
+    if (1 > producto.available_stock) return;
+    const exists = cartItems.find(it => it.product.id_product === producto.id_product);
+    if (exists) return null;
+
+    await api_set_prod_to_cart(producto.id_product, 1);
+
     setCartItems(items => {
-      exists = items.find(it => it.product.id_product == producto.id_product);
-      if (!exists) {
-        return [...items, { product: producto, quantity: 1 }];
-      }
-      return items
+      return [...items, { product: {...producto, available_stock: producto.available_stock - 1}, quantity: 1 }];
     });
 
-    if (!exists) {
-      await api_set_prod_to_cart(producto.id_product, 1);
-      producto.available_stock -= 1;
-    }
+    return producto.available_stock-1;
   }
 
   const updateProdFromCart = async(producto, delta) => {
-    console.log("STOCK BEGIN:", producto.available_stock)
     if (delta > producto.available_stock)
-      return;
+      return null;
+
+    const item = cartItems.find(it => it.product.id_product == producto.id_product);
+    if (item.quantity == 1 && delta < 0)
+      return null;
+
+    const safeQty = Math.max(1, item.quantity + delta);
+    await api_set_prod_to_cart(producto.id_product, safeQty);
 
     setCartItems((items) =>
       items.map((it) => {
         if (it.product.id_product == producto.id_product) {
-          const qty = Math.max(1, it.quantity + delta);
-          return { ...it, quantity: qty };
+          return { product: {...producto, available_stock: producto.available_stock - delta}, quantity: safeQty };
         } else {
           return it;
         }
       }).filter((it) => it.quantity > 0)
     );
 
-    const item = cartItems.find(it => it.product.id_product === producto.id_product);
-    const safeQty = Math.max(1, item.quantity + delta);
-    await api_set_prod_to_cart(producto.id_product, safeQty);
-    producto.available_stock -= delta;
-    console.log("STOCK END:", producto.available_stock)
+    return Math.max(0, producto.available_stock - delta);
   }
 
   const removeProdFromCart = async(producto) => {
     const item = cartItems.find(it => it.product.id_product === producto.id_product);
-    setCartItems((items) => items.filter((it) => it.product.id_product != producto.id_product));
+    if (!item) return null;
 
     await api_del_prod_from_cart(producto.id_product);
-    producto.available_stock += item.quantity;
+
+    setCartItems((items) => items.filter((it) => it.product.id_product != producto.id_product));
+
+    return producto.available_stock + item.quantity;
   }
 
   //====================== {funciones (api) auxiliares} ========================
@@ -153,8 +159,9 @@ export function CartProvider({ children }) {
   const on_cart_timeout = () => {
     console.log("EMPTIED CLIENT'S CART");
     cartItems.map((it) => {
-      api_del_prod_from_cart(it.product.id_product);
+      removeProdFromCart(it.product);
     })
+    setCartItems([]);
     clearTimeout(timer.current);
   };
 
