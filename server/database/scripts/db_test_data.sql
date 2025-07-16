@@ -1,9 +1,16 @@
-INSERT INTO Category (name) values ('Procesadores');
-INSERT INTO Category (name) values ('RAM');
-INSERT INTO Category (name) values ('SSD/HDD');
-INSERT INTO Category (name) values ('Laptops');
-INSERT INTO Category (name) values ('GPUs');
-INSERT INTO Category (name) values ('Monitores');
+INSERT INTO Category (name) values ('cpu');
+INSERT INTO Category (name) values ('motherboard');
+INSERT INTO Category (name) values ('ram');
+INSERT INTO Category (name) values ('gpu');
+INSERT INTO Category (name) values ('storage');
+INSERT INTO Category (name) values ('psu');
+INSERT INTO Category (name) values ('case');
+INSERT INTO Category (name) values ('cooler');
+INSERT INTO Category (name) values ('monitor');
+INSERT INTO Category (name) values ('keyboard');
+INSERT INTO Category (name) values ('mouse');
+INSERT INTO Category (name) values ('headphones');
+INSERT INTO Category (name) values ('speakers');
+INSERT INTO Category (name) values ('webcam');
 
 SELECT * FROM Category;
-
