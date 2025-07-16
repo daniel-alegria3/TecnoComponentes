@@ -170,8 +170,8 @@ export default function Productos() {
                 </td>
               </tr>
             ) : (
-              filteredProducts.map((product) => (
-                <tr key={product.id_product}>
+              filteredProducts.map((product, idx) => (
+                <tr key={idx}>
                   <td className="px-4 py-3 text-sm">{product.fecha_compra}</td>
                   <td className="px-4 py-3">{product.nombre_producto}</td>
                   <td className="px-4 py-3">S/ {product.precio_compra}</td>
