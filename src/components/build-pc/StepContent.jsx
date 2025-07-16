@@ -2,6 +2,7 @@ import StepHeader from "./StepHeader";
 import SubStepNavigation from "./SubStepNavigation";
 import ProductSelector from "./ProductSelector";
 import ProductFilters from "../ProductFilters";
+import { useProductFiltering } from "../../hooks/useProductFiltering";
 
 export default function StepContent({ 
   currentStep, 
@@ -74,6 +75,9 @@ export default function StepContent({
   const productType = getProductTypeForStep(currentStep, currentSub);
   const selectedProduct = getSelectedProductForStep(currentStep, currentSub);
 
+  // Usar el hook de filtrado
+  const filtering = useProductFiltering(products);
+
   return (
     <div>
       <StepHeader step={currentStep} subStep={currentSub} />
@@ -90,19 +94,24 @@ export default function StepContent({
       />
       
       <ProductFilters
-        marcas={filters.filterOptions.marcas}
-        sockets={filters.filterOptions.sockets}
-        nucleosOptions={filters.filterOptions.nucleosOptions}
-        priceRange={filters.priceRange}
-        onRangeChange={filters.handleRangeChange}
-        onLimpiarFiltros={filters.limpiarFiltros}
+        products={products}
+        selectedBrand={filtering.selectedBrand}
+        priceRange={filtering.priceRange}
+        onBrandChange={filtering.handleBrandChange}
+        onPriceRangeChange={filtering.handlePriceRangeChange}
+        onClearFilters={filtering.clearFilters}
       />
       
       <ProductSelector
-        products={products}
+        products={filtering.filteredProducts}
         productType={productType}
         selectedProduct={selectedProduct}
         onSelectProduct={onSelectProduct}
+        noResultsMessage={
+          filtering.totalProducts > 0 && !filtering.hasResults
+            ? "No se encontraron productos en el rango de precio establecido"
+            : "No hay productos disponibles para esta categoría"
+        }
       />
     </div>
   );

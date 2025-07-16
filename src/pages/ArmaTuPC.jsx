@@ -10,7 +10,6 @@ import WelcomeStep from "../components/build-pc/WelcomeStep";
 import { useProducts } from "../hooks/useProducts";
 import { useProductSelection } from "../hooks/useProductSelection";
 import { useStepNavigation } from "../hooks/useStepNavigation";
-import { useProductFilters } from "../hooks/useProductFilters";
 
 export default function ArmaTuPC() {
   const [showSummary, setShowSummary] = useState(false);
@@ -18,7 +17,6 @@ export default function ArmaTuPC() {
   const { filteredProducts, loading, error } = useProducts();
   const selectedProducts = useProductSelection();
   const navigation = useStepNavigation();
-  const filters = useProductFilters();
 
   useEffect(() => {
     if (navigation.currentStep === 6) {
@@ -32,7 +30,8 @@ export default function ArmaTuPC() {
   // Agregar función canGoToNextMainStep al objeto navigation
   const enhancedNavigation = {
     ...navigation,
-    canGoToNextMainStep: (step) => navigation.canGoToNextMainStep(step, selectedProducts.canContinue)
+    canGoToNextMainStep: (step) => navigation.canGoToNextMainStep(step, selectedProducts.canContinue),
+    handleNextStep: () => navigation.handleNextStep(selectedProducts)
   };
 
   const estimatedTDP = 0; // Se elimina la dependencia de specs.TDP
@@ -68,12 +67,9 @@ export default function ArmaTuPC() {
       <BuildStepNavigator
         steps={navigation.steps}
         currentStep={showSummary ? LAST_STEP : navigation.currentStep}
-        setCurrentStep={(step) => {
-          if (showSummary) {
-            setShowSummary(false);
-          }
-          navigation.setCurrentStep(step);
-        }}
+        completedSteps={navigation.completedSteps}
+        navigateToStep={navigation.navigateToStep}
+        selectedProducts={selectedProducts}
       />
 
       {showSummary ? (
@@ -82,14 +78,14 @@ export default function ArmaTuPC() {
           setShowSummary={setShowSummary}
           goToStep={(step) => {
             if (showSummary) setShowSummary(false);
-            navigation.setCurrentStep(step);
+            navigation.navigateToStep(step, selectedProducts);
           }}
         />
       ) : (
         <>
           {/* Paso de Inicio */}
           {navigation.currentStep === 1 ? (
-            <WelcomeStep onContinue={navigation.handleNextStep} />
+            <WelcomeStep onContinue={() => enhancedNavigation.handleNextStep()} />
           ) : (
             <div className="max-w-7xl mx-auto px-4 py-8 flex">
               <main className="flex-1 pr-8">
@@ -112,7 +108,6 @@ export default function ArmaTuPC() {
                       filteredProducts={filteredProducts}
                       selectedProducts={selectedProducts}
                       onSelectProduct={selectedProducts.handleSelectProduct}
-                      filters={filters}
                       navigation={enhancedNavigation}
                       loading={loading}
                       error={error}
