@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate} from "react-router-dom";
 
 export default function Perfil() {
     const navigate = useNavigate()
+    const email = localStorage.getItem('userEmail') || '';
     return (
       <div className="min-h-screen bg-gradient-to-b from-violet-50 to-violet-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-8xl mx-auto">
@@ -21,30 +22,22 @@ export default function Perfil() {
               <div className="flex justify-center -mt-16 mb-4">
                 <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden">
                   <img 
-                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" 
+                    src="https://www.boredpanda.com/blog/wp-content/uploads/2024/06/sigma-face-6.jpg" 
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
-  
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-violet-900">María González</h2>
-                <p className="text-violet-600">@mariagonzalez</p>
+                <p className="text-violet-600">{email}</p>
               </div>
   
               {/* Stats */}
-              <div className="grid grid-cols-3 divide-x divide-violet-200 border border-violet-200 rounded-lg mb-6">
-                <div className="py-4 text-center">
-                  <p className="text-2xl font-bold text-violet-700">2</p>
+              <div className="grid grid-cols-2 divide-x divide-violet-200 border border-violet-200 rounded-lg mb-6">
+                <button onClick={() => navigate("/ordenes")} className="py-4 text-center">
                   <p className="text-sm text-violet-500">Pedidos</p>
-                </div>
-                <button onClick={() => navigate("/")} className="py-4 text-center">
-                  <p className="text-2xl font-bold text-violet-700">3</p>
-                  <p className="text-sm text-violet-500">Direcciones</p>
                 </button>
                 <button onClick={() => navigate("/cart")} className="py-4 text-center">
-                  <p className="text-2xl font-bold text-violet-700">4</p>
                   <p className="text-sm text-violet-500">En Carrito</p>
                 </button>
               </div>

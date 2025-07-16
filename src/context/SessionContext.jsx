@@ -11,13 +11,14 @@ export const useSession = () => useContext(SessionContext);
 
 export function SessionProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
 
   useEffect(() => {
     const queryLogin = async () => {
       try {
         const res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
           method: "GET",
-          credentials: 'include',
+          credentials: "include",
         });
 
         const rpta = await res.json();
@@ -30,12 +31,12 @@ export function SessionProvider({ children }) {
       } catch (err) {
         console.log(err.message || "Error obteniendo informacion del login");
       }
-    }
+    };
 
     queryLogin();
   }, []);
 
-  const doRegister= async (firstName, lastName, email, password) => {
+  const doRegister = async (firstName, lastName, email, password) => {
     try {
       // Hash the password before sending (SHA-256)
       const hashedPassword = await hashPassword(password);
@@ -62,7 +63,7 @@ export function SessionProvider({ children }) {
     } catch (err) {
       throw err;
     }
-  }
+  };
 
   const doLogin = async (email, password) => {
     try {
@@ -84,18 +85,24 @@ export function SessionProvider({ children }) {
       if (!res.ok) {
         throw new Error(rpta.error);
       }
-
+      
       setIsLoggedIn(rpta.loggedIn);
+      if (rpta.loggedIn) {
+        console.log("Login exitoso");
+        setUserEmail(email); // Guardamos el email usado para login
+        localStorage.setItem("userEmail", email); // Opcional: Persistir
+        console.log("Email guardado en localStorage:", email);
+      }
     } catch (err) {
       throw err;
     }
-  }
+  };
 
   const doLogout = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/clients/logout`, {
         method: "POST",
-        credentials: 'include',
+        credentials: "include",
       });
 
       const rpta = await res.json();
@@ -105,10 +112,12 @@ export function SessionProvider({ children }) {
       }
 
       setIsLoggedIn(rpta.loggedIn);
+      setUserEmail(null); // Limpiamos el email
+      localStorage.removeItem('userEmail'); // Opcional: Limpiar persistencia
     } catch (err) {
       throw err;
     }
-  }
+  };
 
   // Helper function to hash passwords (SHA-256)
   const hashPassword = async (password) => {
@@ -120,9 +129,10 @@ export function SessionProvider({ children }) {
   };
 
   return (
-    <SessionContext.Provider value={{ isLoggedIn, doRegister, doLogin, doLogout }}>
+    <SessionContext.Provider
+      value={{ isLoggedIn, userEmail, doRegister, doLogin, doLogout }}
+    >
       {children}
     </SessionContext.Provider>
   );
 }
-
