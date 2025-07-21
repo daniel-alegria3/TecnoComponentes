@@ -1,4 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from "react";
+import { useProducts } from "./ProductsContext";
 
 const CartContext = createContext({
   cartItems: [],
@@ -15,6 +16,7 @@ export function CartProvider({ children }) {
 
   const [cartItems, setCartItems] = useState([]);
   const timer = useRef(null);
+  const { refreshProducts } = useProducts();
 
   const initCartUserData = async () => {
     try {
@@ -61,21 +63,25 @@ export function CartProvider({ children }) {
   ///[ END DEBUG FUNCTION
 
   const addProdToCart = async(producto) => {
-    if (1 > producto.available_stock) return;
+    if (1 > producto.stock) return;
     const exists = cartItems.find(it => it.product.id_product === producto.id_product);
     if (exists) return null;
 
     await api_set_prod_to_cart(producto.id_product, 1);
 
     setCartItems(items => {
-      return [...items, { product: {...producto, available_stock: producto.available_stock - 1}, quantity: 1 }];
+      return [...items, { product: {...producto}, quantity: 1 }];
     });
 
-    return producto.available_stock-1;
+    // Refrescar productos para obtener el stock actualizado del servidor
+    await refreshProducts();
+
+    // Ya no calculamos el stock localmente, el backend lo maneja físicamente
+    return null;
   }
 
   const updateProdFromCart = async(producto, delta) => {
-    if (delta > producto.available_stock)
+    if (delta > producto.stock)
       return null;
 
     const item = cartItems.find(it => it.product.id_product == producto.id_product);
@@ -88,14 +94,18 @@ export function CartProvider({ children }) {
     setCartItems((items) =>
       items.map((it) => {
         if (it.product.id_product == producto.id_product) {
-          return { product: {...producto, available_stock: producto.available_stock - delta}, quantity: safeQty };
+          return { product: {...producto}, quantity: safeQty };
         } else {
           return it;
         }
       }).filter((it) => it.quantity > 0)
     );
 
-    return Math.max(0, producto.available_stock - delta);
+    // Refrescar productos para obtener el stock actualizado del servidor
+    await refreshProducts();
+
+    // Ya no calculamos el stock localmente, el backend lo maneja físicamente
+    return null;
   }
 
   const removeProdFromCart = async(producto) => {
@@ -106,7 +116,11 @@ export function CartProvider({ children }) {
 
     setCartItems((items) => items.filter((it) => it.product.id_product != producto.id_product));
 
-    return producto.available_stock + item.quantity;
+    // Refrescar productos para obtener el stock actualizado del servidor
+    await refreshProducts();
+
+    // Ya no calculamos el stock localmente, el backend lo maneja físicamente
+    return null;
   }
 
   //====================== {funciones (api) auxiliares} ========================

@@ -114,8 +114,8 @@ export const STEP_CONFIG = {
 };
 
 export const INITIAL_STEPS = [
-  { id: 1, name: "Inicio", href: "#", status: "complete" },
-  { id: 2, name: "CPU & Placa Base", href: "#", status: "current" },
+  { id: 1, name: "Inicio", href: "#", status: "current" },
+  { id: 2, name: "CPU & Placa Base", href: "#", status: "upcoming" },
   { id: 3, name: "RAM & GPU", href: "#", status: "upcoming" },
   { id: 4, name: "Almacenamiento & PSU", href: "#", status: "upcoming" },
   { id: 5, name: "Gabinete & Refrigeración", href: "#", status: "upcoming" },

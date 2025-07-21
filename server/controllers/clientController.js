@@ -1,4 +1,5 @@
 const pool = require('../database/db');
+const productController = require('./productController');
 
 const clientController = {
   getAllProducts_client: async (req, res) => {
@@ -53,12 +54,42 @@ const clientController = {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
 
+      // Obtener cantidad actual en el carrito (si existe)
+      const [cartRows] = await pool.query(`
+        SELECT scp.quantity 
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        WHERE sc.id_client = ? AND scp.id_product = ?
+      `, [id_client, id_product]);
+
+      const currentQuantityInCart = cartRows.length > 0 ? cartRows[0].quantity : 0;
+
+      // Obtener stock actual del producto
+      const [productRows] = await pool.query('SELECT stock FROM Product WHERE id_product = ?', [id_product]);
+      
+      if (productRows.length === 0) {
+        return res.status(404).json({ error: 'Producto no encontrado.' });
+      }
+
+      const currentStock = productRows[0].stock;
+      const quantityDifference = parseInt(quantity) - currentQuantityInCart;
+
+      // Validar que hay suficiente stock para la diferencia
+      if (quantityDifference > currentStock) {
+        return res.status(400).json({ error: 'Stock insuficiente para agregar al carrito.' });
+      }
+
+      // Actualizar stock del producto (restar la diferencia)
+      const newStock = currentStock - quantityDifference;
+      await productController.updateProductStock(id_product, newStock);
+
+      // Agregar/actualizar producto en el carrito
       await pool.query('CALL agregar_carrito(?, ?, ?)', [id_client, id_product, parseInt(quantity)]);
 
       res.status(200).json({ message: 'Producto agregado al carrito correctamente.' });
     } catch (error) {
-      console.error('Error en llenarCarrito:', error);
-      res.status(500).json({ error: error.sqlMessage || 'Error al agregar producto al carrito.' });
+      console.error('Error en agregarCarrito:', error);
+      res.status(500).json({ error: error.message || 'Error al agregar producto al carrito.' });
     }
   },
   verCarrito: async (req, res) => {
@@ -88,7 +119,37 @@ const clientController = {
       if (!id_client || !id_product) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
       }
+
+      // Obtener cantidad actual en el carrito antes de eliminar
+      const [cartRows] = await pool.query(`
+        SELECT scp.quantity 
+        FROM Shopping_Cart_Product scp
+        JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
+        WHERE sc.id_client = ? AND scp.id_product = ?
+      `, [id_client, id_product]);
+
+      if (cartRows.length === 0) {
+        return res.status(404).json({ error: 'Producto no encontrado en el carrito.' });
+      }
+
+      const quantityInCart = cartRows[0].quantity;
+
+      // Obtener stock actual del producto
+      const [productRows] = await pool.query('SELECT stock FROM Product WHERE id_product = ?', [id_product]);
+      
+      if (productRows.length === 0) {
+        return res.status(404).json({ error: 'Producto no encontrado.' });
+      }
+
+      const currentStock = productRows[0].stock;
+
+      // Eliminar producto del carrito
       await pool.query('CALL vaciar_carrito(?, ?)', [id_client, id_product]);
+
+      // Devolver stock al producto (sumar la cantidad que estaba en el carrito)
+      const newStock = currentStock + quantityInCart;
+      await productController.updateProductStock(id_product, newStock);
+
       res.status(200).json({ message: 'Producto eliminado del carrito correctamente.' });
     } catch (error) {
       console.error('Error en vaciarCarrito:', error);
