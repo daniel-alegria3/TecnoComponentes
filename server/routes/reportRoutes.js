@@ -84,7 +84,7 @@ router.get('/productstock/preview', async (req, res) => {
 // Helper function to get products data
 async function getProductsData() {
     try {
-        const res = await fetch('http://localhost:5000/api/clients/getproducts');
+        const res = await fetch(`http://${process.env.FRONTEND_IP}:5000/api/clients/getproducts`);
         console.log(res)
         const rpta = await res.json();
         if (!res.ok) {

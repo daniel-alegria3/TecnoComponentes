@@ -41,7 +41,7 @@ export default function Checkout() {
     const fetchDirecciones = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/clients/verdireccion",
+          `http://${import.meta.env.VITE_APP_IP}:5000/api/clients/verdireccion`,
           {
             credentials: "include",
           }
@@ -169,7 +169,7 @@ export default function Checkout() {
     console.log("Productos a enviar:", productos);
     const fetchRealizarPago = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/clients/realizarcompra", {
+        const response = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/realizarcompra`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

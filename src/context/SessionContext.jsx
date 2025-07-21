@@ -16,7 +16,7 @@ export function SessionProvider({ children }) {
   useEffect(() => {
     const queryLogin = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/clients/logged_in`, {
+        const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/logged_in`, {
           method: "GET",
           credentials: "include",
         });
@@ -41,7 +41,7 @@ export function SessionProvider({ children }) {
       // Hash the password before sending (SHA-256)
       const hashedPassword = await hashPassword(password);
 
-      const res = await fetch("http://localhost:5000/api/clients/register", {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/register`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -70,7 +70,7 @@ export function SessionProvider({ children }) {
       // Hash the password before sending (SHA-256)
       const hashedPassword = await hashPassword(password);
 
-      const res = await fetch("http://localhost:5000/api/clients/login", {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -100,7 +100,7 @@ export function SessionProvider({ children }) {
 
   const doLogout = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/clients/logout`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/logout`, {
         method: "POST",
         credentials: "include",
       });

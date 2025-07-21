@@ -29,7 +29,7 @@ const ModalDireccion = ({ isOpen, onClose, onSave, onSelect }) => {
     try {
       setLoading(true);
       const response = await fetch(
-        "http://localhost:5000/api/clients/verdireccion",
+        `http://${import.meta.env.VITE_APP_IP}:5000/api/clients/verdireccion`,
         {
           credentials: "include",
         }
@@ -130,7 +130,7 @@ const ModalDireccion = ({ isOpen, onClose, onSave, onSelect }) => {
     try {
       // 1. Primero hacemos el fetch para guardar en la base de datos
       const response = await fetch(
-        "http://localhost:5000/api/clients/creardireccion",
+        `http://${import.meta.env.VITE_APP_IP}:5000/api/clients/creardireccion`,
         {
           method: "POST",
           credentials: "include", // Para incluir cookies si usas sesiones

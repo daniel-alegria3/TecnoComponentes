@@ -110,7 +110,7 @@ export default function Cart() {
     const fetchRecommended = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5000/api/clients/getproducts");
+        const response = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/getproducts`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

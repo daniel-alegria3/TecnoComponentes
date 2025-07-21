@@ -24,7 +24,7 @@ export default function Productos() {
         setError(null);
 
         const res = await fetch(
-          "http://localhost:5000/api/clients/vercompras", {
+          `http://${import.meta.env.VITE_APP_IP}:5000/api/clients/vercompras`, {
            method: "GET",
            credentials: 'include',
         });
@@ -62,7 +62,7 @@ export default function Productos() {
     // TODO: implementar
     /*
     try {
-      const res = await fetch(`http://localhost:5000/api/???/${id}`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/???/${id}`, {
         method: "DELETE",
       });
 

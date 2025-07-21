@@ -28,7 +28,7 @@ export const useProducts = () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch("http://localhost:5000/api/clients/getproducts");
+        const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/getproducts`);
         if (!res.ok) throw new Error("Error al obtener productos");
         const data = await res.json();
         setProductos(Array.isArray(data) ? data : []);

@@ -32,7 +32,7 @@ export default function ProductDetail() {
     const fetchProduct = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/products/${id}`
+          `http://${import.meta.env.VITE_APP_IP}:5000/api/products/${id}`
         );
         if (!response.ok) throw new Error("Producto no encontrado");
         const data = await response.json();

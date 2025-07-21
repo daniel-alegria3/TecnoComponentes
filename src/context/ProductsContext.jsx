@@ -29,7 +29,7 @@ export function ProductsProvider({ children }) {
 
   const initProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/clients/getproducts", {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/getproducts`, {
         method: "GET",
         credentials: 'include',
       });

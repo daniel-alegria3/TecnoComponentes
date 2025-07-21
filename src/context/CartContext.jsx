@@ -20,7 +20,7 @@ export function CartProvider({ children }) {
 
   const initCartUserData = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/clients/vercarrito/42069`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/vercarrito/42069`, {
         method: "GET",
         credentials: 'include',
       });
@@ -126,7 +126,7 @@ export function CartProvider({ children }) {
   //====================== {funciones (api) auxiliares} ========================
   const api_set_prod_to_cart = async(id_product, quantity) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/clients/agregarcarrito`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/agregarcarrito`, {
         method: "POST",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
@@ -149,7 +149,7 @@ export function CartProvider({ children }) {
 
   const api_del_prod_from_cart = async(id_product) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/clients/vaciarcarrito`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/vaciarcarrito`, {
         method: "DELETE",
         credentials: 'include',
         headers: { "Content-Type": "application/json" },

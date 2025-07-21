@@ -44,7 +44,7 @@ export default function Productos() {
         */
 
         const catsResponse = await fetch(
-          "http://localhost:5000/api/products/allcategory"
+          `http://${import.meta.env.VITE_APP_IP}:5000/api/products/allcategory`
         );
         if (!catsResponse.ok) throw new Error("Error al obtener categorias");
         const cats = await catsResponse.json();
@@ -65,7 +65,7 @@ export default function Productos() {
         setError(null);
 
         const productsResponse = await fetch(
-          "http://localhost:5000/api/clients/getproducts"
+          `http://${import.meta.env.VITE_APP_IP}:5000/api/clients/getproducts`
         );
         if (!productsResponse.ok) throw new Error("Error al obtener productos");
         const productsData = await productsResponse.json();
@@ -94,7 +94,7 @@ export default function Productos() {
   // CRUD Operations
   const addProduct = async (productData) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/products`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -118,7 +118,7 @@ export default function Productos() {
 
   const deleteProduct = async (id) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/products/${id}`, {
         method: "DELETE",
       });
 
@@ -137,7 +137,7 @@ export default function Productos() {
   const editProduct = async (productData) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/products/${productData.id_product}`,
+        `http://${import.meta.env.VITE_APP_IP}:5000/api/products/${productData.id_product}`,
         {
           method: "PUT",
           headers: {
@@ -195,7 +195,7 @@ export default function Productos() {
 
   const downloadReport = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/reports/productstock", {
+      const res = await fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/reports/productstock`, {
         method: 'GET',
       });
 

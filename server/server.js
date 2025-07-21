@@ -1,3 +1,5 @@
+require('dotenv').config(); // Agrega esto al inicio de tu archivo server
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -5,14 +7,15 @@ const app = express();
 
 /// TODO: Aprender y usar crendeciales en Production
 // router.use(cors({
-//   origin: 'http://localhost:3000',
+//   origin: `http://${import.meta.env.VITE_APP_IP}:3000`,
 //   credentials: true
 
 // }));
 
 // Enables Cross-Origin Resource Sharing
 app.use(cors({
-  origin: 'http://localhost:5173',  // frontend origin
+  origin: `http://${process.env.FRONTEND_IP}:5173`,  // frontend origin
+  // origin: `http://localhost:5173`,  // frontend origin
   credentials: true,
 }));
 

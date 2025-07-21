@@ -28,7 +28,7 @@ export default function useProductImages(imageIds) {
           memImageIds.map(async (id) => {
             try {
               const res = await fetch(
-                  `http://localhost:5000/api/images/${id}`,
+                  `http://${import.meta.env.VITE_APP_IP}:5000/api/images/${id}`,
                   {signal: controller.signal}
               );
               if (!res.ok) return PLACEHOLDER_IMG;

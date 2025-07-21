@@ -29,7 +29,7 @@ export const useAppLoading = () => {
           }),
           
           // API inicial
-          fetch('http://localhost:5000/api/clients/getproducts')
+          fetch(`http://${import.meta.env.VITE_APP_IP}:5000/api/clients/getproducts`)
             .then(res => res.json())
             .catch(() => []),
           
