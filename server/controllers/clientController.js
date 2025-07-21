@@ -56,7 +56,7 @@ const clientController = {
 
       // Obtener cantidad actual en el carrito (si existe)
       const [cartRows] = await pool.query(`
-        SELECT scp.quantity 
+        SELECT scp.quantity
         FROM Shopping_Cart_Product scp
         JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
         WHERE sc.id_client = ? AND scp.id_product = ?
@@ -66,7 +66,7 @@ const clientController = {
 
       // Obtener stock actual del producto
       const [productRows] = await pool.query('SELECT stock FROM Product WHERE id_product = ?', [id_product]);
-      
+
       if (productRows.length === 0) {
         return res.status(404).json({ error: 'Producto no encontrado.' });
       }
@@ -114,7 +114,6 @@ const clientController = {
 
     const id_client = req.session.id_client; // from using 'clientAuth' on the router
 
-    console.log(req.body)
     try {
       if (!id_client || !id_product) {
         return res.status(400).json({ error: 'Faltan parámetros obligatorios.' });
@@ -122,7 +121,7 @@ const clientController = {
 
       // Obtener cantidad actual en el carrito antes de eliminar
       const [cartRows] = await pool.query(`
-        SELECT scp.quantity 
+        SELECT scp.quantity
         FROM Shopping_Cart_Product scp
         JOIN Shopping_Cart sc ON scp.id_cart = sc.id_cart
         WHERE sc.id_client = ? AND scp.id_product = ?
@@ -136,7 +135,7 @@ const clientController = {
 
       // Obtener stock actual del producto
       const [productRows] = await pool.query('SELECT stock FROM Product WHERE id_product = ?', [id_product]);
-      
+
       if (productRows.length === 0) {
         return res.status(404).json({ error: 'Producto no encontrado.' });
       }
@@ -165,9 +164,9 @@ const clientController = {
 
     // Validaciones iniciales
     if (!id_client || !Array.isArray(productos) || productos.length === 0 || !id_address) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             success: false,
-            error: 'Datos incompletos: se requieren productos y dirección de envío' 
+            error: 'Datos incompletos: se requieren productos y dirección de envío'
         });
     }
 
@@ -220,10 +219,10 @@ const clientController = {
         }
 
         await connection.commit();
-        
-        res.json({ 
+
+        res.json({
             success: true,
-            message: 'Compra realizada exitosamente', 
+            message: 'Compra realizada exitosamente',
             id_order_detail,
             direccion_entrega: JSON.parse(shippingAddressBlob.toString())
         });
@@ -231,14 +230,14 @@ const clientController = {
     } catch (error) {
         await connection.rollback();
         console.error('Error en realizarCompra:', error);
-        
+
         // Manejo específico de errores del procedimiento almacenado
         const errorMessage = error.sqlMessage || error.message;
-        const statusCode = error.sqlMessage?.includes('no existe') ? 404 : 
-                          error.sqlMessage?.includes('Stock insuficiente') ? 409 : 
+        const statusCode = error.sqlMessage?.includes('no existe') ? 404 :
+                          error.sqlMessage?.includes('Stock insuficiente') ? 409 :
                           error.sqlMessage?.includes('carrito') ? 400 : 500;
 
-        res.status(statusCode).json({ 
+        res.status(statusCode).json({
             success: false,
             error: errorMessage,
             ...(process.env.NODE_ENV === 'development' && {
@@ -266,7 +265,6 @@ const clientController = {
       const [result] = await pool.query('CALL obtener_historial_compras_cliente(?)', [id_client]);
 
       // CALL devuelve un array de arrays, el primero contiene los resultados
-      console.log("WILDDDDDDDDDDDDDD: ", result)
       const products = result[0];
 
       const productsWithParsed = products.map(product => {
@@ -298,9 +296,6 @@ const clientController = {
         };
       });
 
-      console.log("\nWOOOOOOOOOOOOOOOOOOO\n")
-      console.log(productsWithParsed)
-      console.log("\nFFFFFFFFFFFFFFFFFFFF\n")
       res.json(Array.isArray(productsWithParsed) ? productsWithParsed : []);
     } catch (error) {
       await connection.rollback();
@@ -347,10 +342,10 @@ const clientController = {
         resultado = resultado.map(orden => {
             try {
                 // Convertir BLOB a string y luego parsear a JSON
-                const direccionEnvio = orden.shipping_address ? 
-                    JSON.parse(orden.shipping_address.toString()) : 
+                const direccionEnvio = orden.shipping_address ?
+                    JSON.parse(orden.shipping_address.toString()) :
                     null;
-                
+
                 return {
                     ...orden,
                     shipping_address: direccionEnvio
@@ -391,13 +386,13 @@ const clientController = {
   },
 
   crearDireccionCliente: async (req, res) => {
-    const { 
-      name_surname, 
-      phone, 
-      physical_address, 
-      apartment, 
-      province, 
-      district 
+    const {
+      name_surname,
+      phone,
+      physical_address,
+      apartment,
+      province,
+      district
     } = req.body;
 
     const id_client = req.session.id_client;
@@ -492,16 +487,16 @@ const clientController = {
     },
 
   editarDireccionCliente: async (req, res) => {
-      const { 
-          id_address, 
-          name_surname, 
-          phone, 
-          physical_address, 
-          apartment, 
-          province, 
-          district 
+      const {
+          id_address,
+          name_surname,
+          phone,
+          physical_address,
+          apartment,
+          province,
+          district
       } = req.body;
-  
+
       const id_client = req.session.id_client;
 
       try {
@@ -512,7 +507,7 @@ const clientController = {
                   error: 'Se requieren IDs válidos de cliente y dirección.'
               });
           }
-  
+
           // Validar campos obligatorios según el procedimiento
           const requiredFields = {
               name_surname: 'Nombre y apellido',
@@ -521,25 +516,25 @@ const clientController = {
               province: 'Provincia',
               district: 'Distrito'
           };
-  
+
           const missingFields = [];
           for (const [field, name] of Object.entries(requiredFields)) {
               if (!req.body[field] || req.body[field].toString().trim() === '') {
                   missingFields.push(name);
               }
           }
-  
+
           if (missingFields.length > 0) {
               return res.status(400).json({
                   success: false,
                   error: `Los siguientes campos son obligatorios: ${missingFields.join(', ')}`
               });
           }
-  
+
           // Convertir a números los IDs
           const clientId = parseInt(id_client);
           const addressId = parseInt(id_address);
-  
+
           // Llamar al procedimiento almacenado con todos los parámetros
           await pool.query(
               'CALL editar_direccion_cliente(?, ?, ?, ?, ?, ?, ?, ?)',
@@ -554,7 +549,7 @@ const clientController = {
                   district
               ]
           );
-  
+
           // Respuesta exitosa
           res.status(200).json({
               success: true,
@@ -570,18 +565,18 @@ const clientController = {
                   district
               }
           });
-  
+
       } catch (error) {
           console.error('Error al editar dirección:', error);
-  
+
           let statusCode = 500;
           let errorMessage = 'Error al procesar la solicitud';
-  
+
           if (error.sqlMessage) {
               if (error.sqlMessage.includes('no existe')) {
                   statusCode = 404;
                   errorMessage = error.sqlMessage;
-              } else if (error.sqlMessage.includes('no puede estar vacío') || 
+              } else if (error.sqlMessage.includes('no puede estar vacío') ||
                         error.sqlMessage.includes('no puede ser nulo')) {
                   statusCode = 400;
                   errorMessage = error.sqlMessage;
@@ -590,7 +585,7 @@ const clientController = {
                   errorMessage = 'La dirección no pertenece al cliente especificado';
               }
           }
-  
+
           res.status(statusCode).json({
               success: false,
               error: errorMessage,
