@@ -21,6 +21,7 @@ import Ordenes from "./pages/Ordenes";
 import "./App.css";
 import Dashboard from "./pages/admin/Dashboard";
 import Productos from "./pages/admin/Productos";
+import Ventas from "./pages/admin/Ventas";
 
 function App() {
   const { isLoading, loadingProgress } = useAppLoading();
@@ -51,6 +52,7 @@ function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route path="/admin/" element={<Dashboard />} />
         <Route path="/admin/productos" element={<Productos />} />
+        <Route path="/admin/ventas" element={<Ventas />} />
       </Route>
     </Routes>
   );

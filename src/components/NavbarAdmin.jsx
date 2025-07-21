@@ -11,22 +11,23 @@ import {
   import NavLink from './NavLink';
   import { useLocation } from "react-router-dom";
   import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-  
+
   const navigation = [
     { name: "Dashboard", href: "/admin" },
     { name: "Productos", href: "/admin/productos" },
+    { name: "Ventas", href: "/admin/ventas" },
     // { name: "Sobre nosotros", href: "/SobreNosotros" },
     // { name: "Construye tu PC", href: "/ConstruyeTuPC" },
   ];
-  
+
   function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
   }
-  
+
   export default function Navbar() {
     const location = useLocation();
     const pathname = location.pathname;
-  
+
     return (
       <>
       <Disclosure as="nav" className="bg-gray-800">
@@ -87,7 +88,7 @@ import {
                 <span className="sr-only">View notifications</span>
                 <BellIcon aria-hidden="true" className="size-6" />
               </button>
-  
+
               {/* Profile dropdown */}
               <Menu as="div" className="relative ml-3">
                 <div>
@@ -125,7 +126,7 @@ import {
             </div>
           </div>
         </div>
-  
+
         <DisclosurePanel className="sm:hidden">
           <div className="space-y-1 px-2 pt-2 pb-3">
             {navigation.map((item) => {
@@ -153,5 +154,5 @@ import {
       </>
     );
   }
-  
-  
+
+

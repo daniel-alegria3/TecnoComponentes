@@ -176,7 +176,7 @@ export default function Productos() {
                   <td className="px-4 py-3">{product.nombre_producto}</td>
                   <td className="px-4 py-3">S/ {product.precio_compra}</td>
                   <td className="px-4 py-3">{product.cantidad}</td>
-                  <td className="px-4 py-3">{product.subtotal}</td>
+                  <td className="px-4 py-3">S/ {product.subtotal}</td>
                   {/*
                   <td className="px-4 py-3">
                     <button

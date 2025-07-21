@@ -843,6 +843,36 @@ BEGIN
 END;
 //
 
+--
+CREATE PROCEDURE obtener_historial_compras (
+)
+BEGIN
+    SELECT
+        sc.id_client,
+        od.id_order_detail,
+        od.date_added AS fecha_compra,
+        od.shipping_address,
+        po.id_product,
+        p.name AS nombre_producto,
+        p.images_path,
+        po.price_at_buy AS precio_compra,
+        po.quantity AS cantidad,
+        (po.price_at_buy * po.quantity) AS subtotal,
+        cat.name AS categoria
+    FROM
+        Orden_Detail od
+    JOIN
+        Product_Order po ON od.id_order_detail = po.id_order_detail
+    JOIN
+        Product p ON po.id_product = p.id_product
+    JOIN
+        Category cat ON p.category = cat.id_category
+    JOIN
+        Shopping_Cart sc ON sc.id_cart = po.id_cart
+    ORDER BY
+        od.date_added DESC;
+END;
+//
 
 DELIMITER ;
 

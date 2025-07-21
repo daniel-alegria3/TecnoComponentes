@@ -1,61 +1,20 @@
 import React, { useState, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
-  PencilIcon,
   TrashIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
-import ProductModal from "../../components/ProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 
 export default function Productos() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]); // Nuevo estado para categorías
   const [search, setSearch] = useState("");
-  const [productModalOpen, setProductModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("add");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
 
-  // Obtener categorias
-  useEffect(() => {
-    if (productModalOpen) {
-      return;
-    }
-
-    const fetchCats = async () => {
-      try {
-        /*
-        const defaultCategories = [
-          { id: 1, name: "Procesadores" },
-          { id: 2, name: "RAM" },
-          { id: 3, name: "SSD/HDD" },
-          { id: 4, name: "Laptops" },
-          { id: 5, name: "GPUs" },
-          { id: 6, name: "Mouse" },
-          { id: 7, name: "Monitores" },
-          { id: 8, name: "Teclado" },
-          { id: 9, name: "Fuente de poder" },
-          { id: 10, name: "Audifonos" },
-        ];
-        */
-
-        const catsResponse = await fetch(
-          "http://localhost:5000/api/products/allcategory"
-        );
-        if (!catsResponse.ok) throw new Error("Error al obtener categorias");
-        const cats = await catsResponse.json();
-        setCategories(cats || []);
-      } catch (err) {
-        console.error("Error:", err);
-      }
-    };
-
-    fetchCats();
-  }, [productModalOpen]);
+  const [filterByToday, setFilterByToday] = useState(false);
 
   // Obtener productos y establecer categorías al cargar el componente
   useEffect(() => {
@@ -64,13 +23,21 @@ export default function Productos() {
         setLoading(true);
         setError(null);
 
-        const productsResponse = await fetch(
-          "http://localhost:5000/api/clients/getproducts"
-        );
-        if (!productsResponse.ok) throw new Error("Error al obtener productos");
-        const productsData = await productsResponse.json();
+        const res = await fetch(
+          "http://localhost:5000/api/clients/vercomprastodo", {
+           method: "GET",
+           credentials: 'include',
+        });
+        const rpta = await res.json();
 
-        setProducts(productsData);
+        if (!res.ok) throw new Error("Error al obtener las ordenes");
+
+        if (!rpta?.error) {
+          setProducts(rpta || []);
+        } else {
+          setProducts([]);
+        }
+
       } catch (err) {
         console.error("Error:", err);
         setError(err.message);
@@ -82,43 +49,30 @@ export default function Productos() {
     fetchData();
   }, []);
 
-  // Filtrar productos
+  // Filtrar productos - now includes search AND today filter
   useEffect(() => {
-    setFilteredProducts(
-      products.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      )
-    );
-  }, [products]);
+    let filtered = products?.filter((p) =>
+      p.nombre_producto.toLowerCase().includes(search.toLowerCase())
+    ) || [];
+
+    if (filterByToday) {
+      const today = new Date().toISOString().split('T')[0];
+
+      filtered = filtered.filter((p) => {
+        const productDate = new Date(p.fecha_compra).toISOString().split('T')[0];
+        return productDate === today;
+      });
+    }
+
+    setFilteredProducts(filtered);
+  }, [products, search, filterByToday]);
 
   // CRUD Operations
-  const addProduct = async (productData) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(productData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error);
-      }
-
-      const newProduct = await res.json();
-      return newProduct.id_product;
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Error agregando producto");
-      throw err; // Re-lanzar el error para manejo adicional
-    }
-  };
-
   const deleteProduct = async (id) => {
+    // TODO: implementar
+    /*
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/???/${id}`, {
         method: "DELETE",
       });
 
@@ -132,42 +86,7 @@ export default function Productos() {
       console.error("Error:", err);
       alert("Error eliminando producto");
     }
-  };
-
-  const editProduct = async (productData) => {
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/products/${productData.id_product}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(productData),
-        }
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error);
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Error editando producto");
-      throw err;
-    }
-  };
-
-  const handleOpenAddModal = () => {
-    setSelectedProduct(null);
-    setModalMode("add");
-    setProductModalOpen(true);
-  };
-
-  const handleOpenEditModal = (product) => {
-    setSelectedProduct(product);
-    setModalMode("edit");
-    setProductModalOpen(true);
+    */
   };
 
   const handleDeleteProduct = (productId) => {
@@ -175,28 +94,14 @@ export default function Productos() {
     setDeleteModalOpen(false);
   };
 
-  const handleSaveProduct = async (productData) => {
-    try {
-      if (modalMode === "edit") {
-        await editProduct(productData);
-        setProducts(
-          products.map((p) =>
-            p.id_product === productData.id_product ? productData : p
-          )
-        );
-      } else {
-        const newId = await addProduct(productData);
-        setProducts([...products, { ...productData, id_product: newId }]);
-      }
-    } catch (error) {
-      console.error("Error al guardar producto:", error);
-    }
-  };
-
   const downloadReport = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/reports/productstock", {
-        method: 'GET',
+      const res = await fetch("http://localhost:5000/api/reports/productsales", {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          products: filteredProducts,
+        }),
       });
 
       if (!res.ok) {
@@ -225,6 +130,20 @@ export default function Productos() {
           <h2 className="text-xl font-bold text-gray-800">Productos</h2>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+            {/* Today filter checkbox */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <input
+                type="checkbox"
+                id="filterToday"
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                checked={filterByToday}
+                onChange={(e) => setFilterByToday(e.target.checked)}
+              />
+              <label htmlFor="filterToday" className="text-sm font-medium text-gray-700">
+                Solo hoy
+              </label>
+            </div>
+
             {/* Buscador */}
             <div className="relative w-full sm:w-72">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -238,17 +157,6 @@ export default function Productos() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-
-            {/* Botón agregar producto */}
-            <button
-              className="flex items-center bg-gray-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700"
-              onClick={handleOpenAddModal}
-            >
-              <div className="flex items-center justify-center bg-white rounded-full h-8 w-8 shadow-lg mr-2">
-                <PlusIcon className="h-4 w-4 text-gray-600" />
-              </div>
-              Agregar Producto
-            </button>
           </div>
         </div>
 
@@ -258,14 +166,14 @@ export default function Productos() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                  ID
+                  Fecha
                 </th>
+                <th className="px-4 py-2">Client ID</th>
                 <th className="px-4 py-2">Nombre</th>
-                <th className="px-4 py-2">Marca</th>
-                <th className="px-4 py-2">Categoria</th>
-                <th className="px-4 py-2">Precio Venta</th>
-                <th className="px-4 py-2">Stock</th>
-                <th className="px-4 py-2">Acciones</th>
+                <th className="px-4 py-2">Precio</th>
+                <th className="px-4 py-2">Cantidad</th>
+                <th className="px-4 py-2">Subtotal</th>
+                {/* <th className="px-4 py-2">Acciones</th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -317,21 +225,16 @@ export default function Productos() {
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => (
-                  <tr key={product.id_product}>
-                    <td className="px-4 py-3 text-sm">{product.id_product}</td>
-                    <td className="px-4 py-3">{product.name}</td>
-                    <td className="px-4 py-3">{product.brand}</td>
-                    <td className="px-4 py-3">{product.category}</td>
-                    <td className="px-4 py-3">S/ {product.price}</td>
-                    <td className="px-4 py-3">{product.stock}</td>
+                filteredProducts.map((product, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-3 text-sm">{product.fecha_compra}</td>
+                    <td className="px-4 py-3">{product.id_client}</td>
+                    <td className="px-4 py-3">{product.nombre_producto}</td>
+                    <td className="px-4 py-3">$/ {product.precio_compra}</td>
+                    <td className="px-4 py-3">{product.cantidad}</td>
+                    <td className="px-4 py-3">$/ {product.subtotal}</td>
+                    {/*
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleOpenEditModal(product)}
-                        className="text-blue-600 hover:underline mr-3"
-                      >
-                        <PencilIcon className="h-5 w-5" />
-                      </button>
                       <button
                         onClick={() => {
                           setSelectedProduct(product);
@@ -342,22 +245,13 @@ export default function Productos() {
                         <TrashIcon className="h-5 w-5" />
                       </button>
                     </td>
+                    */}
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
-
-        {/* Modal para productos */}
-        <ProductModal
-          isOpen={productModalOpen}
-          onClose={() => setProductModalOpen(false)}
-          product={selectedProduct}
-          onSave={handleSaveProduct}
-          mode={modalMode}
-          categories={categories}
-        />
 
         {/* Modal para eliminar producto */}
         <DeleteProductModal
