@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext, createContext } from "react";
+import { SHA256 } from "crypto-js";
 
 const SessionContext = createContext({
   isLoggedIn: null,
@@ -119,13 +120,23 @@ export function SessionProvider({ children }) {
     }
   };
 
-  // Helper function to hash passwords (SHA-256)
   const hashPassword = async (password) => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    try {
+      if (window.crypto?.subtle) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+      } else {
+        // Fallback si crypto.subtle no está disponible (por ejemplo, en HTTP)
+        console.warn("crypto.subtle no disponible, usando crypto-js");
+        return SHA256(password).toString();
+      }
+    } catch (err) {
+      console.error("Error en hashPassword:", err);
+      throw err;
+    }
   };
 
   return (
