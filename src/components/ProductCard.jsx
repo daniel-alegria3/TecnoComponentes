@@ -29,14 +29,9 @@ export default function ProductCard({ producto, productoID = null, onSelect, isS
 
   const handleAddToCart = async e => {
     e.stopPropagation();
-    const available_stock = await addProdToCart(product);
-    if (available_stock != null) {
-      if (productoID) {
-        setProduct({available_stock: available_stock});
-      } else {
-        product.available_stock = available_stock;
-      }
-    }
+    await addProdToCart(product);
+    // Ya no actualizamos el stock localmente, el backend lo maneja físicamente
+    // El stock se actualizará cuando se recarguen los productos desde el servidor
   };
 
   if (!product) return null;
@@ -166,13 +161,13 @@ export default function ProductCard({ producto, productoID = null, onSelect, isS
               </div>
 
               <span className={`text-xs text-white px-2 py-1 rounded-full ${
-                product.available_stock > 10
+                product.stock > 10
                   ? "bg-gradient-to-r from-violet-600 to-violet-400"
-                  : product.available_stock > 0
+                  : product.stock > 0
                     ? "bg-gradient-to-r from-violet-500 to-violet-300"
                     : "bg-gradient-to-r from-gray-500 to-gray-400"
               }`}>
-                {product.available_stock > 0 ? `${product.available_stock} en stock` : "Agotado"}
+                {product.stock > 0 ? `${product.stock} en stock` : "Agotado"}
               </span>
             </div>
           </div>

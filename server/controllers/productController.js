@@ -324,6 +324,44 @@ const productController = {
       res.status(500).json({ error: 'Error al actualizar las especificaciones del producto' });
     }
   },
+
+  // Función auxiliar para actualizar solo el stock de un producto
+  updateProductStock: async (productId, newStock) => {
+    try {
+      // Obtener datos actuales del producto
+      const [productRows] = await pool.query('SELECT * FROM Product WHERE id_product = ?', [productId]);
+      
+      if (productRows.length === 0) {
+        throw new Error('Producto no encontrado');
+      }
+
+      const product = productRows[0];
+      
+      // Obtener nombre de la categoría
+      const [categoryRows] = await pool.query('SELECT name FROM Category WHERE id_category = ?', [product.category]);
+      const categoryName = categoryRows[0]?.name || '';
+
+      // Actualizar usando el procedimiento existente
+      await pool.query(
+        `CALL ActualizarProducto(?, ?, ?, ?, ?, ?, ?, ?);`,
+        [
+          productId,
+          product.name,
+          product.images_path,
+          product.brand || '',
+          categoryName,
+          product.description || '',
+          product.price,
+          newStock
+        ]
+      );
+
+      return true;
+    } catch (error) {
+      console.error('Error en updateProductStock:', error);
+      throw error;
+    }
+  },
 };
 
 module.exports = productController;

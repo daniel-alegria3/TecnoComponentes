@@ -84,13 +84,18 @@ export function ProductsProvider({ children }) {
   }, []);
 
 
+  const refreshProducts = useCallback(async () => {
+    await initProducts();
+  }, []);
+
   const contextValue = useMemo(() => ({
     products,
     getProductByID,
     updateProductByID,
     initProducts,
+    refreshProducts,
     productsData, // for internal use
-  }), [products, getProductByID, updateProductByID, productsData]);
+  }), [products, getProductByID, updateProductByID, refreshProducts, productsData]);
 
   return (
     <ProductsContext.Provider value={contextValue}>
