@@ -73,10 +73,10 @@ export default function CartItem({ producto, productoID, quantity }) {
       </div>
       <div className="text-right">
         <p className="text-gray-700">
-          €{product.price}
+          S/ {product.price}
         </p>
         <p className="font-semibold">
-          €{(product.price * quantity).toFixed(2)}
+          S/ {(product.price * quantity).toFixed(2)}
         </p>
       </div>
       <button

@@ -182,7 +182,7 @@ export default function Cart() {
           <h2 className="text-xl font-semibold">Resumen del Pedido</h2>
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>€{subtotal.toFixed(2)}</span>
+            <span>{subtotal.toFixed(2)}</span>
           </div>
           <div>
             <span className="block mb-1">Envío</span>
@@ -204,7 +204,7 @@ export default function Cart() {
                 checked={shippingCost === 4.99}
                 onChange={handleShipping}
               />
-              Express (€4.99)
+              Express (4.99)
             </label>
           </div>
           <div>
@@ -224,7 +224,7 @@ export default function Cart() {
           </div>
           <div className="flex justify-between text-lg font-semibold">
             <span>Total</span>
-            <span>€{total.toFixed(2)}</span>
+            <span>S/{total.toFixed(2)}</span>
           </div>
           <button
             onClick={() => navigate("/sales")}
